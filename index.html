@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallel Bible Reader</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div id="app-container">
+        <header id="top-bar">
+			<div class="top-group" id="top-bar-group-left">
+				<button id="bibleVersionPopupBtn" class="top-bar-icon-btn" title="Select Bible Versions">
+					<i class="fas fa-book-bible"></i>
+					<span class="version-indicator primary" id="primaryVersionIndicator">1</span>
+					<span class="version-indicator secondary" id="secondaryVersionIndicator">2</span>
+				</button>
+				<button id="prevChapterBtn" class="nav-btn chapter-nav-btn" title="Previous Chapter"><i class="fas fa-chevron-left"></i></button>
+				<span id="currentChapterDisplay" class="chapter-display"></span> <button id="nextChapterBtn" class="nav-btn chapter-nav-btn" title="Next Chapter"><i class="fas fa-chevron-right"></i></button>
+									<div class="font-size-controls top-group-item"> <button id="decreaseFontSizeBtn" class="top-bar-icon-btn" title="Decrease Font Size">
+        <i class="fas fa-font" style="font-size: 0.8em;"></i> <i class="fas fa-minus" style="font-size: 0.6em; vertical-align: middle;"></i>
+    </button>
+    <span id="currentFontSizeDisplay" title="Current font size multiplier" style="color: var(--top-bar-text-color); font-size: 0.85rem; padding: 0 5px; min-width: 35px; text-align: center;">100%</span>
+    <button id="increaseFontSizeBtn" class="top-bar-icon-btn" title="Increase Font Size">
+        <i class="fas fa-font" style="font-size: 0.8em;"></i> <i class="fas fa-plus" style="font-size: 0.6em; vertical-align: middle;"></i>
+    </button>
+</div>
+			</div>
+
+				<div class="top-group" id="top-bar-group-right">
+					<button id="commentaryPopupBtn" class="top-bar-icon-btn" title="Select Commentary"><i class="fas fa-comments"></i></button>
+					<label class="icon-toggle-label" title="Toggle showing all commentaries for current verse">
+						<input type="checkbox" id="multiCommentaryToggle" class="hidden-checkbox">
+						<i class="fas fa-layer-group multi-commentary-icon"></i>
+					</label>
+					<button id="themePopupBtn" class="top-bar-icon-btn" title="Select Theme"><i class="fas fa-palette"></i></button>
+					<button id="toggleSearchBtn" class="top-bar-icon-btn" title="Search Bible"><i class="fas fa-search"></i></button>
+					
+					<button id="toggleCommentaryUploadBtn" class="top-bar-icon-btn" title="Manage Commentaries"><i class="fas fa-book-reader"></i></button> 
+					<button id="toggleFileUploadBtn" class="top-bar-icon-btn" title="Manage Bibles"><i class="fas fa-database"></i></button>
+					<button id="toggleUserDataBtn" class="top-bar-icon-btn" title="My Data"><i class="fas fa-user-circle"></i></button>
+					<button id="toggleViewBtn" class="top-bar-icon-btn" title="Toggle View"><i class="fas fa-columns"></i></button>
+				</div>
+		</header>
+
+		<div id="bibleVersionSelectModal" class="selection-modal hidden">
+			<div class="selection-modal-content">
+				<div class="selection-modal-header">
+					<h3>Select Bible Versions</h3>
+					<button class="close-selection-modal-btn" data-modal-id="bibleVersionSelectModal">&times;</button>
+				</div>
+				<div class="bible-version-choice">
+					<label for="popupPrimaryVersionSelect">Primary (1): <span id="currentPopupPrimaryVersion"></span></label>
+					<select id="popupPrimaryVersionSelect" class="popup-select"></select>
+				</div>
+				<div class="bible-version-choice">
+					<label for="popupSecondaryVersionSelect">Secondary (2): <span id="currentPopupSecondaryVersion"></span></label>
+					<select id="popupSecondaryVersionSelect" class="popup-select"></select>
+				</div>
+				</div>
+		</div>
+
+<div id="commentarySelectModal" class="selection-modal hidden">
+    <div class="selection-modal-content">
+        <div class="selection-modal-header">
+            <h3>Select Commentary</h3>
+            <button class="close-selection-modal-btn" data-modal-id="commentarySelectModal">&times;</button>
+        </div>
+        <div id="popupCommentaryList" class="popup-item-list">
+            </div>
+    </div>
+</div>
+
+<div id="themeSelectModal" class="selection-modal hidden">
+    <div class="selection-modal-content">
+        <div class="selection-modal-header">
+            <h3>Select Theme</h3>
+            <button class="close-selection-modal-btn" data-modal-id="themeSelectModal">&times;</button>
+        </div>
+        <div id="popupThemeList" class="popup-item-list theme-list">
+            <button data-value="light" class="theme-option-button">Light</button>
+            <button data-value="dark" class="theme-option-button">Dark</button>
+            <button data-value="sepia" class="theme-option-button">Sepia</button>
+        </div>
+    </div>
+</div>
+
+
+        <main id="main-content-area">
+            <aside id="sidebar" class="hidden">
+                <div id="bookList" class="book-list">
+                    </div>
+            </aside>
+
+            <section id="reader-view">
+                <div id="upload-panel" class="panel hidden">
+                    <h2>Manage Bible Versions</h2>
+                    <label for="bibleFile">Upload a Bible (.db, .sqlite3):</label>
+                    <input type="file" id="bibleFile" accept=".db, .sqlite, .sqlite3" multiple>
+                    <input type="text" id="versionNameInput" placeholder="Enter Version Name (e.g., KJV, ESV)">
+                    <button id="addVersionBtn" disabled>Add Version</button>
+                    <p id="statusMessage" class="message"></p>
+                    <hr>
+                    <h3>Loaded Versions:</h3>
+                    <div id="loadedVersionsList" class="items-grid-container">
+					</div>
+                    <button id="closeUploadPanelBtn">Close</button>
+                </div>
+
+                <div id="commentary-upload-panel" class="panel hidden">
+                    <h2>Manage Commentaries</h2>
+                    <label for="commentaryFile">Upload a Commentary (.db, .sqlite3):</label>
+                    <input type="file" id="commentaryFile" accept=".db, .sqlite, .sqlite3">
+                    <input type="text" id="commentaryNameInput" placeholder="Enter Commentary Short Name (e.g., MHCC)">
+                    <button id="addCommentaryBtn">Add Commentary</button>
+                    <p id="commentaryStatusMessage" class="message"></p>
+                    <hr>
+                    <h3>Loaded Commentaries:</h3>
+                    <div id="loadedCommentariesList" class="items-grid-container">
+					</div>
+                    <button id="closeCommentaryUploadBtn">Close</button>
+                </div>
+
+                <div id="search-panel" class="panel hidden">
+                    <h2>Search Bible</h2>
+                    <div class="search-controls">
+                        <input type="text" id="searchQueryInput" placeholder="Enter search query">
+                        <select id="searchScopeSelect">
+                            <option value="currentBook">Current Book</option>
+                            <option value="oldTestament">Old Testament</option>
+                            <option value="newTestament">New Testament</option>
+                            <option value="all">All Bible</option>
+                        </select>
+                        <select id="matchTypeSelect">
+                            <option value="sentence">Match Sentence</option>
+                            <option value="words">Match All Words</option>
+                        </select>
+                        <button id="performSearchBtn">Search</button>
+                    </div>
+                    <p id="searchStatusMessage" class="message"></p>
+                    <div id="searchResultsList" class="search-results-list">
+                        </div>
+                    <button id="closeSearchPanelBtn">Close</button>
+                </div>
+
+                <div id="user-data-panel" class="panel hidden">
+                    <h2>My Data</h2>
+                    <div class="user-data-tabs">
+                        <button class="tab-button active" data-tab="highlights">Highlights</button>
+                        <button class="tab-button" data-tab="notes">Notes</button>
+                        <button class="tab-button" data-tab="bookmarks">Bookmarks</button>
+                    </div>
+
+                    <div id="highlights-tab" class="tab-content active">
+                        <h3>My Highlights</h3>
+                        <p class="placeholder">Highlights will appear here.</p>
+                        <ul id="highlightsList" class="user-data-list"></ul>
+                    </div>
+                    <div id="notes-tab" class="tab-content hidden">
+                        <h3>My Notes</h3>
+                        <p class="placeholder">Notes will appear here.</p>
+                        <ul id="notesList" class="user-data-list"></ul>
+                    </div>
+                    <div id="bookmarks-tab" class="tab-content hidden">
+                        <h3>My Bookmarks</h3>
+                        <select id="bookmarkCategorySelect" class="category-select">
+                            <option value="all">All Categories</option>
+                            </select>
+                        <p class="placeholder">Bookmarks will appear here.</p>
+                        <ul id="bookmarksList" class="user-data-list"></ul>
+                    </div>
+                    <button id="closeUserDataPanelBtn">Close</button>
+                </div>
+				<div id="bookChapterVerseSelector" class="panel hidden"> <div id="bookGridView" class="navigation-view">
+						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+							<h2>Select a Book</h2>
+							<button id="closeNavigatorBtn" class="nav-btn" title="Close Navigator"><i class="fas fa-times"></i></button>
+						</div>
+						<div id="bookGridContainer">
+							<div class="testament-section">
+								<h3>Old Testament</h3>
+								<div class="grid-items book-grid" id="otBookGrid">
+									</div>
+							</div>
+							<div class="testament-section">
+								<h3>New Testament</h3>
+								<div class="grid-items book-grid" id="ntBookGrid">
+									</div>
+							</div>
+						</div>
+					</div>
+
+					<div id="chapterGridView" class="navigation-view hidden">
+						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+							<button id="backToBookGridBtn" class="nav-btn" title="Back to Books"><i class="fas fa-arrow-left"></i> Books</button>
+							<h2 id="chapterGridTitle"></h2> <button id="closeNavigatorBtnChapterView" class="nav-btn" title="Close Navigator"><i class="fas fa-times"></i></button>
+						</div>
+						<div id="chapterGrid" class="grid-items chapter-grid"> </div>
+					</div>
+
+					<div id="verseGridView" class="navigation-view hidden">
+						 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+							<button id="backToChapterGridBtn" class="nav-btn" title="Back to Chapters"><i class="fas fa-arrow-left"></i> Chapters</button> <h2 id="verseGridTitle"></h2> <button id="closeNavigatorBtnVerseView" class="nav-btn" title="Close Navigator"><i class="fas fa-times"></i></button>
+						</div>
+						<div id="verseGrid" class="grid-items verse-grid"> </div>
+					</div>
+				</div>
+                <div id="bibleContentView" class="panel hidden">
+                    <div class="parallel-container">
+                        <div class="bible-column primary-column">
+                            <h3 id="primaryChapterTitle" class="column-title"></h3>
+                            <div id="primaryBibleContent" class="bible-content"></div>
+                        </div>
+                        <div class="bible-column secondary-column">
+                            <h3 id="secondaryChapterTitle" class="column-title"></h3>
+                            <div id="secondaryBibleContent" class="bible-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 My Bible Reader by Salai AaHu</p>
+        </footer>
+    </div>
+
+    <div id="introModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="introModalTitle"></h2>
+            <div id="introModalText"></div>
+        </div>
+    </div>
+
+	<div id="commentaryModal" class="modal hidden">
+	  <div class="modal-content">
+		<span class="close-button">&times;</span>
+		<h2 id="commentaryModalTitle"></h2>
+		<div id="commentaryModalNav" style="text-align:center; margin-bottom:10px;">
+		  <button id="prevCommentaryBtn" style="margin-right:10px;">◀</button>
+		  <button id="nextCommentaryBtn">▶</button>
+		</div>
+		<div id="commentaryModalText"></div>
+	  </div>
+	</div>
+
+    <div id="noteModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="noteModalTitle"></h2>
+            <textarea id="noteTextarea" placeholder="Enter your note here..."></textarea>
+            <div class="modal-actions">
+                <button id="saveNoteBtn">Save Note</button>
+                <button id="deleteNoteBtn" class="delete-btn hidden">Delete Note</button>
+                <button id="cancelNoteBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="bookmarkModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="bookmarkModalTitle"></h2>
+            <div class="modal-form-group">
+                <label for="bookmarkCategoryInput">Category:</label>
+                <input type="text" id="bookmarkCategoryInput" list="bookmarkCategoriesDatalist" placeholder="e.g., Favorites, Prayer">
+                <datalist id="bookmarkCategoriesDatalist"></datalist>
+            </div>
+            <div class="modal-actions">
+                <button id="saveBookmarkBtn">Save Bookmark</button>
+                <button id="deleteBookmarkBtn" class="delete-btn hidden">Delete Bookmark</button>
+                <button id="cancelBookmarkBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="highlightPicker" class="highlight-picker hidden">
+        <div class="color-swatch highlight-green" data-color="green"></div>
+        <div class="color-swatch highlight-yellow" data-color="yellow"></div>
+        <div class="color-swatch highlight-blue" data-color="blue"></div>
+        <div class="color-swatch highlight-purple" data-color="purple"></div>
+        <div class="color-swatch highlight-pink" data-color="pink"></div>
+        <div class="color-swatch clear" data-color="clear" title="Clear Highlight"><i class="fas fa-times"></i></div>
+    </div>
+
+    <script src="sql-wasm.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="script.js"></script>
+	<div id="verseImageModal" class="modal hidden">
+  <div class="modal-content" style="max-width: 650px;">
+  <div style="text-align:center; margin-top: 10px;">
+  <label for="verseCardTheme">Theme:</label>
+  <select id="verseCardTheme">
+    <option value="sunset" selected>Sunset</option>
+    <option value="midnight">Midnight</option>
+    <option value="aqua">Aqua</option>
+    <option value="custom">Custom</option>
+  </select>
+</div>
+
+
+    <span id="closeVerseImageModal" class="close-button">&times;</span>
+    <h2 style="text-align:center;">Shareable Verse Card</h2>
+    <div id="verseImagePreviewContainer" style="margin-top: 20px; text-align: center;"></div>
+    <div class="modal-actions" style="text-align: center; margin-top: 20px;">
+	<div style="text-align:center; margin-top: 10px;">
+  <input type="text" id="verseCardFooter" placeholder="Custom footer (optional)" style="width:80%;padding:2px;">
+</div>
+<div style="display:flex; justify-content:center; gap:15px; margin-top:10px; flex-wrap: wrap;">
+  <div>
+    <label for="verseCardFont">Font:</label><br>
+    <select id="verseCardFont">
+      <option value="Georgia" selected>Georgia</option>
+      <option value="Arial">Arial</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Trebuchet MS">Trebuchet MS</option>
+    </select>
+  </div>
+  <div>
+    <label for="verseCardAlign">Text Align:</label><br>
+    <select id="verseCardAlign">
+      <option value="center" selected>Center</option>
+      <option value="left">Left</option>
+      <option value="right">Right</option>
+    </select>
+  </div>
+  <div>
+  <label for="verseCardTextSize">Text Size:</label><br>
+  <select id="verseCardTextSize">
+    <option value="medium" selected>Medium</option>
+    <option value="small">Small</option>
+    <option value="large">Large</option>
+  </select>
+</div>
+
+<div>
+  <label for="verseCardTextColor">Text Color:</label><br>
+  <input type="color" id="verseCardTextColor" value="#333333">
+</div>
+  <div>
+    <label for="verseCardLogo">Upload Logo:</label><br>
+    <input type="file" id="verseCardLogo" accept="image/*">
+  </div>
+  <div>
+    <label for="verseCardBgImage">Background Image:</label><br>
+    <input type="file" id="verseCardBgImage" accept="image/*">
+  </div>
+</div>
+      <button id="downloadVerseImageBtn">Download</button>
+      <button id="copyVerseImageBtn">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+<div id="verseActionPopup" class="verse-action-popup hidden">
+  <i class="fas fa-share-alt action-icon" title="Share"></i>
+  <i class="fas fa-highlighter action-icon" title="Highlight"></i>
+  <i class="fas fa-sticky-note action-icon" title="Note"></i>
+  <i class="fas fa-bookmark action-icon" title="Bookmark"></i>
+  <i class="fas fa-image action-icon" title="Verse Card"></i>
+</div>
+<div id="highlightColorPicker" class="highlight-color-picker hidden">
+  <div class="color-option" data-color="yellow" style="background-color: #fff58c;"></div>
+  <div class="color-option" data-color="green" style="background-color: #b9fbc0;"></div>
+  <div class="color-option" data-color="blue" style="background-color: #a0c4ff;"></div>
+  <div class="color-option" data-color="pink" style="background-color: #ffc6ff;"></div>
+  <div class="color-option" data-color="orange" style="background-color: #ffd6a5;"></div>
+</div>
+</body>
+</html>
