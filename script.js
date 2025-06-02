@@ -1279,12 +1279,14 @@ function openIndexedDB() {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onupgradeneeded = (event) => {
+  const db = event.target.result;
   if (!db.objectStoreNames.contains('highlights')) {
-    db.createObjectStore('highlights', { keyPath: 'id', autoIncrement: true })
-      .createIndex('byVerse', ['versionName','bookNumber','chapter','verse'], { unique: false });
+    const highlightsStore = db.createObjectStore('highlights', {
+      keyPath: 'id',
+      autoIncrement: true
+    });
   }
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
+             if (!db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
                 db.createObjectStore(OBJECT_STORE_NAME, { keyPath: 'versionName' });
             }
             if (!db.objectStoreNames.contains(COMMENTARY_STORE_NAME)) {
