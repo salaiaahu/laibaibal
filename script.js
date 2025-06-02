@@ -3971,7 +3971,7 @@ async function initializeApp() {
     }
     try {
         statusMessage.textContent = 'Initializing SQL.js...';
-        SQL = await window.initSqlJs({ locateFile: file => `/laibaibal/sql-wasm.js` });
+        SQL = await window.initSqlJs({ locateFile: file => `/laibaibal/sql-wasm.wasm` });
         console.log('DEBUG: SQL.js initialized.');
         statusMessage.textContent = 'SQL.js initialized.';
         
