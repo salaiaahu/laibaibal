@@ -71,7 +71,7 @@ const PREDEFINED_RESOURCES = [
     {
         name: "NASB",
         type: "bible",
-        url: "https://raw.githubusercontent.com/salaiaahu/baibalca/main/NASB'95.SQLite3",
+        url: "https://raw.githubusercontent.com/salaiaahu/baibalca/main/NASB%2795.SQLite3",
         description: "New American Standard Bible"
     },
     {
@@ -89,7 +89,7 @@ const PREDEFINED_RESOURCES = [
     {
         name: "EASY'18", 
         type: "commentary",
-        url: "https://raw.githubusercontent.com/salaiaahu/baibalca/main/EASY'18.commentaries.SQLite3",
+        url: "https://raw.githubusercontent.com/salaiaahu/baibalca/main/EASY%2718.commentaries.SQLite3",
         description: "EASY'18 Commentary"
     },
     {
@@ -1279,9 +1279,10 @@ function openIndexedDB() {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onupgradeneeded = (event) => {
-			if (!db.objectStoreNames.contains('highlights')) {
-			db.createObjectStore('highlights', { keyPath: 'id' });
-			}
+  if (!db.objectStoreNames.contains('highlights')) {
+    db.createObjectStore('highlights', { keyPath: 'id', autoIncrement: true })
+      .createIndex('byVerse', ['versionName','bookNumber','chapter','verse'], { unique: false });
+  }
             const db = event.target.result;
             if (!db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
                 db.createObjectStore(OBJECT_STORE_NAME, { keyPath: 'versionName' });
