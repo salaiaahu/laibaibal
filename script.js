@@ -130,6 +130,14 @@ const PRELOADED_RESOURCES_MANAGER = {
 };
 
 // --- DOM Elements ---
+const hamburgerMenuBtn = document.getElementById('hamburgerMenuBtn');
+const slideMenu = document.getElementById('slideMenu');
+const slideMenuOverlay = document.getElementById('slideMenuOverlay');
+const closeSlideMenuBtn = document.getElementById('closeSlideMenuBtn');
+
+const slideMenuManageBiblesBtn = document.getElementById('slideMenuManageBiblesBtn');
+const slideMenuManageCommentariesBtn = document.getElementById('slideMenuManageCommentariesBtn');
+const slideMenuMyDataBtn = document.getElementById('slideMenuMyDataBtn');
 // Top Bar
 const primaryVersionSelect = document.getElementById('primaryVersionSelect');
 const secondaryVersionSelect = document.getElementById('secondaryVersionSelect');
@@ -271,6 +279,53 @@ let latestSelectedText = '';
 
 
 // -------- NEW FUNCTIONS ---------
+///////--------- sliding menu
+function setupSlideMenuListeners() {
+    if (hamburgerMenuBtn && slideMenu && slideMenuOverlay) {
+        hamburgerMenuBtn.addEventListener('click', () => {
+            console.log("Hamburger menu button clicked");
+            slideMenu.classList.remove('hidden'); // Or .add('open') if using that for animation
+            slideMenuOverlay.classList.remove('hidden');
+        });
+
+        const closeMenu = () => {
+            slideMenu.classList.add('hidden'); // Or .remove('open')
+            slideMenuOverlay.classList.add('hidden');
+        };
+
+        if (closeSlideMenuBtn) {
+            closeSlideMenuBtn.addEventListener('click', closeMenu);
+        }
+        slideMenuOverlay.addEventListener('click', closeMenu);
+
+        // Listeners for items within the slide menu
+        if (slideMenuManageBiblesBtn && uploadPanel) {
+            slideMenuManageBiblesBtn.addEventListener('click', () => {
+                console.log("Manage Bibles from slide menu clicked");
+                showPanel(uploadPanel);
+                closeMenu();
+            });
+        }
+        if (slideMenuManageCommentariesBtn && commentaryUploadPanel) {
+            slideMenuManageCommentariesBtn.addEventListener('click', () => {
+                console.log("Manage Commentaries from slide menu clicked");
+                showPanel(commentaryUploadPanel);
+                closeMenu();
+            });
+        }
+        if (slideMenuMyDataBtn && userDataPanel) {
+            slideMenuMyDataBtn.addEventListener('click', () => {
+                console.log("My Data from slide menu clicked");
+                showPanel(userDataPanel);
+                updateUserDataPanel('highlights'); // Default to highlights tab
+                closeMenu();
+            });
+        }
+        console.log("Slide menu listeners configured.");
+    } else {
+        console.error("One or more slide menu elements not found.");
+    }
+}
 // --------- preload helper ----------//
 async function fetchFileFromUrl(url) {
     console.log("Attempting to fetch from URL:", url);
@@ -515,25 +570,25 @@ function populateBibleVersionModal() {
 }
 
 function populateCommentaryModal() {
-    if (!popupCommentaryList) return;
-    popupCommentaryList.innerHTML = ''; // Clear previous
+    if (!popupCommentaryList || !commentarySelectModal) return; // Add check for modal
+    popupCommentaryList.innerHTML = ''; 
 
-    // Add "None" option
+    // "None" option
     const noneButton = document.createElement('button');
-    noneButton.classList.add('popup-list-item');
+    noneButton.classList.add('popup-list-item'); // Use common class
     noneButton.textContent = "-- None --";
-    noneButton.dataset.value = "";
+    noneButton.dataset.value = ""; // Empty value for "None"
     if (!activeCommentary) {
         noneButton.classList.add('selected-item');
     }
     noneButton.addEventListener('click', async () => {
-        await setActiveCommentary("");
-        populateCommentaryModal();
-        commentarySelectModal.classList.add('hidden');
+        await setActiveCommentary(""); // Set active commentary to none
+        // populateCommentaryModal(); // Re-populate to update selection (optional if closing immediately)
+        commentarySelectModal.classList.add('hidden'); // Auto-close
     });
     popupCommentaryList.appendChild(noneButton);
 
-    // Add loaded commentaries
+    // Loaded commentaries
     const commentaries = Object.keys(loadedCommentaries);
     commentaries.forEach(commentaryName => {
         const button = document.createElement('button');
@@ -545,11 +600,12 @@ function populateCommentaryModal() {
         }
         button.addEventListener('click', async () => {
             await setActiveCommentary(commentaryName);
-            populateCommentaryModal(); // Re-populate to update selection
-            commentarySelectModal.classList.add('hidden');
+            // populateCommentaryModal(); // Re-populate to update selection (optional if closing immediately)
+            commentarySelectModal.classList.add('hidden'); // Auto-close
         });
         popupCommentaryList.appendChild(button);
     });
+    console.log("Commentary modal populated.");
 }
 
 function populateThemeModal() {
@@ -664,66 +720,84 @@ function setupNavigationListeners() {
 }
 
 function setupPopupTriggersAndModals() {
-    // Close buttons for all new modals
-    document.querySelectorAll('.close-selection-modal-btn').forEach(btn => {
+    // Helper to close all these specific selection modals
+    const closeAllPopups = () => {
+        if (bibleVersionSelectModal) bibleVersionSelectModal.classList.add('hidden');
+        if (commentarySelectModal) commentarySelectModal.classList.add('hidden');
+        if (themeSelectModal) themeSelectModal.classList.add('hidden');
+    };
+
+    // Generic close buttons for these modals (the '×' button)
+    document.querySelectorAll('.selection-modal .close-selection-modal-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            const modalId = btn.dataset.modalId;
-            if (modalId && document.getElementById(modalId)) {
-                document.getElementById(modalId).classList.add('hidden');
-            } else { // Fallback if data-modal-id is not set, closes parent modal
-                btn.closest('.selection-modal').classList.add('hidden');
+            const modalToClose = btn.closest('.selection-modal');
+            if (modalToClose) {
+                modalToClose.classList.add('hidden');
             }
         });
     });
-    // --- Bible Version Modal ---
-    if (bibleVersionPopupBtn) {
+
+    // --- Bible Version Selection Modal ---
+    if (bibleVersionPopupBtn && bibleVersionSelectModal && popupPrimaryVersionSelect && popupSecondaryVersionSelect) {
         bibleVersionPopupBtn.addEventListener('click', () => {
-            closeAllSelectionModals(); // Close others
-            populateBibleVersionModal();
+            closeAllPopups(); // Close any other open selection popups
+            populateBibleVersionModal(); // Populate with current selections and options
             bibleVersionSelectModal.classList.remove('hidden');
         });
-    }
-    if (popupPrimaryVersionSelect) {
+
         popupPrimaryVersionSelect.addEventListener('change', async (e) => {
+            console.log("Primary version selected in popup:", e.target.value);
             await setActiveVersion('primary', e.target.value);
-            populateBibleVersionModal(); // Re-populate to update current display
-            // Optionally close modal on selection, or wait for "Apply" button if you add one
-            // bibleVersionSelectModal.classList.add('hidden'); 
+            populateBibleVersionModal(); // Update current version display in modal & main icon
+            bibleVersionSelectModal.classList.add('hidden'); // Auto-close
         });
-    }
-    if (popupSecondaryVersionSelect) {
+
         popupSecondaryVersionSelect.addEventListener('change', async (e) => {
+            console.log("Secondary version selected in popup:", e.target.value);
             await setActiveVersion('secondary', e.target.value);
-            populateBibleVersionModal();
-            // bibleVersionSelectModal.classList.add('hidden');
+            populateBibleVersionModal(); // Update current version display in modal & main icon
+            bibleVersionSelectModal.classList.add('hidden'); // Auto-close
         });
+    } else {
+        console.error("Bible version popup trigger or modal elements not found.");
     }
 
-    // --- Commentary Modal ---
-    if (commentaryPopupBtn) {
+    // --- Commentary Selection Modal ---
+    if (commentaryPopupBtn && commentarySelectModal && popupCommentaryList) {
         commentaryPopupBtn.addEventListener('click', () => {
-            closeAllSelectionModals();
-            populateCommentaryModal();
+            closeAllPopups();
+            populateCommentaryModal(); // Populates the list and sets up internal click listeners
             commentarySelectModal.classList.remove('hidden');
         });
+        // Note: The click listeners for individual commentary buttons inside populateCommentaryModal
+        // should already handle setActiveCommentary and then closing the modal.
+        // We'll ensure that logic is in populateCommentaryModal.
+    } else {
+        console.error("Commentary popup trigger or modal elements not found.");
     }
 
-    // --- Theme Modal ---
-    if (themePopupBtn) {
+    // --- Theme Selection Modal ---
+    if (themePopupBtn && themeSelectModal && popupThemeList) {
         themePopupBtn.addEventListener('click', () => {
-            closeAllSelectionModals();
-            populateThemeModal(); // To mark current theme as selected
+            closeAllPopups();
+            populateThemeModal(); // Marks the current theme as selected
             themeSelectModal.classList.remove('hidden');
         });
-    }
-    if (popupThemeList) {
+
+        // Event listeners for theme buttons within the popup
         popupThemeList.querySelectorAll('.theme-option-button').forEach(button => {
-            button.addEventListener('click', () => {
-                applyTheme(button.dataset.value);
-                populateThemeModal(); // Re-mark selected
-                // themeSelectModal.classList.add('hidden'); // Optionally close
+            // Remove old listener before adding new one to prevent duplication if this setup runs multiple times
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+
+            newButton.addEventListener('click', () => {
+                applyTheme(newButton.dataset.value); // Applies the theme
+                populateThemeModal();             // Updates the selected item in the popup
+                themeSelectModal.classList.add('hidden'); // Auto-close
             });
         });
+    } else {
+        console.error("Theme popup trigger or modal elements not found.");
     }
 }
 
@@ -903,7 +977,7 @@ async function populateChapterGrid(book) { // Takes book object
         chapterDataWithCounts.forEach(({ chapterNumber, verseCount }) => {
             const chapterItem = document.createElement('div');
             chapterItem.classList.add('grid-item');
-            chapterItem.innerHTML = `<span class="chapter-number">${chapterNumber}</span><span class="verse-count">${verseCount} verses</span>`;
+            chapterItem.innerHTML = `<span class="chapter-number">${chapterNumber}</span><span class="verse-count">${verseCount} </span>`;
             chapterItem.dataset.chapter = chapterNumber;
 
             chapterItem.addEventListener('click', () => {
@@ -2204,7 +2278,7 @@ async function showChaptersGrid(book) {
             const chapterItem = document.createElement('div');
             chapterItem.classList.add('grid-item'); // Use new professional styling class
             // Add new structure for chapter number and verse count
-            chapterItem.innerHTML = `<span class="chapter-number">${chapterNumber}</span><span class="verse-count">${verseCount} verses</span>`;
+            chapterItem.innerHTML = `<span class="chapter-number">${chapterNumber}</span><span class="verse-count">${verseCount} </span>`;
             chapterItem.dataset.chapter = chapterNumber;
 
             chapterItem.addEventListener('click', () => {
@@ -4114,7 +4188,7 @@ async function initializeApp() {
         setupNavigationListeners();     // For book/chapter/verse navigator panel (triggered by currentChapterDisplay click & its internal back/close buttons)
         setupThemeControls();           // For theme modal trigger and theme application
         setupPopupTriggersAndModals();  // For Bible version, commentary, theme popups (opening them and handling selections)
-
+		setupSlideMenuListeners();
         // ----- Other Global Event Listeners that were in your initializeApp -----
 	if (addVersionBtn) {
     addVersionBtn.addEventListener('click', () => {
@@ -4588,10 +4662,30 @@ if (toggleViewBtn) {
                 el.addEventListener(eventType, updateVerseImagePreview);
             }
         });
+		
         const downloadVerseImgBtn = document.getElementById('downloadVerseImageBtn');
-        if(downloadVerseImgBtn) downloadVerseImgBtn.addEventListener('click', ()/*: void*/ => { /* your download logic */ });
+        if(downloadVerseImgBtn) downloadVerseImgBtn.addEventListener('click', ()/*: void*/ => { 
+					if (!lastGeneratedCanvas) return;
+			const link = document.createElement('a');
+			link.download = `verse-card.png`;
+			link.href = lastGeneratedCanvas.toDataURL('image/png');
+			link.click();
+		});
+		
         const copyVerseImgBtn = document.getElementById('copyVerseImageBtn');
-        if(copyVerseImgBtn) copyVerseImgBtn.addEventListener('click', async () => { /* your copy logic */ });
+        if(copyVerseImgBtn) copyVerseImgBtn.addEventListener('click', async () => {
+						if (!lastGeneratedCanvas) return;
+			try {
+				const blob = await new Promise(resolve => lastGeneratedCanvas.toBlob(resolve));
+				await navigator.clipboard.write([
+					new ClipboardItem({ 'image/png': blob })
+				]);
+				alert('Image copied to clipboard!');
+			} catch (e) {
+				console.error('Clipboard error:', e);
+				alert('Failed to copy image. Try downloading instead.');
+			}
+		});
 
 
         // Scroll Sync
