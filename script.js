@@ -39,7 +39,7 @@ let isScrollingProgrammatically = false;
 
 // IndexedDB Constants (Updated Version for new stores)
 const DB_NAME = 'BibleReaderDB';
-const DB_VERSION = 2; // INCREMENTED VERSION FOR NEW OBJECT STORES
+const DB_VERSION = 1; // INCREMENTED VERSION FOR NEW OBJECT STORES
 const OBJECT_STORE_NAME = 'bibleVersions';
 const COMMENTARY_STORE_NAME = 'commentaryVersions';
 const HIGHLIGHTS_STORE_NAME = 'highlights'; // NEW
@@ -105,7 +105,7 @@ const PRELOADED_RESOURCES_MANAGER = {
     key: 'bibleReaderAppPreloaded', // localStorage key to track preloaded resources
     // Increment this version if you change the PREDEFINED_RESOURCES list
     // to force a re-check and potential re-load/addition of new items.
-    batchVersion: 'preload_v1.0.0', 
+    batchVersion: 'preload_v1.0.1', 
     
     getPreloadedStatus: function() {
         try {
