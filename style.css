@@ -326,7 +326,7 @@ html, body {
     background-color: #4CAF50;
     color: white;
     border: none;
-    padding: 8px 12px;
+    padding: 1px 2px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
@@ -541,7 +541,7 @@ html, body {
 .verse-count {
     font-size: 0.7em;
     color: #6b7280; /* Tailwind gray-500 */
-    margin-top: 3px; /* Small gap from chapter number */
+    margin-top: 5px; /* Small gap from chapter number */
     display: block;
 }
 
@@ -662,7 +662,15 @@ html, body {
 	padding: 5px;
 
 }
-
+#upload-panel h3, #commentary-upload-panel h3 { /* "Loaded Versions:" heading */
+    font-size: 1.2em;
+    color: var(--subheading-text-color); /* Use subheading theme color */
+    margin-top: 25px; /* Space above the grid */
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--panel-border-color);
+    text-align: left; /* Override panel's center align if any */
+}
 
 #upload-panel, #commentary-upload-panel, #search-panel, #user-data-panel { /* Common styles for these panels */
     display: flex; /* keep */
@@ -791,7 +799,7 @@ html, body {
 /* Parallel View Specific Styles */
 .parallel-container {
     display: flex;
-    gap: 20px;
+    gap: 5px;
     width: 100%;
     flex-grow: 1;
     min-height: 0;
@@ -814,9 +822,9 @@ html, body {
 	font-size: var(--bible-title-font-size);
     text-align: center;
     margin-top: 0;
-    margin-bottom: 5px;
+    margin-bottom: 1px;
     color: var(--column-title-text-color);               /* CHANGED */
-    padding-bottom: 5px;
+    padding-bottom: 1px;
     border-bottom: 1px solid var(--column-title-border-color); /* CHANGED */
     flex-shrink: 0;
 }
@@ -917,14 +925,15 @@ html, body {
 
 h2, h3 {
     color: #2c3e50;
+	font-size: 1.0em;
     text-align: center;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: 1px;
+    margin-bottom: 1px;
 }
 
 .subheading {
 	font-size: var(--bible-subheading-font-size);
-    font-size: 1.2em;
+    font-size: 0.9em;
     font-weight: bold;
     color: var(--subheading-text-color);  
     margin-top: 0.1em;
@@ -966,13 +975,15 @@ h2, h3 {
 
 footer {
     text-align: center;
-
     color: #666;
 	max-height: 30px;
     font-size: 0.9em;
     background: var(--panel-bg-color);
     border-top: 1px solid #ccc;
     flex-shrink: 0;
+}
+footer p{
+	margin-top: 2px;
 }
 
 /* Modal styles (general) */
@@ -1007,8 +1018,8 @@ footer {
 
 #commentaryModalTitle { /* This contains the title and the tabs */
     margin-top: 0;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
+    margin-bottom: 0
+    padding-bottom: 0;
     border-bottom: 1px solid var(--modal-border-color);
     flex-shrink: 0; /* Prevent title/tabs from shrinking if text is long */
     /* Ensure title and tabs within it don't cause overflow themselves */
@@ -1063,13 +1074,13 @@ footer {
 
 /* Note Modal Specifics */
 #noteModalTitle {
-    font-size: 1.5em; /* Larger title */
+    font-size: 1.1em; /* Larger title */
     font-weight: 600; /* Semi-bold */
     color: var(--modal-title-text-color);
     text-align: center;
     margin-top: 0; /* Already good */
-    margin-bottom: 20px; /* More space below title */
-    padding-right: 25px; /* Ensure it doesn't overlap with a far-right close button */
+    margin-bottom: 5px; /* More space below title */
+    padding-right: 5px; /* Ensure it doesn't overlap with a far-right close button */
 }
 
 #noteTextarea {
@@ -1411,44 +1422,299 @@ footer {
     color: #333;
 }
 .selection-modal-content {
-	padding: 15px;
-	margin-bottom: 0;
-	
+    background-color: var(--modal-content-bg-color);
+    color: var(--main-text-color); /* Default text color for content inside */
+    padding: 20px 25px 25px 25px; /* Balanced padding */
+    border-radius: 8px;
+    box-shadow: var(--modal-shadow, 0 6px 18px rgba(0,0,0,0.25)); /* More defined shadow */
+    width: 100%;
+    max-width: 380px; /* Adjust max-width as needed */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--modal-border-color);
 }
+.selection-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--modal-border-color);
+}
+
+.selection-modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600; /* Semi-bold */
+    color: var(--modal-title-text-color); /* Ensure this uses themed title color */
+}
+.close-selection-modal-btn { /* The '×' button */
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    color: var(--main-text-color);
+    opacity: 0.6;
+    cursor: pointer;
+    padding: 0 4px; /* Slight padding for click area */
+    line-height: 1;
+}
+.close-selection-modal-btn:hover {
+    opacity: 1;
+    color: var(--accent-color); /* Or a specific close-hover color */
+}
+/* --- Bible Version Selection Specifics --- */
+.bible-version-choice {
+    margin-bottom: 20px;
+}
+.bible-version-choice label {
+    display: flex; /* Align label text and current version span */
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--main-text-color);
+}
+.bible-version-choice label span#currentPopupPrimaryVersion,
+.bible-version-choice label span#currentPopupSecondaryVersion {
+    font-weight: normal;
+    font-style: italic;
+    font-size: 0.8em;
+    color: var(--main-text-color); /* Or a muted version */
+    opacity: 0.7;
+}
+
+.popup-select { /* <select> elements in Bible version popup */
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 5px;
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    /* Consider basic custom dropdown arrow if desired, or leave as native */
+}
+.popup-select:focus {
+    outline: none;
+    border-color: var(--input-focus-border-color);
+    box-shadow: 0 0 0 2px var(--accent-color-transparent, rgba(0, 123, 255, 0.2)); /* Use accent color for focus glow */
+}
+
+/* --- Commentary & Theme Item Lists (Buttons) --- */
+.popup-item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Space between list items */
+    max-height: 300px; /* Max height before scrolling */
+    overflow-y: auto;
+    margin-bottom: 15px; /* Space before any action button below list */
+    padding-right: 5px; /* Give scrollbar some space */
+}
+
+.popup-item-list button.popup-list-item,
+.popup-item-list button.theme-option-button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px; /* Good padding */
+    background-color: var(--input-bg-color); /* Use a subtle background, consistent with inputs */
+    color: var(--main-text-color);
+    border: 1px solid var(--input-border-color);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 400; /* Normal weight for items */
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.popup-item-list button.popup-list-item:hover,
+.popup-item-list button.theme-option-button:hover {
+    background-color: var(--subtle-hover-bg-color, var(--main-bg-color)); /* Define --subtle-hover-bg-color or use main bg */
+    border-color: var(--accent-color); /* Accent border on hover */
+    color: var(--accent-color); /* Accent text on hover */
+}
+
+.popup-item-list button.popup-list-item.selected-item,
+.popup-item-list button.theme-option-button.selected-item {
+    background-color: var(--accent-color);
+    color: var(--accent-text-color);
+    font-weight: 600; /* Bolder for selected item */
+    border-color: var(--accent-color);
+}
+
+/* Optional: An "Apply" button if needed for Bible Version Modal */
+.selection-modal-content .modal-action-button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    background-color: var(--accent-color);
+    color: var(--accent-text-color);
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px; /* Space above button if list is present */
+    text-align: center;
+}
+.selection-modal-content .modal-action-button:hover {
+    opacity: 0.85;
+}
+
+/* --- Sliding Menu --- */
+.slide-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Dimming overlay */
+    z-index: 1090; /* Below menu, above other content */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+.slide-menu-overlay:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0s linear 0s;
+}
+
+.slide-menu {
+    position: fixed;
+    top: 0;
+    left: -300px; /* Start off-screen (adjust width as needed) */
+    width: 280px;  /* Width of the menu */
+    max-width: 80%; /* Max width for smaller screens */
+    height: 100%;
+    background-color: var(--sidebar-bg-color, #34495e); /* Use sidebar theme color */
+    color: var(--sidebar-text-color, #fff);
+    box-shadow: 3px 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 1100; /* Above overlay */
+    display: flex;
+    flex-direction: column;
+    transition: left 0.3s ease-in-out;
+}
+.slide-menu:not(.hidden) { /* Or use a class like .open */
+    left: 0; /* Slide in */
+}
+
+.slide-menu-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--sidebar-border-color, rgba(255,255,255,0.1));
+    flex-shrink: 0;
+}
+.menu-title-icon {
+    font-size: 1.5em;
+    margin-right: 10px;
+}
+.menu-title-text {
+    font-size: 1.2em;
+    font-weight: bold;
+    flex-grow: 1;
+}
+.menu-close-btn { /* Style for close button inside menu */
+    color: var(--sidebar-text-color); /* Ensure it's visible on menu background */
+    font-size: 1.5em; /* Match other close buttons */
+}
+.menu-close-btn:hover {
+    background-color: var(--sidebar-hover-bg-color, rgba(255,255,255,0.1));
+}
+
+
+ul.slide-menu-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+    overflow-y: auto; /* If many menu items */
+}
+.slide-menu-items li button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 15px 20px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid var(--sidebar-border-color, rgba(255,255,255,0.1));
+    color: var(--sidebar-text-color);
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.slide-menu-items li:last-child button {
+    border-bottom: none;
+}
+.slide-menu-items li button:hover {
+    background-color: var(--sidebar-hover-bg-color, #4a6582);
+}
+.menu-item-icon {
+    font-size: 1.1em;
+    margin-right: 15px;
+    width: 20px; /* For alignment */
+    text-align: center;
+}
+
+.slide-menu-footer {
+    padding: 15px 20px;
+    text-align: center;
+    font-size: 0.85em;
+    border-top: 1px solid var(--sidebar-border-color, rgba(255,255,255,0.1));
+    color: var(--sidebar-text-color);
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+#hamburgerMenuBtn {
+    /* font-size: 1.2em; /* Slightly larger if desired */
+    margin: 10px 5px; 
+}
+
+
+/*------------------- MOBILE VIEW START HERE ------------------- */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    #top-bar {
-        flex-direction: row; /* Attempt to keep in a row */
-        flex-wrap: wrap;     /* Allow to wrap to a second line if necessary */
-        justify-content: space-between; /* Space out the main groups */
-        align-items: center;
-        padding: 3px 5px; /* Reduced padding */
-    }
-    footer {
-        display: none;
-    }
-    .top-group {
-        width: auto; /* Don't force full width for each group */
-        margin-bottom: 0; /* Remove if they are inline */
-        justify-content: center; /* Center items within their group */
-        /* gap: 4px; /* Minimal gap for very small screens */
-    }
-    #top-bar-group-left {
-        display: inline-flex; /* Ensure items are inline */
-        align-items: center;
-        /* flex-basis: 180px; /* Example: give it some base width */
-        /* flex-shrink: 1; */
-        /* flex-grow: 1; */
-    }
-    #top-bar-group-right {
-        display: inline-flex;
-        align-items: center;
-        flex-wrap: nowrap; /* Try to keep icons in one line, may need to hide some */
-        overflow-x: auto; /* If too many icons, allow horizontal scroll for this group */
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-    }
+#top-bar {
+    flex-direction: row;    /* Keep groups in a row */
+    flex-wrap: nowrap;      /* PREVENT groups from wrapping to new line */
+    justify-content: space-between;/* Space out the main groups */
+    align-items: center;    /* Vertically align items in the bar */
+    padding: 0;       /* <<< MINIMAL top/bottom and side padding for the entire bar */
+    height: auto;           /* Let content define height, but will be constrained by items */
+    gap: 1px;      
+	width: 100%;
+}
+
+.top-group {
+    width: auto;            /* Group takes its content's width */
+    margin-bottom: 0;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 1;           /* Allow groups to shrink */
+    flex-grow: 0;           /* Groups don't expand beyond content unless specified */
+    gap: 0;               /* <<< MINIMAL gap between items *within* a group */
+}
+
+/* Specific group for Bible icon & Chapter Nav */
+#top-bar-group-left {
+    display: flex; /* Ensure it's flex if not already */
+    align-items: center;
+    /* flex-grow: 1; /* Remove or reduce grow, let content dictate size initially */
+    /* min-width: auto; /* Allow to be more compact */
+}
+
+/* Group 2: Remaining Tools & Settings Icons */
+#top-bar-group-right {
+    display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-right: 10px;
+}
     #top-bar-group-right::-webkit-scrollbar { /* Chrome, Safari, Opera */
         display: none;
     }
@@ -1465,26 +1731,75 @@ footer {
         display: none;
     }
 
-    .top-group.navigation-controls .chapter-display {
-        font-size: 1rem;    /* Smaller chapter display text */
-        padding: 6px 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 140px; /* Prevent it from taking too much space */
-        text-align: center;
+    .top-bar-icon-btn {
+        background-color: transparent !important; /* Remove buttony background */
+        border: none !important;
+        padding: 1px; /* Minimal padding around icon */
+        margin: 0 1px; /* Minimal margin */
+        font-size: 1.2em; /* Adjust icon size as needed */
+        color: var(--top-bar-text-color); /* Ensure icon color is from theme */
+
     }
-.selection-modal-content {
-	padding: 10px;
-	margin-bottom: 0;
-	
+    .top-bar-icon-btn:hover {
+        background-color: var(--top-bar-button-hover-bg-color, rgba(255,255,255,0.15)) !important; /* Subtle hover */
+    }
+.top-group .checkbox-label-text { /* If you have <span class="checkbox-label-text"> */
+    display: none; 
 }
-    #toggleCommentaryUploadBtn, #toggleViewBtn, #toggleSearchBtn, #toggleFileUploadBtn, #toggleUserDataBtn {
+/* Specific styling for the Bible Version popup trigger with indicators */
+#bibleVersionPopupBtn {
+    padding: 6px 8px; /* Base padding */
+    padding-right: 15px; /* Extra space on the right if indicators are absolutely positioned there */
+}
+
+#bibleVersionPopupBtn .version-indicator {
+    /* Your existing styles for indicators are likely fine, just ensure they fit with smaller button */
+    font-size: 0.5em; /* Even smaller */
+    width: 10px;
+    height: 10px;
+    /* Adjust top/right if needed */
+}
+#bibleVersionPopupBtn .version-indicator.primary { top: 1px; right: 6px; }
+#bibleVersionPopupBtn .version-indicator.secondary { bottom: 1px; right: -2px; }
+
+
+/* Ensure the icon toggle for multi-commentary is also compact */
+.icon-toggle-label {
+    cursor: pointer;
+    padding: 1px 2px; /* From .top-bar-icon-btn if it inherits, or set directly */
+    display: inline-flex; /* Should already make children inline */
+    align-items: center;  /* Should vertically align children */
+    border-radius: 4px;
+    position: relative; /* In case hidden-checkbox needs it */
+}
+.multi-commentary-icon { /* The <i> tag */
+    font-size: 1.1em; 
+    color: var(--top-bar-text-color);
+    transition: color 0.2s ease;
+}
+
+.chapter-nav-btn { /* Class for #prevChapterBtn and #nextChapterBtn */
+    padding: 0;   /* Reduced padding */
+    font-size: 0.85rem; /* Slightly smaller icon if using em-based icon sizing */
+    line-height: 1;     /* Ensure icon is vertically centered if it's text-based */
+}
+
+/* Current Chapter Display (e.g., "Gen 1") */
+#currentChapterDisplay {
+    font-size: 0.9rem;
+    font-weight: 500; /* Normal or slightly bolder */
+    padding: 0;   /* <<< MINIMAL padding */
+    margin: 0 1px;      /* <<< MINIMAL margin */
+    line-height: 1.2;   /* Adjust for tight vertical fit */
+    max-width: 80px;    /* Reduce max-width further if needed */
+    /* ... (keep text-overflow: ellipsis etc.) ... */
+}
+    #toggleCommentaryUploadBtn, #toggleViewBtn,  #toggleSearchBtn, #toggleFileUploadBtn, #toggleUserDataBtn {
         width: auto;
         flex-grow: 1;
         margin-bottom: 5px;
 		flex-wrap: wrap;
-		gap: 8px; 
+		gap: 1px; 
     }
     #main-content-area {
         flex-direction: column;
@@ -1529,6 +1844,46 @@ footer {
         flex-grow: 1;
         margin: 2px 0;
     }
+	.items-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Increased min item width for better spacing */
+    gap: 10px;
+    padding: 10px 0; /* Add some vertical padding */
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+}
+
+/*////////////////////////////////////////////////////////////////////// */
+
+.selection-modal { /* The outer modal container (backdrop) */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.55); /* Slightly darker backdrop for more focus */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    padding: 15px; /* So modal doesn't touch screen edges */
+    box-sizing: border-box;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease-out, visibility 0s linear 0.25s; /* Smooth fade */
+}
+.selection-modal:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.25s ease-out, visibility 0s linear 0s;
+}
+.selection-modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s; /* Delay hiding until fade out */
 }
 .highlight-color-picker {
   position: absolute;
@@ -1561,91 +1916,98 @@ footer {
 /* Container for the grid of loaded Bibles/Commentaries */
 .items-grid-container {
     display: grid;
-    /* Adjust minmax for desired item width. 200px is a good start. */
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-    gap: 16px; /* Space between items */
-    padding: 10px 0; /* Add some vertical padding */
-    margin-top: 10px; /* Space from the "Loaded..." heading */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Increased min item width for better spacing */
+    gap: 16px;
+    padding: 15px 0; /* Add some vertical padding */
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* Styling for each item (Bible/Commentary) in the grid */
+/* Styling for each item (Bible/Commentary) in the grid - "Card" styling */
 .grid-list-item {
     display: flex;
-    align-items: center; /* Vertically align icon, name, and button */
-	max-width: 150px;
-    background-color: var(--panel-bg-color, #fff); /* Use theme variable, fallback to white */
-    border: 1px solid var(--panel-border-color, #e0e0e0); /* Use theme variable for border */
-    border-radius: 8px; /* More rounded corners */
-    padding: 12px 16px; /* Comfortable padding */
-    box-shadow: var(--panel-shadow, 0 2px 4px rgba(0,0,0,0.08)); /* Use theme variable for shadow */
-    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+    align-items: center;
+    background-color: var(--panel-bg-color); /* Uses panel background, consistent with its container */
+    border: 1px solid var(--panel-border-color); 
+    border-radius: 6px; /* Slightly softer radius */
+    padding: 10px;      /* Increased padding for more internal whitespace */
+    box-shadow: var(--panel-shadow, 0 1px 3px rgba(0,0,0,0.07)); /* Subtle shadow */
+    transition: box-shadow 0.25s ease-in-out, transform 0.25s ease-in-out, border-color 0.25s ease-in-out;
 }
 
 .grid-list-item:hover {
-    transform: translateY(-3px); /* Slight lift effect on hover */
-    box-shadow: 0 5px 12px rgba(0,0,0,0.12); /* More pronounced shadow on hover */
+    transform: translateY(-2px); /* Subtle lift */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1); /* Slightly more pronounced shadow on hover */
+    border-color: var(--accent-color); /* Accent border on hover */
 }
 
 .grid-list-item .item-icon {
-    font-size: 1.6em; /* Size of the Font Awesome icon */
-    color: var(--accent-color, #4CAF50); /* Use your theme's accent color */
-    margin-right: 15px; /* Space between icon and name */
-    flex-shrink: 0; 
+    font-size: 1.8em; /* Larger icon */
+    color: var(--accent-color); 
+    margin-right: 15px;
+    flex-shrink: 0;
+    width: 30px; /* Give icon a fixed width for alignment */
+    text-align: center;
 }
 
 .grid-list-item .item-name {
-    flex-grow: 1; /* Name takes up available space */
-    font-size: 1em;
-    font-weight: 500; /* Medium weight */
-    color: var(--main-text-color, #333); /* Use theme text color */
+    flex-grow: 1;
+    font-size: 1em; /* Standard font size */
+    font-weight: 500; /* Medium weight for readability */
+    color: var(--main-text-color);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap; /* Prevent name from wrapping */
+    white-space: nowrap;
+    line-height: 1.4; /* Ensure good line height if name ever wraps (though it's nowrap) */
 }
 
 .grid-list-item .remove-item-btn {
     background-color: transparent;
     border: none;
-    color: var(--delete-button-bg-color, #dc3545); /* Use a theme variable for delete color */
-    font-size: 1.2em; /* Size of the trash icon */
+    color: var(--main-text-color); /* Muted color for icon initially */
+    opacity: 0.6; /* Make it less prominent until hover */
+    font-size: 1.1em;
     cursor: pointer;
-    padding: 6px; /* Make click area decent */
-    margin-left: 10px; /* Space from the name */
-    border-radius: 50%; /* Round button for icon */
-    width: 32px;   /* Explicit size for the button */
-    height: 32px;
+    padding: 8px; /* Increase click area */
+    margin-left: 12px;
+    border-radius: 50%;
+    width: 36px;  
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
     flex-shrink: 0;
 }
 
 .grid-list-item .remove-item-btn:hover {
-    background-color: rgba(220, 53, 69, 0.1); /* Light red background on hover */
-    color: var(--delete-button-hover-bg-color, #c82333); /* Darker icon color on hover */
+    background-color: var(--delete-button-bg-color, rgba(220, 53, 69, 0.1)); /* Use theme delete color, with fallback for hover bg */
+    color: var(--delete-button-text-color, #c82333); /* Icon becomes more prominent red */
+    opacity: 1;
 }
 
 /* Placeholder text styling within the grid container */
 .items-grid-container .placeholder {
-    grid-column: 1 / -1; /* Make placeholder span all available columns */
+    grid-column: 1 / -1; 
     text-align: center;
-    color: var(--main-text-color, #777); /* Use theme text color, with a fallback */
-    opacity: 0.7;
-    padding: 20px;
+    color: var(--main-text-color); 
+    opacity: 0.6; /* Make placeholder less prominent */
+    padding: 25px;
     font-style: italic;
+    font-size: 0.95em;
 }
 
 /* General styling for the modal title H2 element */
 .modal-content h2#commentaryModalTitle, 
 .modal-content h2#noteModalTitle { /* Apply to other modal titles too */
-    font-size: 1.4em; /* Adjust as desired */
+    font-size: 1.1em; /* Adjust as desired */
     font-weight: 600;
     color: var(--modal-title-text-color); /* <<< USE THEME VARIABLE FOR TEXT */
     text-align: center;
     margin-top: 0;
-    margin-bottom: 10px; /* Space before commentary tabs/nav */
-    padding-bottom: 10px;
+    margin-bottom: 0; /* Space before commentary tabs/nav */
+    padding-bottom: 5px;
     border-bottom: 1px solid var(--modal-border-color);
 }
 
@@ -1655,12 +2017,12 @@ footer {
     flex-wrap: wrap; /* Allow tabs to wrap if many */
     gap: 6px;
     justify-content: center;
-    margin-top: 10px; /* Space between verse label and tabs */
+    margin-top: 5px; /* Space between verse label and tabs */
 }
 
 /* Individual commentary tab buttons */
 #commentaryModalTitle .commentary-tab {
-    padding: 7px 14px; /* More padding */
+    padding: 1px 2px; /* More padding */
     background-color: var(--input-bg-color);    /* <<< USE THEME VARIABLE for background */
     color: var(--main-text-color);           /* <<< USE THEME VARIABLE for text */
     border: 1px solid var(--input-border-color); /* <<< USE THEME VARIABLE for border */
