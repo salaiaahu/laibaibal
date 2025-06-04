@@ -282,11 +282,15 @@ let latestSelectedText = '';
 ///////--------- sliding menu
 function setupSlideMenuListeners() {
     if (hamburgerMenuBtn && slideMenu && slideMenuOverlay) {
-        hamburgerMenuBtn.addEventListener('click', () => {
-            console.log("Hamburger menu button clicked");
-            slideMenu.classList.remove('hidden'); // Or .add('open') if using that for animation
-            slideMenuOverlay.classList.remove('hidden');
-        });
+hamburgerMenuBtn.addEventListener('click', () => {
+    console.log("GitHub Pages: Hamburger clicked!");
+    console.log("GitHub Pages: slideMenu current classes (before):", slideMenu.classList.toString());
+    console.log("GitHub Pages: slideMenuOverlay current classes (before):", slideMenuOverlay.classList.toString());
+    slideMenu.classList.remove('hidden');
+    slideMenuOverlay.classList.remove('hidden');
+    console.log("GitHub Pages: slideMenu current classes (after):", slideMenu.classList.toString());
+    console.log("GitHub Pages: slideMenuOverlay current classes (after):", slideMenuOverlay.classList.toString());
+});
 
         const closeMenu = () => {
             slideMenu.classList.add('hidden'); // Or .remove('open')
