@@ -39,7 +39,7 @@ let isScrollingProgrammatically = false;
 
 // IndexedDB Constants (Updated Version for new stores)
 const DB_NAME = 'BibleReaderDB';
-const DB_VERSION = 1; // INCREMENTED VERSION FOR NEW OBJECT STORES
+const DB_VERSION = 2; // INCREMENTED VERSION FOR NEW OBJECT STORES
 const OBJECT_STORE_NAME = 'bibleVersions';
 const COMMENTARY_STORE_NAME = 'commentaryVersions';
 const HIGHLIGHTS_STORE_NAME = 'highlights'; // NEW
@@ -1278,35 +1278,72 @@ function openIndexedDB() {
         
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-        request.onupgradeneeded = (event) => {
-  const db = event.target.result;
-  if (!db.objectStoreNames.contains('highlights')) {
-    const highlightsStore = db.createObjectStore('highlights', {
-      keyPath: 'id',
-      autoIncrement: true
-    });
-  }
-             if (!db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
-                db.createObjectStore(OBJECT_STORE_NAME, { keyPath: 'versionName' });
-            }
-            if (!db.objectStoreNames.contains(COMMENTARY_STORE_NAME)) {
-                db.createObjectStore(COMMENTARY_STORE_NAME, { keyPath: 'versionName' });
-            }
-            // NEW: Create object stores for user data
-            if (!db.objectStoreNames.contains(HIGHLIGHTS_STORE_NAME)) {
-                const highlightsStore = db.createObjectStore(HIGHLIGHTS_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+request.onupgradeneeded = (event) => {
+    const db = event.target.result;
+    const oldVersion = event.oldVersion;
+    console.log(`DB onupgradeneeded: Upgrading from version ${oldVersion} to ${db.version}.`);
+
+    // Object stores for Bible and Commentary files
+    if (oldVersion < 1 || !db.objectStoreNames.contains(OBJECT_STORE_NAME)) { // OBJECT_STORE_NAME = 'bibleVersions'
+        console.log("DB onupgradeneeded: Creating/ensuring 'bibleVersions' store.");
+        db.createObjectStore(OBJECT_STORE_NAME, { keyPath: 'versionName' });
+    }
+    if (oldVersion < 1 || !db.objectStoreNames.contains(COMMENTARY_STORE_NAME)) { // COMMENTARY_STORE_NAME = 'commentaryVersions'
+        console.log("DB onupgradeneeded: Creating/ensuring 'commentaryVersions' store.");
+        db.createObjectStore(COMMENTARY_STORE_NAME, { keyPath: 'versionName' });
+    }
+
+    // User data stores (Highlights, Notes, Bookmarks) - assume these are new for DB_VERSION = 2
+    // If event.oldVersion is 0, it's a new DB, create everything.
+    // If event.oldVersion is 1, it's an upgrade from v1 to v2, so create these new stores.
+    if (oldVersion < 2) {
+        console.log("DB onupgradeneeded: Version < 2 detected, creating user data stores and indexes.");
+        if (!db.objectStoreNames.contains(HIGHLIGHTS_STORE_NAME)) {
+            console.log("DB onupgradeneeded: Creating highlights store with 'byVerse' index.");
+            const highlightsStore = db.createObjectStore(HIGHLIGHTS_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+            highlightsStore.createIndex('byVerse', ['versionName', 'bookNumber', 'chapter', 'verse'], { unique: false });
+        } else { // Store exists, ensure index exists if upgrading from a version that might not have it
+            const transaction = event.target.transaction; // Get transaction from event
+            const highlightsStore = transaction.objectStore(HIGHLIGHTS_STORE_NAME);
+            if (!highlightsStore.indexNames.contains('byVerse')) {
+                console.log("DB onupgradeneeded: 'highlights' store exists, creating missing 'byVerse' index.");
                 highlightsStore.createIndex('byVerse', ['versionName', 'bookNumber', 'chapter', 'verse'], { unique: false });
             }
-            if (!db.objectStoreNames.contains(NOTES_STORE_NAME)) {
-                const notesStore = db.createObjectStore(NOTES_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+        }
+
+        if (!db.objectStoreNames.contains(NOTES_STORE_NAME)) {
+            console.log("DB onupgradeneeded: Creating notes store with 'byVerse' index.");
+            const notesStore = db.createObjectStore(NOTES_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+            notesStore.createIndex('byVerse', ['versionName', 'bookNumber', 'chapter', 'verse'], { unique: false });
+        } else {
+            const transaction = event.target.transaction;
+            const notesStore = transaction.objectStore(NOTES_STORE_NAME);
+            if (!notesStore.indexNames.contains('byVerse')) {
+                console.log("DB onupgradeneeded: 'notes' store exists, creating missing 'byVerse' index.");
                 notesStore.createIndex('byVerse', ['versionName', 'bookNumber', 'chapter', 'verse'], { unique: false });
             }
-            if (!db.objectStoreNames.contains(BOOKMARKS_STORE_NAME)) {
-                const bookmarksStore = db.createObjectStore(BOOKMARKS_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+        }
+
+        if (!db.objectStoreNames.contains(BOOKMARKS_STORE_NAME)) {
+            console.log("DB onupgradeneeded: Creating bookmarks store with 'byVerse' and 'byCategory' indexes.");
+            const bookmarksStore = db.createObjectStore(BOOKMARKS_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+            bookmarksStore.createIndex('byVerse', ['versionName', 'bookNumber', 'chapter', 'verse'], { unique: false });
+            bookmarksStore.createIndex('byCategory', 'category', { unique: false });
+        } else {
+            const transaction = event.target.transaction;
+            const bookmarksStore = transaction.objectStore(BOOKMARKS_STORE_NAME);
+            if (!bookmarksStore.indexNames.contains('byVerse')) {
+                console.log("DB onupgradeneeded: 'bookmarks' store exists, creating missing 'byVerse' index.");
                 bookmarksStore.createIndex('byVerse', ['versionName', 'bookNumber', 'chapter', 'verse'], { unique: false });
+            }
+            if (!bookmarksStore.indexNames.contains('byCategory')) {
+                console.log("DB onupgradeneeded: 'bookmarks' store exists, creating missing 'byCategory' index.");
                 bookmarksStore.createIndex('byCategory', 'category', { unique: false });
             }
-        };
+        }
+    }
+    console.log("DB onupgradeneeded: Schema setup process completed for version", db.version);
+};
 
         request.onsuccess = (event) => {
             dbPromise = event.target.result;
