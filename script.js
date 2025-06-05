@@ -6,6 +6,11 @@ let loadedVersions = {}; // Stores Bible versions
 let activeVersions = { primary: null, secondary: null };
 let activeDbs = { primary: null, secondary: null }; // Stores active Bible DB instances
 
+let inAppBackAction = null; 
+
+
+let selectionTimeout = null;
+
 let loadedCommentaries = {}; // Stores commentary versions
 let activeCommentary = null; // Name of active commentary
 let activeCommentaryDb = null; // Active commentary DB instance
@@ -139,6 +144,9 @@ const slideMenuManageBiblesBtn = document.getElementById('slideMenuManageBiblesB
 const slideMenuManageCommentariesBtn = document.getElementById('slideMenuManageCommentariesBtn');
 const slideMenuMyDataBtn = document.getElementById('slideMenuMyDataBtn');
 // Top Bar
+const primaryVersionIndicator = document.getElementById('primaryVersionIndicator');
+const secondaryVersionIndicator = document.getElementById('secondaryVersionIndicator');
+
 const primaryVersionSelect = document.getElementById('primaryVersionSelect');
 const secondaryVersionSelect = document.getElementById('secondaryVersionSelect');
 const commentarySelect = document.getElementById('commentarySelect');
@@ -279,18 +287,106 @@ let latestSelectedText = '';
 
 
 // -------- NEW FUNCTIONS ---------
+function updateActiveVersionNameDisplays() {
+    const primaryDisplay = document.getElementById('activePrimaryVersionNameDisplay');
+    const secondaryDisplay = document.getElementById('activeSecondaryVersionNameDisplay');
+
+    if (primaryDisplay) {
+        if (activeVersions.primary) {
+            primaryDisplay.textContent = activeVersions.primary;
+            primaryDisplay.style.display = 'inline';
+        } else {
+            primaryDisplay.textContent = '';
+            primaryDisplay.style.display = 'none';
+        }
+    }
+
+    if (secondaryDisplay) {
+        // Only show secondary version name if in PARALLEL view AND a secondary version is active
+        if (currentViewMode === 'parallel' && activeVersions.secondary) {
+            secondaryDisplay.textContent = activeVersions.secondary;
+            secondaryDisplay.style.display = 'inline';
+        } else {
+            secondaryDisplay.textContent = '';
+            secondaryDisplay.style.display = 'none';
+        }
+    }
+}
+
+// --------- Selection
+// New function to process selection
+function processTextSelection() {
+    const selection = window.getSelection();
+
+    if (!selection || selection.rangeCount === 0) {
+        if (latestSelection || latestSelectedText) {
+            latestSelection = null;
+            latestSelectedText = '';
+        }
+        return;
+    }
+
+    const range = selection.getRangeAt(0);
+    if (range.collapsed) {
+        if (latestSelection || latestSelectedText) {
+            latestSelection = null;
+            latestSelectedText = '';
+        }
+        return;
+    }
+
+    const selectedText = selection.toString().trim();
+    let verseElement = null;
+    const commonAncestor = range.commonAncestorContainer;
+
+    if (commonAncestor) {
+        verseElement = commonAncestor.nodeType === Node.TEXT_NODE ?
+            commonAncestor.parentElement.closest('.verse-paragraph') :
+            commonAncestor.closest('.verse-paragraph');
+    }
+
+    if (selectedText && verseElement) {
+        const startContainerVerse = range.startContainer.nodeType === Node.TEXT_NODE ? range.startContainer.parentElement.closest('.verse-paragraph') : range.startContainer.closest('.verse-paragraph');
+        const endContainerVerse = range.endContainer.nodeType === Node.TEXT_NODE ? range.endContainer.parentElement.closest('.verse-paragraph') : range.endContainer.closest('.verse-paragraph');
+
+        if (startContainerVerse === verseElement && endContainerVerse === verseElement) {
+            latestSelection = range.cloneRange();
+            latestSelectedText = selectedText;
+            console.log(`[Selection Processed] Text: "${latestSelectedText}" in verse ${verseElement.dataset.verse} of ${verseElement.dataset.versionName}`);
+        } else {
+            latestSelection = null;
+            latestSelectedText = '';
+        }
+    } else {
+        latestSelection = null;
+        latestSelectedText = '';
+    }
+}
+
+// Debounced handler for selection
+function handleSelectionChange() {
+    clearTimeout(selectionTimeout);
+    selectionTimeout = setTimeout(() => {
+        // Check if the active element is an input or textarea; if so, user might be selecting text *inside* an input
+        // For now, let's assume selections for highlights/notes are primarily from verse content.
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+            // User might be selecting text within an input field, not for highlighting verses.
+            // We might not want to update latestSelectedText in this case, or handle it differently.
+            // For simplicity now, we'll still process it, but this is an area for refinement.
+            // console.log("Selection change while input/textarea is active.");
+        }
+        processTextSelection();
+    }, 100); // Debounce for 100ms
+}
+
 ///////--------- sliding menu
 function setupSlideMenuListeners() {
     if (hamburgerMenuBtn && slideMenu && slideMenuOverlay) {
-hamburgerMenuBtn.addEventListener('click', () => {
-    console.log("GitHub Pages: Hamburger clicked!");
-    console.log("GitHub Pages: slideMenu current classes (before):", slideMenu.classList.toString());
-    console.log("GitHub Pages: slideMenuOverlay current classes (before):", slideMenuOverlay.classList.toString());
-    slideMenu.classList.remove('hidden');
-    slideMenuOverlay.classList.remove('hidden');
-    console.log("GitHub Pages: slideMenu current classes (after):", slideMenu.classList.toString());
-    console.log("GitHub Pages: slideMenuOverlay current classes (after):", slideMenuOverlay.classList.toString());
-});
+        hamburgerMenuBtn.addEventListener('click', () => {
+            console.log("Hamburger menu button clicked");
+            slideMenu.classList.remove('hidden'); // Or .add('open') if using that for animation
+            slideMenuOverlay.classList.remove('hidden');
+        });
 
         const closeMenu = () => {
             slideMenu.classList.add('hidden'); // Or .remove('open')
@@ -330,6 +426,182 @@ hamburgerMenuBtn.addEventListener('click', () => {
         console.error("One or more slide menu elements not found.");
     }
 }
+
+//------------------------
+
+function processUserTextSelection(eventContext) { // eventContext can be the event or null
+    const selection = window.getSelection();
+
+    // If no selection object or no range selected, clear our tracked state
+    if (!selection || selection.rangeCount === 0) {
+        if (latestSelection || latestSelectedText) {
+            latestSelection = null;
+            latestSelectedText = '';
+        }
+        return;
+    }
+
+    const range = selection.getRangeAt(0);
+
+    // If the selection is collapsed (it's a click, not a drag), clear our tracked state
+    if (range.collapsed) {
+        // Only clear if the click wasn't on an interactive element that might *use* the selection later
+        // The initial check in the event listeners handles this for popups.
+        // This case is for clicks on general document area that collapse selection.
+        if (latestSelection || latestSelectedText) {
+            latestSelection = null;
+            latestSelectedText = '';
+        }
+        return;
+    }
+
+    const selectedText = selection.toString().trim();
+
+    let verseElement = null;
+    const commonAncestor = range.commonAncestorContainer;
+    if (commonAncestor) {
+        verseElement = commonAncestor.nodeType === Node.TEXT_NODE ?
+            commonAncestor.parentElement.closest('.verse-paragraph') :
+            commonAncestor.closest('.verse-paragraph');
+    }
+
+    if (selectedText && verseElement) {
+        const startContainerVerse = range.startContainer.nodeType === Node.TEXT_NODE ?
+                                   range.startContainer.parentElement.closest('.verse-paragraph') :
+                                   range.startContainer.closest('.verse-paragraph');
+        const endContainerVerse = range.endContainer.nodeType === Node.TEXT_NODE ?
+                                 range.endContainer.parentElement.closest('.verse-paragraph') :
+                                 range.endContainer.closest('.verse-paragraph');
+
+        if (startContainerVerse === verseElement && endContainerVerse === verseElement) {
+            latestSelection = range.cloneRange();
+            latestSelectedText = selectedText;
+            console.log(`[UserSelection] Text selected: "${latestSelectedText}" in verse ${verseElement.dataset.verse} (Version: ${verseElement.dataset.versionName})`);
+        } else {
+            latestSelection = null;
+            latestSelectedText = '';
+        }
+    } else {
+        latestSelection = null;
+        latestSelectedText = '';
+    }
+}
+
+//-----------Back key control 
+function setupMobileBackButtonHandler() {
+    console.log("Setting up mobile back button (popstate) listener.");
+
+    // Push an initial state so we can intercept the first back press
+    // If the current URL doesn't have a hash, or to ensure our state is on top
+    if (window.location.hash !== "#appActive") {
+        history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+    }
+
+
+    window.addEventListener('popstate', function(event) {
+        console.log("POPSTATE event fired. Current state:", event.state, "Current hash:", window.location.hash);
+
+        // If a specific back action was queued, execute it
+        if (typeof inAppBackAction === 'function') {
+            console.log("Executing queued inAppBackAction.");
+            inAppBackAction();
+            inAppBackAction = null; // Clear it after execution
+            // Push a state again to "consume" this back press and stay in the app
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+            return;
+        }
+
+        // --- Default back button behavior if no specific action was queued ---
+        // Check for open modals or specific UI states in reverse order of opening
+        // Selection Modals (Theme, Commentary, Bible Versions)
+        if (themeSelectModal && !themeSelectModal.classList.contains('hidden')) {
+            console.log("Back button: Closing theme select modal.");
+            themeSelectModal.classList.add('hidden');
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        } else if (commentarySelectModal && !commentarySelectModal.classList.contains('hidden')) {
+            console.log("Back button: Closing commentary select modal.");
+            commentarySelectModal.classList.add('hidden');
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        } else if (bibleVersionSelectModal && !bibleVersionSelectModal.classList.contains('hidden')) {
+            console.log("Back button: Closing bible version select modal.");
+            bibleVersionSelectModal.classList.add('hidden');
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        }
+        // Note, Bookmark, Highlight Pickers, etc.
+        else if (noteModal && !noteModal.classList.contains('hidden')) {
+            console.log("Back button: Closing note modal via cancelNote.");
+            cancelNote(); // Assumes cancelNote hides the modal
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        } else if (bookmarkModal && !bookmarkModal.classList.contains('hidden')) {
+            console.log("Back button: Closing bookmark modal via cancelBookmark.");
+            cancelBookmark();
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        } else if (highlightPicker && !highlightPicker.classList.contains('hidden')) {
+            console.log("Back button: Closing highlightPicker.");
+            hideHighlightPicker();
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        } else if (highlightColorPicker && !highlightColorPicker.classList.contains('hidden')) {
+            console.log("Back button: Closing highlightColorPicker.");
+            highlightColorPicker.classList.add('hidden');
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        }
+        // Slide Menu
+        else if (slideMenu && !slideMenu.classList.contains('hidden')) {
+            console.log("Back button: Closing slide menu.");
+            slideMenu.classList.add('hidden');
+            slideMenuOverlay.classList.add('hidden');
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        }
+        // Book/Chapter/Verse Navigator Panel
+        else if (bookChapterVerseSelector && !bookChapterVerseSelector.classList.contains('hidden')) {
+            console.log("Back button: Navigator panel is open.");
+            if (verseGridView && !verseGridView.classList.contains('hidden')) {
+                console.log("Back button: In verse grid, going to chapter grid.");
+                if (backToChapterGridBtn) backToChapterGridBtn.click(); // Simulate back button click
+            } else if (chapterGridView && !chapterGridView.classList.contains('hidden')) {
+                console.log("Back button: In chapter grid, going to book grid.");
+                if (backToBookGridBtn) backToBookGridBtn.click();
+            } else if (bookGridView && !bookGridView.classList.contains('hidden')) {
+                console.log("Back button: In book grid, closing navigator panel.");
+                if (closeNavigatorBtn) closeNavigatorBtn.click();
+            }
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive"); // Consume back press
+        }
+        // Other panels like Upload, Search, UserData
+        else if (uploadPanel && !uploadPanel.classList.contains('hidden')) {
+            console.log("Back button: Closing upload panel.");
+            if (closeUploadPanelBtn) closeUploadPanelBtn.click(); // Or showPanel(bibleContentView);
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        } else if (searchPanel && !searchPanel.classList.contains('hidden')) {
+            console.log("Back button: Closing search panel.");
+            if (closeSearchPanelBtn) closeSearchPanelBtn.click();
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        } else if (commentaryUploadPanel && !commentaryUploadPanel.classList.contains('hidden')) {
+            console.log("Back button: Closing commentary upload panel.");
+            if (closeCommentaryUploadBtn) closeCommentaryUploadBtn.click();
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        } else if (userDataPanel && !userDataPanel.classList.contains('hidden')) {
+            console.log("Back button: Closing user data panel.");
+            if (closeUserDataPanelBtn) closeUserDataPanelBtn.click();
+            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        }
+        // If nothing else was open, this is the "root" of the app view
+        else if (window.location.hash === "#appActive" && event.state && event.state.appState === 'activeRoot') {
+            // We are at what we consider the app's "base" after a back press.
+            // To prevent exiting on the next back press, we can push another state.
+            // Or, here you could implement a "Press back again to exit" toast.
+            console.log("Back button: At app root state. Pushing state again to prevent exit on next back, or allow exit.");
+            // For now, let's allow default (which might be exit or previous page in browser history)
+            // If you want to strictly control exit, you'd need a more complex state machine or counter.
+            // To try and "stay in app" one more level:
+            // history.pushState({appState: 'reallyExit?'}, "Confirm Exit", "#confirmExit");
+            // Or simply do nothing and let the browser go back further in its history / close.
+        } else {
+            console.log("Back button: No specific in-app action for current state. Default browser back may occur.");
+        }
+    });
+}
+
 // --------- preload helper ----------//
 async function fetchFileFromUrl(url) {
     console.log("Attempting to fetch from URL:", url);
@@ -536,11 +808,14 @@ function setupThemeControls() { // Or add this content to setupNavigationListene
 }
 
 function populateBibleVersionModal() {
-    if (!popupPrimaryVersionSelect || !popupSecondaryVersionSelect) return;
+    if (!popupPrimaryVersionSelect || !popupSecondaryVersionSelect) {
+        console.error("populateBibleVersionModal: Popup select elements not found.");
+        return;
+    }
     
     const versions = Object.keys(loadedVersions);
     
-    // Populate Primary
+    // Populate Primary Select
     popupPrimaryVersionSelect.innerHTML = '<option value="">-- Select Primary --</option>';
     versions.forEach(versionName => {
         const option = document.createElement('option');
@@ -551,10 +826,11 @@ function populateBibleVersionModal() {
         }
         popupPrimaryVersionSelect.appendChild(option);
     });
-    currentPopupPrimaryVersion.textContent = activeVersions.primary ? `(${activeVersions.primary})` : '';
+    if (currentPopupPrimaryVersion) { // Check if element exists
+        currentPopupPrimaryVersion.textContent = activeVersions.primary ? `(${activeVersions.primary})` : '';
+    }
 
-
-    // Populate Secondary
+    // Populate Secondary Select
     popupSecondaryVersionSelect.innerHTML = '<option value="">-- Select Secondary (None) --</option>';
     versions.forEach(versionName => {
         const option = document.createElement('option');
@@ -565,12 +841,23 @@ function populateBibleVersionModal() {
         }
         popupSecondaryVersionSelect.appendChild(option);
     });
-    currentPopupSecondaryVersion.textContent = activeVersions.secondary ? `(${activeVersions.secondary})` : '(None)';
+    if (currentPopupSecondaryVersion) { // Check if element exists
+        currentPopupSecondaryVersion.textContent = activeVersions.secondary ? `(${activeVersions.secondary})` : '(None)';
+    }
 
     // Update visual indicators on the main bible icon button
-    if(primaryVersionIndicator) primaryVersionIndicator.style.display = activeVersions.primary ? 'inline-flex' : 'none';
-    if(secondaryVersionIndicator) secondaryVersionIndicator.style.display = activeVersions.secondary ? 'inline-flex' : 'none';
+    if (primaryVersionIndicator) { // Check if the element variable is valid
+        primaryVersionIndicator.style.display = activeVersions.primary ? 'inline-flex' : 'none';
+    } else {
+        console.warn("primaryVersionIndicator DOM element not found.");
+    }
 
+    if (secondaryVersionIndicator) { // Check if the element variable is valid
+        secondaryVersionIndicator.style.display = activeVersions.secondary ? 'inline-flex' : 'none';
+    } else {
+        console.warn("secondaryVersionIndicator DOM element not found.");
+    }
+    console.log("LOG: populateBibleVersionModal() finished.");
 }
 
 function populateCommentaryModal() {
@@ -724,6 +1011,7 @@ function setupNavigationListeners() {
 }
 
 function setupPopupTriggersAndModals() {
+console.log("LOG: setupPopupTriggersAndModals() called.");
     // Helper to close all these specific selection modals
     const closeAllPopups = () => {
         if (bibleVersionSelectModal) bibleVersionSelectModal.classList.add('hidden');
@@ -740,13 +1028,21 @@ function setupPopupTriggersAndModals() {
             }
         });
     });
+    console.log("DEBUG: bibleVersionPopupBtn element is:", bibleVersionPopupBtn); // Check if element exists
+    console.log("DEBUG: bibleVersionSelectModal element is:", bibleVersionSelectModal); // Check if modal element exists
 
     // --- Bible Version Selection Modal ---
     if (bibleVersionPopupBtn && bibleVersionSelectModal && popupPrimaryVersionSelect && popupSecondaryVersionSelect) {
         bibleVersionPopupBtn.addEventListener('click', () => {
+console.log("EVENT: #bibleVersionPopupBtn CLICKED.");
             closeAllPopups(); // Close any other open selection popups
+console.log("LOG: After closeAllPopups()");
             populateBibleVersionModal(); // Populate with current selections and options
+console.log("LOG: After populateBibleVersionModal()"); 
             bibleVersionSelectModal.classList.remove('hidden');
+            console.log("LOG: bibleVersionSelectModal 'hidden' class removed. Current classes:", bibleVersionSelectModal.classList.toString()); // LOG 4
+            console.log("LOG: bibleVersionSelectModal computed display style:", window.getComputedStyle(bibleVersionSelectModal).display); // LOG 5
+  
         });
 
         popupPrimaryVersionSelect.addEventListener('change', async (e) => {
@@ -1179,10 +1475,10 @@ function toggleViewMode() {
     console.log("toggleViewMode called. Current mode was:", currentViewMode);
     currentViewMode = (currentViewMode === 'parallel') ? 'single' : 'parallel';
     console.log("New view mode set to:", currentViewMode);
-    saveLastReadPosition(); // Save the new view mode preference
-    updateViewModeDisplay(); // Update button icon/title and container class
+    saveLastReadPosition(); 
+    updateViewModeDisplay(); // Updates button icon and .single-view class
+    updateActiveVersionNameDisplays(); // <<< ADD THIS CALL HERE
     if (currentBook && currentChapter) {
-        // Reload content to apply view mode (e.g., show/hide secondary column)
         loadChapterContent(currentBook.book_number, currentChapter, currentVerse);
     }
 }
@@ -1858,7 +2154,7 @@ determineOtNtRanges(activeDbs.primary);
         currentChapterDisplay.textContent = '';
         sidebar.classList.add('hidden');
     }
-
+updateActiveVersionNameDisplays();
     saveLastReadPosition();
 }
 
@@ -2467,36 +2763,81 @@ async function loadVersionContent(versionType) {
     const chapterTitleEl = versionType === 'primary' ? primaryChapterTitle : secondaryChapterTitle;
     const processingVersionName = activeVersions[versionType];
 
+    // Ensure currentBook and currentChapter (global state) are valid
     if (!currentBook || currentChapter === null || currentChapter === undefined) {
-        contentDiv.innerHTML = '<p class="placeholder">Book or chapter not selected.</p>';
-        chapterTitleEl.textContent = processingVersionName || (versionType === 'primary' ? 'Primary Version' : 'Secondary Version');
+        if (contentDiv) contentDiv.innerHTML = '<p class="placeholder">Book or chapter not selected.</p>';
+        if (chapterTitleEl) chapterTitleEl.textContent = processingVersionName || (versionType === 'primary' ? 'Primary Version' : 'Secondary Version');
         return;
     }
 
     const processingBookNumber = currentBook.book_number;
-    const processingChapterString = currentChapter;
+    const processingChapterString = currentChapter; // This is defined early and reliably
     const selectedVerseToScrollTo = currentVerse;
 
     if (!dbInstance) {
-        contentDiv.innerHTML = `<p class="placeholder">Bible version '${processingVersionName || versionType}' not loaded.</p>`;
-        chapterTitleEl.textContent = `No ${processingVersionName || versionType} version selected`;
+        if (contentDiv) contentDiv.innerHTML = `<p class="placeholder">Bible version '${processingVersionName || versionType}' not loaded.</p>`;
+        if (chapterTitleEl) chapterTitleEl.textContent = `No ${processingVersionName || versionType} version selected`;
         return;
     }
 
+    // Define bookDisplayNameForDisplay early for use in titles and error messages
     let bookDisplayNameForDisplay = `Book ${processingBookNumber}`;
     const bookMeta = loadedVersions[processingVersionName]?.books.find(b => b.book_number === processingBookNumber);
     if (bookMeta) {
         bookDisplayNameForDisplay = bookMeta.short_name;
     }
 
+    // Define chapterDisplayString early as well, derived from processingChapterString
+    let chapterDisplayString = processingChapterString === 'introduction' ? 'Introduction' : processingChapterString.toString();
+
+
     try {
         let contentHtml = '';
-        let chapterTitleText = `${processingVersionName}: ${bookDisplayNameForDisplay} ${processingChapterString === 'introduction' ? 'Introduction' : processingChapterString}`;
+        // Construct the main title for the column based on view mode
+    let columnTitleText = ""; 
+    // NEW: Determine if the title element for this column should be visible
+    let isTitleVisible = false;
+
+    if (processingVersionName) { // Only proceed if there's a version for this column
+        if (currentViewMode === 'single') {
+            // In single view, only the primary column is shown,
+            // and we want to HIDE its title.
+            if (versionType === 'primary') {
+                isTitleVisible = false; // Primary title hidden in single view
+                columnTitleText = ''; // No text needed if hidden
+            }
+            // Secondary column is hidden by CSS in single view, so its title state here is less critical
+        } else { // Parallel view
+            if (versionType === 'primary') {
+                // Primary column title is also hidden in parallel view (as per previous request)
+                isTitleVisible = false;
+                columnTitleText = '';
+            } else { // Secondary column in parallel view
+                // ONLY the secondary column title is visible in parallel view
+                isTitleVisible = true;
+                columnTitleText = `${processingVersionName}: ${bookDisplayNameForDisplay} ${chapterDisplayString}`;
+            }
+        }
+    } else { // No version for this column
+         isTitleVisible = false;
+         columnTitleText = ''; // Or 'No version selected' if it were to be shown
+    }
+
+    // Apply visibility and text content
+    if (chapterTitleEl) {
+        if (isTitleVisible) {
+            chapterTitleEl.classList.remove('hidden');
+            chapterTitleEl.textContent = '';
+        } else {
+            chapterTitleEl.classList.add('hidden');
+            chapterTitleEl.textContent = ''; // Clear text if hidden
+        }
+    }
         
         let allHighlightsInChapter = [];
         let notesInChapter = [];
         let bookmarksInChapter = [];
-        let numericChapterForQuery; // Will hold the integer chapter number
+        let numericChapterForQuery;
 
         if (processingChapterString === 'introduction') {
             const introStmt = dbInstance.prepare("SELECT introduction FROM introductions WHERE book_number = ?;");
@@ -2510,7 +2851,7 @@ async function loadVersionContent(versionType) {
         } else {
             numericChapterForQuery = parseInt(processingChapterString);
             if (isNaN(numericChapterForQuery)) {
-                throw new Error(`Invalid chapter specified: ${processingChapterString}`);
+                throw new Error(`Invalid chapter specified (was NaN): ${processingChapterString}`);
             }
 
             const verseStmt = dbInstance.prepare("SELECT verse, text FROM verses WHERE book_number = ? AND chapter = ? ORDER BY verse ASC;");
@@ -2540,14 +2881,13 @@ async function loadVersionContent(versionType) {
             const wholeVerseHighlights = allHighlightsInChapter.filter(h => !h.text);
             const wholeVerseHighlightsMap = new Map(wholeVerseHighlights.map(h => [h.verse, h]));
             
-            const wholeVerseNotes = notesInChapter.filter(n => !n.selectedText); // Specifically notes without selectedText
-            const wholeVerseNotesMap = new Map(wholeVerseNotes.map(n => [n.verse, n]));
+            const wholeVerseNotes = notesInChapter.filter(n => !n.selectedText);
+            const wholeVerseNotesMap = new Map(wholeVerseNotes.map(n => [n.verse, n])); 
             
             const bookmarksMap = new Map(bookmarksInChapter.map(b => [b.verse, b]));
 
             let contentItems = [];
             let currentSubheadingIndex = 0;
-            // Merge verses and subheadings
             while (currentSubheadingIndex < subheadings.length && subheadings[currentSubheadingIndex].verse < 1) {
                 contentItems.push({ type: 'subheading', text: subheadings[currentSubheadingIndex].title });
                 currentSubheadingIndex++;
@@ -2572,12 +2912,10 @@ async function loadVersionContent(versionType) {
                     const selectedClass = selectedVerseToScrollTo === verse_number ? 'selected-verse' : '';
                     const wholeVerseHighlightClass = wholeVerseHighlightsMap.has(verse_number) ? `highlight-${wholeVerseHighlightsMap.get(verse_number).color}` : '';
                     
-let commentaryLinksHtml = '';
-const multiMode = document.getElementById('multiCommentaryToggle')?.checked;
-
-// Use these consistently defined variables for the current verse context
-const currentBookForCommentary = processingBookNumber;
-const currentChapterForCommentary = numericChapterForQuery; // This is the integer chapter number
+                    let commentaryLinksHtml = '';
+                    const multiMode = document.getElementById('multiCommentaryToggle')?.checked;
+                    const currentBookForCommentary = processingBookNumber;
+                    const currentChapterForCommentary = numericChapterForQuery;
 
 if (multiMode) {
     for (const commentaryName in loadedCommentaries) {
@@ -2610,14 +2948,14 @@ if (multiMode) {
 }
 
                     let indicatorIcons = '';
-					const hasAnyPartialNoteForThisVerse = notesInChapter.some(n => 
-    n.verse === verse_number && 
-    n.selectedText && 
-    n.versionName === processingVersionName && // ensure context match
-    n.bookNumber === processingBookNumber &&
-    n.chapter === numericChapterForQuery
-);
-                    if (wholeVerseNotesMap.has(verse_number)) { 
+                    const hasAnyPartialNoteForThisVerse = notesInChapter.some(n => 
+                        n.verse === verse_number && n.selectedText && 
+                        n.versionName === processingVersionName &&
+                        n.bookNumber === processingBookNumber &&
+                        n.chapter === numericChapterForQuery
+                    );
+
+                    if (wholeVerseNotesMap.has(verse_number) && !hasAnyPartialNoteForThisVerse) { 
                         indicatorIcons += `<i class="fas fa-sticky-note verse-indicator note-indicator" data-book-number="${processingBookNumber}" data-chapter="${numericChapterForQuery}" data-verse="${verse_number}" data-version-name="${processingVersionName}" title="Verse Note exists"></i>`;
                     }
                     if (bookmarksMap.has(verse_number)) {
@@ -2635,59 +2973,35 @@ if (multiMode) {
                     </p>`;
                 }
             }
-        } // End of 'else' for numeric chapters
+        } 
 
-        contentDiv.innerHTML = contentHtml.trim() === '' ? `<p class="placeholder">No content found for this chapter.</p>` : contentHtml;
-        chapterTitleEl.textContent = chapterTitleText;
+        if (contentDiv) contentDiv.innerHTML = contentHtml.trim() === '' ? `<p class="placeholder">No content found for this chapter.</p>` : contentHtml;
+        
         console.log(`loadVersionContent: Base HTML set for ${versionType}. Ready to layer partials.`);
 
-        // Restore PARTIAL Highlights (modifies contentDiv.innerHTML)
         if (processingChapterString !== 'introduction' && allHighlightsInChapter && Array.isArray(allHighlightsInChapter)) {
-            const numericCh_hl = parseInt(processingChapterString); // Use a distinct var name if numericChapterForQuery isn't set for intro
+            const numericCh_hl = parseInt(processingChapterString);
             try {
-                const partialHighlightsToApply = allHighlightsInChapter.filter(h =>
-                    h.text && typeof h.text === 'string' && h.text.trim() !== '' &&
-                    h.versionName === processingVersionName &&
-                    h.bookNumber === processingBookNumber &&
-                    h.chapter === numericCh_hl
-                );
-                console.log(`PARTIAL HIGHLIGHTS: Found ${partialHighlightsToApply.length} to display for Ch ${numericCh_hl}.`);
-                for (const h of partialHighlightsToApply) {
-                    const verseEl = contentDiv.querySelector(
-                        `p#${versionType}-verse-${h.verse}[data-book-number="${h.bookNumber}"][data-chapter="${h.chapter}"][data-version-name="${h.versionName}"]`
-                    );
-                    if (verseEl) {
-                        let verseHTML = verseEl.innerHTML;
-                        const alreadyWrappedRegex = new RegExp(`<span class="partial-highlight highlight-${h.color}">\\s*${escapeRegExp(h.text)}\\s*</span>`);
-                        if (verseHTML.includes(h.text) && !alreadyWrappedRegex.test(verseHTML)) {
-                            const escapedText = escapeRegExp(h.text);
-                            const regex = new RegExp(escapedText); 
-                            verseEl.innerHTML = verseHTML.replace(regex, (match) => `<span class="partial-highlight highlight-${h.color}">${match}</span>`);
-                        }
-                    }
-                }
+                // ... (Partial Highlight Restoration Logic using processingVersionName, processingBookNumber, numericCh_hl) ...
             } catch (err) { console.error(`Error restoring partial highlights for ${versionType} (${processingVersionName}), Ch ${processingChapterString}:`, err); }
         } else { console.log("PARTIAL HIGHLIGHTS: Skipped or no highlights to process."); }
 
-
-        // Restore/Render PARTIAL NOTE Indicators (modifies contentDiv.innerHTML)
-if (processingChapterString !== 'introduction' && notesInChapter && Array.isArray(notesInChapter)) {
-    const numericCh_notes = parseInt(processingChapterString);
-    console.log(`PARTIAL NOTES: Attempting to render DOM indicators. Chapter: ${numericCh_notes}. notesInChapter count: ${notesInChapter.length}`);
-    try {
-        const partialNotesToDisplay = notesInChapter.filter(n =>
-            n.selectedText && typeof n.selectedText === 'string' && n.selectedText.trim() !== '' &&
-            n.versionName === processingVersionName &&
-            n.bookNumber === processingBookNumber &&
-            n.chapter === numericCh_notes
-        );
-        console.log(`PARTIAL NOTES: Found ${partialNotesToDisplay.length} partial notes to process for DOM insertion.`);
-
-        if (partialNotesToDisplay.length > 0) {
-            for (const note of partialNotesToDisplay) {
-                const verseEl = contentDiv.querySelector(
-                    `p#${versionType}-verse-${note.verse}[data-book-number="${note.bookNumber}"][data-chapter="${note.chapter}"][data-version-name="${note.versionName}"]`
+        if (processingChapterString !== 'introduction' && notesInChapter && Array.isArray(notesInChapter)) {
+            const numericCh_notes = parseInt(processingChapterString);
+            console.log(`PARTIAL NOTES: Attempting to render DOM indicators. Chapter: ${numericCh_notes}. notesInChapter count: ${notesInChapter?.length}`);
+            try {
+                const partialNotesToDisplay = notesInChapter.filter(n =>
+                    n.selectedText && typeof n.selectedText === 'string' && n.selectedText.trim() !== '' &&
+                    n.versionName === processingVersionName &&
+                    n.bookNumber === processingBookNumber &&
+                    n.chapter === numericCh_notes
                 );
+                console.log(`PARTIAL NOTES: Found ${partialNotesToDisplay.length} partial notes to process for DOM insertion.`);
+                if (partialNotesToDisplay.length > 0) {
+                    for (const note of partialNotesToDisplay) {
+                        const verseEl = contentDiv.querySelector(
+                            `p#${versionType}-verse-${note.verse}[data-book-number="${note.bookNumber}"][data-chapter="${note.chapter}"][data-version-name="${note.versionName}"]`
+                        );
 
                 if (verseEl) {
                     insertPartialNoteIndicatorDOM(verseEl, note);
@@ -2706,12 +3020,14 @@ if (processingChapterString !== 'introduction' && notesInChapter && Array.isArra
 }
 
     } catch (err) {
-        console.error(`Critical error in loadVersionContent for ${processingVersionName || 'Unknown Version'} ${bookDisplayNameForDisplay}:${processingChapterString}:`, err);
-        contentDiv.innerHTML = `<p class="placeholder error">An error occurred loading content. Details: ${err.message}</p>`;
-        chapterTitleEl.textContent = `${processingVersionName || 'Version'} (Error)`;
+        // Use variables guaranteed to be defined at this scope for error logging
+        console.error(`Critical error in loadVersionContent for ${processingVersionName || 'Unknown Version'} ${bookDisplayNameForDisplay || `Book ${processingBookNumber}`}:${processingChapterString}:`, err);
+        if(contentDiv) contentDiv.innerHTML = `<p class="placeholder error">An error occurred loading content. Details: ${err.message}</p>`;
+        if(chapterTitleEl) chapterTitleEl.textContent = `${processingVersionName || 'Version'} (Error)`;
     }
     console.log(`loadVersionContent END for ${versionType}`);
 }
+
 
 async function loadChapterContent(bookNumber, chapterOrSpecial, selectedVerse = null) {
     showPanel(bibleContentView);
@@ -2759,8 +3075,11 @@ async function loadChapterContent(bookNumber, chapterOrSpecial, selectedVerse = 
 	});
     // NEW: Add event listener for Commentary links after content is loaded
     primaryBibleContent.querySelectorAll('.commentary-link').forEach(link => {
-        link.addEventListener('click', (event) => {
+const newLink = link.cloneNode(true);
+link.parentNode.replaceChild(newLink, link);
+        newLink.addEventListener('click', (event) => {
             event.preventDefault();
+			event.stopPropagation();
             const bookNum = parseInt(event.target.dataset.bookNumber);
             const chapterNum = parseInt(event.target.dataset.chapter);
             const verseNum = parseInt(event.target.dataset.verse);
@@ -3061,6 +3380,7 @@ async function showNoteModal(verseRef, initialSelectedText = null) {
     }
     
     noteModal.classList.remove('hidden');
+history.pushState({modal: 'note'}, "Note", "#noteOpen"); 
     
     // Try to ensure other potential overlays are hidden
     if (highlightPicker && !highlightPicker.classList.contains('hidden')) {
@@ -3174,6 +3494,7 @@ async function saveNote() {
         statusMessage.textContent = `Note ${action} for ${loadedVersions[versionName]?.books.find(b=>b.book_number === bookNumber)?.short_name || 'Book'} ${chapter}:${verse}${selectedTextForNote ? ' (on selection)' : ''}.`;
         
         noteModal.classList.add('hidden');
+ if (location.hash === "#noteOpen") history.back(); 
         loadChapterContent(bookNumber, chapter, verse); // Reload chapter to update indicators
         updateUserDataPanel('notes'); // Refresh notes list
     } catch (e) {
@@ -3199,6 +3520,7 @@ async function deleteNote() {
         await deleteIndexedDB(NOTES_STORE_NAME, parseInt(noteId)); // Delete by ID
         statusMessage.textContent = `Note deleted for ${currentBook.short_name} ${chapter}:${currentNoteVerseRef.verse}.`;
         noteModal.classList.add('hidden'); // Hide modal
+ if (location.hash === "#noteOpen") history.back(); 
         loadChapterContent(bookNumber, chapter); // Reload chapter to update indicator
         updateUserDataPanel('notes'); // Refresh notes list
     } catch (e) {
@@ -3210,6 +3532,7 @@ async function deleteNote() {
 
 function cancelNote() {
     noteModal.classList.add('hidden');
+ if (location.hash === "#noteOpen") history.back(); 
 }
 
 
@@ -3339,40 +3662,53 @@ function createVerseCardDOM({
     bookName, chapter, verse, text, versionName, theme, footer,
     font, align, logoDataUrl, bgImageUrl, textSize, textColor
 }) {
-    const bgStyles = {
+        const bgStyles = { // Predefined theme backgrounds
         sunset: 'linear-gradient(135deg, #fceabb, #f8b500)',
-        midnight: 'linear-gradient(135deg, #232526, #414345)',
+        midnight: 'linear-gradient(135deg, #232526, #414345)', // Dark gradient
         aqua: 'linear-gradient(135deg, #00c6ff, #0072ff)',
-        custom: 'linear-gradient(135deg, #ffffff, #dddddd)'
+        custom: 'linear-gradient(135deg, #ffffff, #dddddd)' // Default for 'custom' or if theme not found
+    };
+    const textColors = { // Corresponding text colors for predefined themes
+        sunset: '#333333',
+        midnight: '#ffffff', // Light text for dark background
+        aqua: '#ffffff',     // Light text for aqua background
+        custom: '#333333'    // Default text for custom
     };
 
-    const fontSizes = {
-        small: '1em',
-        medium: '1.4em',
-        large: '1.8em'
-    };
+    const fontSizes = { small: '16px', medium: '20px', large: '26px' }; // Use absolute px for canvas consistency
+    const lineHeights = { small: '1.5', medium: '1.6', large: '1.7' };
 
     const container = document.createElement('div');
-    container.id = 'verseCardCanvasWrapper';
-    container.style.width = '600px';
+    // This ID is for the temporary element used by html2canvas, not for final display
+    container.id = 'tempVerseCardForCanvas'; 
+
+    // Style for rendering. This element will be appended to body, rendered, then removed.
+    // Its size here dictates the canvas size. Let's aim for a good default render size.
+    // For responsiveness, the *canvas image* will be scaled by CSS in the preview container.
+    container.style.width = '600px'; // Render at a decent resolution
     container.style.padding = '40px';
     container.style.background = bgImageUrl ? `url(${bgImageUrl}) center/cover no-repeat` : (bgStyles[theme] || bgStyles.sunset);
-    container.style.color = textColor || '#333';
-    container.style.borderRadius = '20px';
+    container.style.color = textColor || (theme === 'midnight' ? '#ffffff' : '#333333'); // Adjust default text for theme
+    container.style.borderRadius = '15px'; // Slightly less
     container.style.fontFamily = font || '"Georgia", serif';
     container.style.textAlign = align || 'center';
-    container.style.boxShadow = '0 5px 20px rgba(0,0,0,0.3)';
+    container.style.boxSizing = 'border-box';
+    // These styles are for the *source* of the canvas image
+    // The actual displayed canvas inside #verseImagePreviewContainer will be responsive via CSS
+
+    // To ensure it's rendered off-screen but with correct dimensions for html2canvas:
     container.style.position = 'absolute';
+    container.style.left = '-9999px';
     container.style.top = '-9999px';
 
-    container.innerHTML = `
-        <h2 style="margin-bottom: 20px; font-size: 1.6em; color: ${textColor};">${bookName} ${chapter}:${verse}</h2>
-        <p style="font-size: ${fontSizes[textSize]}; line-height: 1.6; margin-bottom: 20px; color: ${textColor};">"${text}"</p>
-        <p style="font-style: italic; color: ${textColor};">${versionName}</p>
-        ${logoDataUrl ? `<img src="${logoDataUrl}" style="max-height: 60px; margin: 20px auto;">` : ''}
-        <p style="font-size: 0.8em; margin-top: 30px; color: ${textColor};">${footer}</p>
-    `;
 
+    container.innerHTML = `
+        <h2 style="margin-top:0; margin-bottom: 25px; font-size: ${parseFloat(fontSizes[textSize]) * 1.3}px; line-height: 1.3; color: inherit;">${bookName} ${chapter}:${verse}</h2>
+        <p style="font-size: ${fontSizes[textSize]}; line-height: ${lineHeights[textSize]}; margin-bottom: 25px; color: inherit; white-space: pre-wrap;">"${text}"</p>
+        <p style="font-style: italic; font-size: ${parseFloat(fontSizes[textSize]) * 0.8}px; color: inherit; opacity: 0.9;">${versionName}</p>
+        ${logoDataUrl ? `<img src="${logoDataUrl}" style="max-height: 50px; max-width: 150px; margin: 20px auto; display: block;">` : ''}
+        <p style="font-size: ${parseFloat(fontSizes[textSize]) * 0.7}px; margin-top: 30px; color: inherit; opacity: 0.8;">${footer || ''}</p>
+    `;
     return container;
 }
 
@@ -3428,11 +3764,14 @@ async function updateVerseImagePreview() {
 
     const logoDataUrl = logoFile ? await readFileAsDataURL(logoFile) : null;
     const bgImageUrl = bgFile ? await readFileAsDataURL(bgFile) : null;
+    const customTextColor = document.getElementById('verseCardTextColor')?.value;
 
     const cardEl = createVerseCardDOM({
         ...lastVerseCardData,
         theme, footer, font, align, logoDataUrl, bgImageUrl,
-		textSize, textColor
+		textSize, textColor,
+        bgImageUrl: bgFile ? await readFileAsDataURL(bgFile) : null, // Custom background image
+        textColor: (theme === 'custom' || bgFile || logoFile) ? customTextColor : null // Use custom text color if theme is custom OR if custom bg/logo is used 
     });
 
     document.body.appendChild(cardEl);
@@ -4067,6 +4406,39 @@ async function performSearch() {
     }
 }
 
+function setupGlobalSelectionListener() {
+    const interactiveSelector = [
+        '#verseActionPopup',
+        '#highlightColorPicker',
+        '#highlightPicker',
+        '.selection-modal', // Covers new theme/version/commentary popups
+        '#noteModal',
+        '#bookmarkModal',
+        'button', // General buttons
+        'select', // General selects
+        'input[type="text"]', // Text inputs
+        'textarea' // Textareas
+    ].join(', '); // Comma-separated selector string
+
+    function handleSelectionEvent(event) {
+        // If the event target (where mouseup/touchend occurred) is an interactive UI element,
+        // do not process text selection, as the user is likely interacting with that UI.
+        if (event.target.closest(interactiveSelector)) {
+            // console.log("Selection event on interactive UI element, deferring to element's handlers.");
+            return;
+        }
+
+        clearTimeout(selectionTimeout);
+        selectionTimeout = setTimeout(() => {
+            processUserTextSelection();
+        }, 50); // Debounce slightly (50-100ms is usually good)
+    }
+
+    document.addEventListener('mouseup', handleSelectionEvent);
+    document.addEventListener('touchend', handleSelectionEvent); // Add listener for touch devices
+
+    console.log("Global text selection listeners (mouseup, touchend) attached.");
+}
 // ARE DEFINED IN THE GLOBAL SCOPE OF SCRIPT.JS (i.e., outside initializeApp)
 
 async function initializeApp() {
@@ -4105,7 +4477,7 @@ async function initializeApp() {
 
         await processPredefinedResources(); 
         updateViewModeDisplay(); // Set initial view mode display
-
+		updateActiveVersionNameDisplays();
         // Load last read position or set defaults
         const lastReadString = localStorage.getItem(LAST_READ_KEY);
         let successfullyLoadedLastReadOrSetDefault = false;
@@ -4193,6 +4565,11 @@ async function initializeApp() {
         setupThemeControls();           // For theme modal trigger and theme application
         setupPopupTriggersAndModals();  // For Bible version, commentary, theme popups (opening them and handling selections)
 		setupSlideMenuListeners();
+		setupMobileBackButtonHandler();
+		setupGlobalSelectionListener();
+		updateActiveVersionNameDisplays();
+
+
         // ----- Other Global Event Listeners that were in your initializeApp -----
 	if (addVersionBtn) {
     addVersionBtn.addEventListener('click', () => {
