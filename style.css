@@ -259,6 +259,226 @@ body.theme-sepia {
     --delete-button-text-color: #ffffff;
     --delete-button-hover-bg-color: #b04040;
 }
+#verseImageModal .modal-content {
+    max-width: 95%; /* Mobile first */
+    width: auto;
+    min-width: 300px;
+    max-height: 95vh; /* Allow a bit more height */
+    overflow-y: auto; /* Crucial: Make the modal content itself scrollable */
+    padding: 15px;    /* Reduce padding slightly */
+}
+@media (min-width: 700px) { /* Wider screens */
+    #verseImageModal .modal-content {
+        max-width: 680px; /* Allow more width for controls side-by-side with preview */
+    }
+}
+/* Theme selector at the top of the modal */
+#verseImageModal div[style*="text-align:center"] { /* Targets the theme selector div */
+    margin-bottom: 15px !important;
+}
+#verseImageModal label[for="verseCardTheme"] {
+    margin-right: 8px;
+    font-weight: 500;
+    color: var(--main-text-color);
+    font-size: 0.9rem;
+}
+#verseImageModal #verseCardTheme.popup-select { /* Ensure it uses popup-select styles */
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    flex-grow: 0; /* Don't let it grow too much */
+    min-width: 120px; /* Give it a decent width */
+}
+#verseImageModal h2 { /* "Shareable Verse Card" title */
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+}
+#verseImagePreviewContainer {
+    width: 95%;
+    max-width: 400px; /* Can be smaller if controls need more space */
+    margin-left: auto;
+    margin-right: auto;
+    aspect-ratio: 16 / 9;
+    background-color: var(--main-bg-color); /* Placeholder background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Important for html2canvas if rendered element is larger */
+    border: 1px dashed var(--input-border-color); /* Keep for clarity */
+    padding: 0; /* Remove padding if canvas fills it */
+    margin-bottom: 20px;
+}
+#verseImagePreviewContainer canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.verse-card-controls-grid.compact-controls {
+    display: grid;
+    /* Start with 2 columns, adjust minmax for item width */
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+    gap: 10px 12px; /* row-gap column-gap */
+    margin-bottom: 20px;
+    align-items: end; /* Align items to the end of their grid cell (useful if labels are different heights) */
+}
+
+.compact-controls .control-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Aligns input to bottom if label heights vary */
+}
+
+.compact-controls .control-group label {
+    font-size: 0.75rem; /* Smaller labels */
+    color: var(--main-text-color);
+    opacity: 0.85;
+    margin-bottom: 3px; /* Tighter space */
+    font-weight: 400; /* Normal weight */
+    white-space: nowrap; /* Prevent labels from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Full width control (like footer input) in the compact grid */
+.compact-controls .control-group.full-width-control {
+    grid-column: 1 / -1; /* Span all columns */
+}
+
+/* File input controls - special attention for compactness */
+.compact-controls .control-group.file-control label {
+    margin-bottom: 2px; /* Very tight */
+}
+.compact-controls .popup-file-input {
+    padding: 4px; /* Make file inputs smaller */
+    font-size: 0.8rem; /* Smaller text for file input button */
+}
+.compact-controls .popup-file-input::file-selector-button { /* Style the button part of file input */
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    margin-right: 5px;
+}
+
+
+/* Inputs and Selects within the compact controls */
+.compact-controls .popup-select,
+.compact-controls .popup-text-input,
+.compact-controls .popup-color-input {
+    width: 100%;
+    padding: 6px 8px; /* Reduced padding */
+    font-size: 0.85rem; /* Smaller font */
+    /* ... (border, radius, bg, color, focus from existing .popup-select CSS) ... */
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    box-sizing: border-box;
+}
+.compact-controls .popup-color-input {
+    padding: 2px; /* Make color input even smaller */
+    height: 34px; /* Align with other inputs */
+}
+
+/* Controls Layout */
+.verse-card-controls-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Stack controls on smallest screens */
+    gap: 15px; /* Space between control groups */
+    margin-bottom: 20px;
+}
+
+@media (min-width: 500px) { /* Two columns for controls on slightly larger screens */
+    .verse-card-controls-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .verse-card-controls-grid .full-width-control { /* Make footer input span both columns */
+        grid-column: 1 / -1;
+    }
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column; /* Stack label and input */
+}
+.control-group label {
+    font-size: 0.8rem; /* Smaller labels */
+    color: var(--main-text-color);
+    opacity: 0.9;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+#verseImageModal div[style*="text-align:center"] { /* Targets the theme selector div */
+    margin-bottom: 15px !important; /* Ensure space below theme selector */
+}
+#verseImageModal label[for="verseCardTheme"] {
+    margin-right: 8px;
+    font-weight: 500;
+    color: var(--main-text-color);
+}
+#verseImageModal #verseCardTheme { /* The theme select dropdown itself */
+    padding: 6px 8px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    font-size: 0.9rem;
+}
+
+/* Styling for inputs and selects within the modal - can reuse general popup styles */
+.popup-select,
+.popup-text-input,
+.popup-color-input,
+.popup-file-input {
+    width: 100%;
+    padding: 8px 10px; /* Consistent padding */
+    font-size: 0.9rem;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    box-sizing: border-box;
+}
+.popup-color-input { padding: 4px; height: 38px; } /* Adjust for color input */
+.popup-file-input { padding: 5px; }
+
+.popup-select:focus,
+.popup-text-input:focus,
+.popup-color-input:focus {
+    outline: none;
+    border-color: var(--input-focus-border-color);
+    box-shadow: 0 0 0 2px var(--accent-color-transparent, rgba(0, 123, 255, 0.2));
+}
+
+/* Action Buttons at the bottom */
+.verse-card-actions {
+    display: grid; /* Use grid for two buttons side-by-side */
+    grid-template-columns: 1fr 1fr; /* Equal width */
+    gap: 10px;
+}
+
+.verse-card-actions .modal-action-button {
+    padding: 10px 12px; /* Slightly smaller padding */
+    font-size: 0.9rem; /* Slightly smaller text */
+    /* flex-grow: 1; /* Not needed if using grid for two columns */
+}
+
+@media (min-width: 500px) {
+    .verse-card-actions .modal-action-button {
+        flex-grow: 0; /* Don't grow on larger screens */
+        min-width: 120px;
+    }
+}
+
+/* Secondary action button style (e.g., for "Copy") */
+.modal-action-button.secondary-action {
+    background-color: var(--button-secondary-bg-color);
+    color: var(--button-secondary-text-color);
+    border: 1px solid var(--button-secondary-border-color);
+}
+.modal-action-button.secondary-action:hover {
+    background-color: var(--button-secondary-hover-bg-color);
+}
 
 html, body {
     height: 100%;
@@ -1674,6 +1894,47 @@ ul.slide-menu-items {
     margin: 10px 5px; 
 }
 
+.active-version-name-display {
+    font-size: 0.75rem;
+    color: var(--top-bar-text-color);
+    opacity: 0.8;
+    margin-left: 1px; /* Space from the Bible icon */
+    margin-right: 3px;
+    padding: 2px 2px;
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 3px;
+    white-space: nowrap;
+    display: none; /* Hide by default, JS will show them */
+}
+
+#activePrimaryVersionNameDisplay:not(:empty) { 
+    /* display: inline; /* JS handles this */
+}
+
+/* Show secondary and its preceding slash ONLY if it has content AND primary has content */
+#activeSecondaryVersionNameDisplay:not(:empty) {
+    /* display: inline; /* JS handles this */
+}
+#activePrimaryVersionNameDisplay:not(:empty) + #activeSecondaryVersionNameDisplay:not(:empty):before {
+    content: "/";
+    margin-right: 3px;
+    margin-left: -2px; /* Adjust spacing around slash */
+    opacity: 0.7;
+}
+.column-title.hidden { /* Add this if you don't have a general .hidden already */
+    display: none !important;
+}
+
+.bible-content p { /* This typically targets your .verse-paragraph elements */
+    /* margin-bottom: 0.5em; /* Original default or your previous setting */
+    margin-top: 0.15em;    /* Minimal top margin for slight separation */
+    margin-bottom: 0.15em; /* Minimal bottom margin */
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1.5;     /* Tighter line height. Adjust between 1.3 to 1.5 for readability. */
+                            /* Your original body line-height is 1.6 */
+    /* Other styles like text color should be inherited or use CSS variables */
+}
 
 /*------------------- MOBILE VIEW START HERE ------------------- */
 
@@ -1689,7 +1950,9 @@ ul.slide-menu-items {
     gap: 1px;      
 	width: 100%;
 }
-
+footer {
+	display: none;
+}
 .top-group {
     width: auto;            /* Group takes its content's width */
     margin-bottom: 0;
@@ -1704,9 +1967,11 @@ ul.slide-menu-items {
 #top-bar-group-left {
     display: flex; /* Ensure it's flex if not already */
     align-items: center;
+	gap: 0;
     /* flex-grow: 1; /* Remove or reduce grow, let content dictate size initially */
     /* min-width: auto; /* Allow to be more compact */
 }
+
 
 /* Group 2: Remaining Tools & Settings Icons */
 #top-bar-group-right {
@@ -1748,8 +2013,8 @@ ul.slide-menu-items {
 }
 /* Specific styling for the Bible Version popup trigger with indicators */
 #bibleVersionPopupBtn {
-    padding: 6px 8px; /* Base padding */
-    padding-right: 15px; /* Extra space on the right if indicators are absolutely positioned there */
+    padding: 1px 1px; /* Base padding */
+    padding-right: 1px; /* Extra space on the right if indicators are absolutely positioned there */
 }
 
 #bibleVersionPopupBtn .version-indicator {
@@ -1764,18 +2029,29 @@ ul.slide-menu-items {
 
 
 /* Ensure the icon toggle for multi-commentary is also compact */
-.icon-toggle-label {
+.icon-toggle-label { /* The <label> that acts as the button */
     cursor: pointer;
-    padding: 1px 2px; /* From .top-bar-icon-btn if it inherits, or set directly */
-    display: inline-flex; /* Should already make children inline */
-    align-items: center;  /* Should vertically align children */
+    padding: 6px 8px;       /* From mobile top-bar styles, adjust as needed */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center; /* Center the icon if label has fixed size */
     border-radius: 4px;
-    position: relative; /* In case hidden-checkbox needs it */
+    /* height: 30px; /* From mobile top-bar styles */
+    /* width: 30px;  /* From mobile top-bar styles */
+    transition: background-color 0.2s ease;
 }
-.multi-commentary-icon { /* The <i> tag */
-    font-size: 1.1em; 
-    color: var(--top-bar-text-color);
+.icon-toggle-label:hover {
+    background-color: var(--top-bar-button-hover-bg-color, rgba(255, 255, 255, 0.1));
+}
+.multi-commentary-icon { /* The <i> tag for the icon */
+    font-size: 1.1em; /* Or your standard top-bar icon size */
+    color: var(--top-bar-text-color); /* Default color */
     transition: color 0.2s ease;
+}
+#multiCommentaryToggle:checked + .multi-commentary-icon {
+    color: var(--accent-color); /* Use your theme's accent color */
+    /* Optionally, change the icon itself or add other effects */
+    /* e.g., Font Awesome duotone icons can have primary/secondary opacity changes */
 }
 
 .chapter-nav-btn { /* Class for #prevChapterBtn and #nextChapterBtn */
@@ -1791,8 +2067,14 @@ ul.slide-menu-items {
     padding: 0;   /* <<< MINIMAL padding */
     margin: 0 1px;      /* <<< MINIMAL margin */
     line-height: 1.2;   /* Adjust for tight vertical fit */
-    max-width: 80px;    /* Reduce max-width further if needed */
-    /* ... (keep text-overflow: ellipsis etc.) ... */
+    width: auto;    /* Reduce max-width further if needed */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    border: none; 
+    background-color: transparent;
+    color: var(--top-bar-text-color);
 }
     #toggleCommentaryUploadBtn, #toggleViewBtn,  #toggleSearchBtn, #toggleFileUploadBtn, #toggleUserDataBtn {
         width: auto;
