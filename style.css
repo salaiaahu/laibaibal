@@ -519,8 +519,6 @@ html, body {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-shrink: 1;           /* Allow groups to shrink */
-    flex-grow: 1; 
 }
 
 .version-select,
@@ -2175,7 +2173,7 @@ ul.slide-menu-items {
 #reader-content-area {
 	border: 5px solid var(--bible-column-border-color);
     padding: 0;
-    overflow-y: auto;
+    overflow: hidden;
     flex-grow: 1;
 }
 
@@ -2201,6 +2199,28 @@ ul.slide-menu-items {
     padding: 15px; /* Add padding here for the text container */
 	overflow-y: auto;
 }
+/* --- TOAST NOTIFICATION FOR EXIT CONFIRMATION --- */
+#toast-notification {
+    position: fixed; /* Keeps it in view even when scrolling */
+    bottom: 20px; /* Position from the bottom */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, 100px); /* Start off-screen below */
+    background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent black */
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px; /* Pill shape */
+    z-index: 9999; /* Ensures it's on top of everything */
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none; /* Prevents it from being clickable */
+    font-size: 0.9rem;
+}
+
+#toast-notification.show {
+    opacity: 1;
+    transform: translate(-50%, 0); /* Move it into view */
+}
+
 
 /*------------------- MOBILE VIEW START HERE ------------------- */
 
@@ -2234,7 +2254,7 @@ footer {
 #top-bar-group-left {
     display: flex; /* Ensure it's flex if not already */
     align-items: center;
-	gap: 1px;
+	gap: 2px;
     /* flex-grow: 1; /* Remove or reduce grow, let content dictate size initially */
     /* min-width: auto; /* Allow to be more compact */
 }
@@ -2267,7 +2287,7 @@ footer {
         border: none !important;
         padding: 2px; /* Minimal padding around icon */
         margin: 1px; /* Minimal margin */
-        font-size: 0.9em; /* Adjust icon size as needed */
+        font-size: 1.2em; /* Adjust icon size as needed */
         color: var(--top-bar-text-color); /* Ensure icon color is from theme */
 
     }
@@ -2364,7 +2384,7 @@ footer {
 
 .chapter-nav-btn { /* Class for #prevChapterBtn and #nextChapterBtn */
     padding: 1px;   /* Reduced padding */
-    font-size: 0.85rem; /* Slightly smaller icon if using em-based icon sizing */
+    font-size: 0.95rem; /* Slightly smaller icon if using em-based icon sizing */
     line-height: 1;     /* Ensure icon is vertically centered if it's text-based */
 }
 
@@ -2507,7 +2527,7 @@ footer {
     color: var(--top-bar-text-color);
 }
 .chapter-display {
-    font-size: 1.2rem;
+    font-size: 1.0rem;
     font-weight: bold;
     min-width: 55px;
     text-align: center;
