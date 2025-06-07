@@ -5058,6 +5058,9 @@ async function setViewMode(newMode) { // newMode will be 'single' or 'parallel'
     saveLastReadPosition(); 
     updateViewModeDisplay(); // Updates the UI class and checkbox state
     
+    // ADD THIS LINE to update the version names in the top bar
+    updateActiveVersionNameDisplays();
+    
     if (currentBook && currentChapter) {
         // Reload content to apply view mode (e.g., show/hide secondary column)
         await loadChapterContent(currentBook.book_number, currentChapter, currentVerse);
