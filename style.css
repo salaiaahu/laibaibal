@@ -854,20 +854,22 @@ html, body {
 
 #reader-view {
     flex-grow: 1;
-    padding: 1.5rem;
+    padding: 0;;
     display: flex;
     flex-direction: column;
     align-items: center;
     overflow: hidden;
     min-height: 0;
 }
+#reader-view:not(.reader-active) {
+    padding: 0.5rem;
+}
 
 .panel {
     background: var(--panel-bg-color); /* CHANGED */
     color: var(--panel-text-color);    /* ADDED */
     box-shadow: var(--panel-shadow);
-    border-radius: 8px;
-    padding: 20px;
+    padding: 10px;
     width: 100%;
 
     display: flex;
@@ -882,6 +884,117 @@ html, body {
 	padding: 5px;
 
 }
+/* Main Search Panel - Make it a flex container */
+#search-panel {
+    /* display: flex; flex-direction: column; /* This is already set by the .panel class, which is good. */
+    padding: 20px 25px;
+    gap: 15px; /* Add a gap between child elements (controls, status, results, close button) */
+}
+
+/* The top section with search inputs and buttons */
+.search-controls {
+    display: flex;
+    flex-wrap: wrap; /* Allow controls to wrap on narrow screens */
+    gap: 10px;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--panel-border-color); /* Add a separator */
+    flex-shrink: 0; /* <<< KEY: Prevent this container from shrinking */
+}
+
+/* Style the inputs and selects within the search bar for a professional look */
+.search-controls input[type="text"],
+.search-controls select {
+    padding: 8px 12px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 5px;
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    font-size: 0.9rem;
+    flex-grow: 1; /* Allow input field to take up most space */
+    min-width: 150px; /* Give a sensible minimum width */
+}
+.search-controls select {
+    flex-grow: 0; /* Don't let selects grow as much as the text input */
+}
+
+/* Style the main search button */
+.search-controls #performSearchBtn {
+    background-color: var(--accent-color);
+    color: var(--accent-text-color);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+.search-controls #performSearchBtn:hover {
+    opacity: 0.85;
+}
+
+
+/* The results list container */
+#searchResultsList {
+    flex-grow: 1;         /* <<< KEY: Make this container take all available vertical space */
+    overflow-y: auto;     /* <<< KEY: Make it scrollable if content overflows */
+    min-height: 0;        /* Required for flex-grow and overflow to work correctly */
+    background-color: var(--main-bg-color); /* A slightly different background for the scroll area */
+    border-radius: 5px;
+    padding: 10px;
+}
+	.items-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Increased min item width for better spacing */
+    gap: 10px;
+    padding: 10px 0; /* Add some vertical padding */
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+/* Styling for each individual search result item to make them distinct */
+.search-result-item {
+    background-color: var(--panel-bg-color); /* Match panel bg for cards */
+    padding: 15px;
+    margin-bottom: 10px; /* Space between result cards */
+    border: 1px solid var(--panel-border-color);
+    border-radius: 6px;
+    box-shadow: var(--panel-shadow);
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.search-result-item:hover {
+    transform: translateY(-2px);
+    border-left: 3px solid var(--accent-color);
+    padding-left: 12px; /* Adjust padding to account for new border */
+}
+
+/* Style the verse reference part of the result */
+.search-result-item .result-reference {
+    display: block;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: var(--main-text-color); /* Use a theme variable */
+    opacity: 0.8;
+    margin-bottom: 5px;
+}
+
+/* Style the verse text part of the result */
+.search-result-item .result-text {
+    line-height: 1.5;
+    color: var(--main-text-color); /* Use a theme variable */
+}
+
+/* This is for highlighting the matched search words */
+.search-result-item em {
+    font-style: normal; /* Removes italics from default <em> */
+    font-weight: bold;
+    background-color: var(--highlight-yellow); /* Use your highlight color */
+    color: #000; /* Ensure text is readable on highlight background */
+    padding: 1px 3px;
+    border-radius: 3px;
+}
+
 #upload-panel h3, #commentary-upload-panel h3 { /* "Loaded Versions:" heading */
     font-size: 1.2em;
     color: var(--subheading-text-color); /* Use subheading theme color */
@@ -940,13 +1053,14 @@ html, body {
 }
 
 #closeUploadPanelBtn, #closeCommentaryUploadBtn, #closeSearchPanelBtn, #closeUserDataPanelBtn {
-    background-color: #6c757d;
+    background-color: var(--accent-color);
     margin-top: 15px;
 	width: 60px;
 	align-items: center;
 	    padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
+	color: var(--accent-text-color);
 }
 
 #closeUploadPanelBtn:hover, #closeCommentaryUploadBtn:hover, #closeSearchPanelBtn:hover, #closeUserDataPanelBtn:hover {
@@ -1686,7 +1800,7 @@ footer p{
 }
 /* --- Bible Version Selection Specifics --- */
 .bible-version-choice {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 .bible-version-choice label {
     display: flex; /* Align label text and current version span */
@@ -1947,6 +2061,145 @@ ul.slide-menu-items {
     /* Other styles like text color should be inherited or use CSS variables */
 }
 
+.view-mode-toggle-container {
+    margin-top: 5px;
+	margin-bottom: 5px;
+    padding-top: 10px;
+	padding-bottom: 10px;
+    border-top: 1px solid var(--panel-border-color); /* Separator */
+	border-bottom: 1px solid var(--panel-border-color);
+}
+
+.view-mode-toggle-container label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--main-text-color);
+    user-select: none; /* Prevent text from being selected */
+}
+
+.view-mode-toggle-container input[type="checkbox"] {
+    margin-right: 10px;
+    /* Optional: Style the checkbox itself */
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+/* --- START: reader SECTION STYLES --- */
+#app-container.reader-active #top-bar {
+    display: none;
+}
+
+/* This rule removes the extra side padding when the reader panel is active */
+#app-container.reader-active #reader-view {
+    padding: 0 !important;
+}
+
+#content-reader-panel {
+    background-color: var(--main-bg-color);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#reader-top-bar {
+    display: flex;
+    flex-direction: column; /* This creates the two rows */
+    background-color: var(--sidebar-bg-color);
+    color: var(--sidebar-text-color);
+    padding: 8px 10px;
+    gap: 8px; /* Space between the two rows */
+    flex-shrink: 0;
+}
+
+/* Row 1: Main Controls */
+.reader-main-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+#reader-search-box {
+    flex-grow: 1; /* Makes search box fill the available middle space */
+    min-width: 50px; /* Allows it to shrink on very small screens */
+	padding: 8px 12px;
+}
+
+/* Row 2: Navigation */
+.reader-song-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 34px; /* Gives the bar a consistent height */
+    background-color: rgba(0,0,0,0.15);
+    border-radius: 5px;
+    padding: 0 10px;
+}
+
+#reader-list-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+#reader-item-nav-group {
+	box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* This spaces out the Back, Title, and Next buttons */
+    width: 100%;
+    gap: 10px;
+	padding: 10px;
+}
+
+#item-title-display {
+    font-weight: bold;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* This will ensure long titles get "..." and don't overflow */
+    flex-grow: 1; /* Allow title to take up space but still get truncated */
+    min-width: 0; /* The critical fix for flexbox truncation */
+}
+
+#reader-item-nav-group .nav-btn {
+    flex-shrink: 0; /* This guarantees the Back, Prev, and Next buttons are always visible */
+}
+
+/* Content Area */
+#reader-content-area {
+	border: 5px solid var(--bible-column-border-color);
+    padding: 0;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+.hymn-list-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--panel-border-color);
+    cursor: pointer;
+}
+
+.hymn-list-item:hover {
+    background-color: var(--main-bg-color);
+}
+
+.hymn-content {
+	border: 1px solid var(--bible-column-border-color);
+	border-radius: 5px;
+    box-sizing: border-box;
+	background-color: var(--bible-column-bg-color);
+	color: var(--bible-column-text-color);
+    width: 100%;
+    height: 100%;
+    margin: 5px; /* Center the content on larger screens */
+    padding: 15px; /* Add padding here for the text container */
+	overflow-y: auto;
+}
+
 /*------------------- MOBILE VIEW START HERE ------------------- */
 
 /* Responsive adjustments */
@@ -1958,7 +2211,7 @@ ul.slide-menu-items {
     align-items: center;    /* Vertically align items in the bar */
     padding: 0;       /* <<< MINIMAL top/bottom and side padding for the entire bar */
     height: auto;           /* Let content define height, but will be constrained by items */
-    gap: 1px;      
+    gap: 2px;      
 	width: 100%;
 }
 footer {
@@ -1972,14 +2225,14 @@ footer {
     align-items: center;
     flex-shrink: 1;           /* Allow groups to shrink */
     flex-grow: 0;           /* Groups don't expand beyond content unless specified */
-    gap: 0;               /* <<< MINIMAL gap between items *within* a group */
+    gap: 2px;               /* <<< MINIMAL gap between items *within* a group */
 }
 
 /* Specific group for Bible icon & Chapter Nav */
 #top-bar-group-left {
     display: flex; /* Ensure it's flex if not already */
     align-items: center;
-	gap: 0;
+	gap: 2px;
     /* flex-grow: 1; /* Remove or reduce grow, let content dictate size initially */
     /* min-width: auto; /* Allow to be more compact */
 }
@@ -1989,8 +2242,7 @@ footer {
 #top-bar-group-right {
     display: flex;
 	align-items: center;
-	justify-content: space-between;
-	margin-right: 10px;
+	gap: 2px;
 }
     #top-bar-group-right::-webkit-scrollbar { /* Chrome, Safari, Opera */
         display: none;
@@ -2011,8 +2263,8 @@ footer {
     .top-bar-icon-btn {
         background-color: transparent !important; /* Remove buttony background */
         border: none !important;
-        padding: 1px; /* Minimal padding around icon */
-        margin: 0 1px; /* Minimal margin */
+        padding: 2px; /* Minimal padding around icon */
+        margin: 1px; /* Minimal margin */
         font-size: 1.2em; /* Adjust icon size as needed */
         color: var(--top-bar-text-color); /* Ensure icon color is from theme */
 
@@ -2020,9 +2272,6 @@ footer {
     .top-bar-icon-btn:hover {
         background-color: var(--top-bar-button-hover-bg-color, rgba(255,255,255,0.15)) !important; /* Subtle hover */
     }
-.top-group .checkbox-label-text { /* If you have <span class="checkbox-label-text"> */
-    display: none; 
-}
 /* Specific styling for the Bible Version popup trigger with indicators */
 #bibleVersionPopupBtn {
     padding: 1px 1px; /* Base padding */
@@ -2040,10 +2289,55 @@ footer {
 #bibleVersionPopupBtn .version-indicator.secondary { bottom: 1px; right: -2px; }
 
 
+/*---------- SEARCH ---------- */
+#search-panel {
+    /* display: flex; flex-direction: column; /* This is already set by the .panel class, which is good. */
+    padding: 10px 55px;
+    gap: 10px; /* Add a gap between child elements (controls, status, results, close button) */
+}
+.search-controls {
+    display: flex;
+    flex-wrap: wrap; /* Allow controls to wrap on narrow screens */
+    gap: 5px;
+    align-items: center;
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--panel-border-color); /* Add a separator */
+    flex-shrink: 0; /* <<< KEY: Prevent this container from shrinking */
+}
+#searchResultsList {
+    flex-grow: 1;         /* <<< KEY: Make this container take all available vertical space */
+    overflow-y: auto;     /* <<< KEY: Make it scrollable if content overflows */
+    min-height: 0;        /* Required for flex-grow and overflow to work correctly */
+    background-color: var(--main-bg-color); /* A slightly different background for the scroll area */
+    border-radius: 3px;
+    padding: 1px;
+	font-size: 0.85em;
+}
+
+.message {
+    margin-top: 1px;
+	margin-bottom: 1px;
+    padding: 3px;
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 3px;
+    width: 100%;
+}
+#closeUploadPanelBtn, #closeCommentaryUploadBtn, #closeSearchPanelBtn, #closeUserDataPanelBtn {
+    background-color: var(--accent-color);
+    margin-top: 1px;
+	width: 60px;
+	align-items: center;
+	padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+	color: var(--accent-text-color);
+}
 /* Ensure the icon toggle for multi-commentary is also compact */
 .icon-toggle-label { /* The <label> that acts as the button */
     cursor: pointer;
-    padding: 6px 8px;       /* From mobile top-bar styles, adjust as needed */
+    padding: 0;       /* From mobile top-bar styles, adjust as needed */
     display: inline-flex;
     align-items: center;
     justify-content: center; /* Center the icon if label has fixed size */
@@ -2072,6 +2366,127 @@ footer {
     line-height: 1;     /* Ensure icon is vertically centered if it's text-based */
 }
 
+/* --- START: reader SECTION STYLES --- */
+#app-container.reader-active #top-bar {
+    display: none;
+}
+
+/* This rule removes the extra side padding when the reader panel is active */
+#app-container.reader-active #reader-view {
+    padding: 0 !important;
+}
+
+#content-reader-panel {
+	border: 1px solid var(--bible-column-border-color); 
+	box-sizing: border-box;
+    background-color: var(--main-bg-color);
+	border: 1px;
+    padding: 0;
+    overflow: hidden;
+}
+
+#reader-top-bar {
+    display: flex;
+    flex-direction: column; /* This creates the two rows */
+    background-color: var(--sidebar-bg-color);
+    color: var(--sidebar-text-color);
+    padding: 8px 10px;
+    gap: 8px; /* Space between the two rows */
+    flex-shrink: 0;
+}
+
+/* Row 1: Main Controls */
+.reader-main-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+#reader-search-box {
+    flex-grow: 1; /* Makes search box fill the available middle space */
+    min-width: 50px; /* Allows it to shrink on very small screens */
+	border-radius: 5px;
+	padding: 6px 8px;
+}
+
+/* Row 2: Navigation */
+.reader-song-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 99%;
+    max-height: 30px; /* Gives the bar a consistent height */
+    background-color: rgba(0,0,0,0.15);
+    border-radius: 5px;
+    padding: 0;
+}
+
+#reader-list-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+#reader-item-nav-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* This spaces out the Back, Title, and Next buttons */
+    width: 100%;
+    gap: 10px;
+	padding: 10px;
+}
+
+#item-title-display {
+    font-weight: bold;
+	font-size: 0.95rem;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* This will ensure long titles get "..." and don't overflow */
+    flex-grow: 1; /* Allow title to take up space but still get truncated */
+    min-width: 0; /* The critical fix for flexbox truncation */
+}
+
+#reader-item-nav-group .nav-btn {
+    flex-shrink: 0; /* This guarantees the Back, Prev, and Next buttons are always visible */
+}
+#app-container.reader-active #top-bar {
+    display: none;
+}
+/* Content Area */
+#reader-content-area {
+	border: 5px solid var(--bible-column-border-color); /* Uses the same border as the Bible view */
+    background-color: var(--bible-column-bg-color);
+	padding: 5px;
+    box-sizing: border-box;
+    flex-grow: 1;
+	overflow: hidden;
+}
+.hymn-content h4 {
+	padding: 0;
+	margin: 0;
+}
+.hymn-list-item {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--panel-border-color);
+    cursor: pointer;
+}
+
+.hymn-list-item:hover {
+    background-color: var(--main-bg-color);
+}
+
+.hymn-content {
+	border: 1px solid var(--bible-column-border-color);
+    width: 100%; /* Makes the box fill the available space */
+    max-width: 800px; /* Prevents it from being too wide on desktops */
+    margin: 0 auto; /* Centers the box on wider screens */
+    overflow-y: auto;
+    /* --- The Visual Styling --- */
+    background-color: var(--bible-column-bg-color); /* Uses the same background */
+    padding: 7px; /* Adds space between the border and the text inside */
+    box-shadow: var(--panel-shadow);
+}
 
 /* Current Chapter Display (e.g., "Gen 1") */
 #currentChapterDisplay {
@@ -2080,7 +2495,7 @@ footer {
     padding: 0;   /* <<< MINIMAL padding */
     margin: 0 1px;      /* <<< MINIMAL margin */
     line-height: 1;   /* Adjust for tight vertical fit */
-    width: auto;    /* Reduce max-width further if needed */
+    max-width: 50px;    /* Reduce max-width further if needed */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2108,19 +2523,8 @@ footer {
         max-height: 0;
         padding: 0;
     }
-	#reader-view {
-		flex-grow: 1;
-		/* padding: 1.5rem; /* Original padding */
-		padding: 0.5rem 0.5rem 0.5rem 0.5rem; /* Reduced top/bottom padding, kept side for breathing room */
-		/* OR, if you want NO space around panels: padding: 0; */
-		display: flex;
-		flex-direction: column;
-		align-items: center; /* This centers panels if they're not width: 100% */
-		overflow: hidden; /* Keep this */
-		min-height: 0; /* Keep this for flex children scrolling */
-	}
     .panel {
-        padding: 15px;
+        padding: 10px;
     }
     .parallel-container {
         flex-direction: column;
@@ -2209,15 +2613,6 @@ footer {
 }
 
 /* Container for the grid of loaded Bibles/Commentaries */
-.items-grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Increased min item width for better spacing */
-    gap: 16px;
-    padding: 15px 0; /* Add some vertical padding */
-    margin-top: 10px;
-    width: 100%;
-    box-sizing: border-box;
-}
 
 /* Styling for each item (Bible/Commentary) in the grid - "Card" styling */
 .grid-list-item {
