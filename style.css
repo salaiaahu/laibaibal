@@ -2175,7 +2175,7 @@ ul.slide-menu-items {
 #reader-content-area {
 	border: 5px solid var(--bible-column-border-color);
     padding: 0;
-    overflow: hidden;
+    overflow-y: auto;
     flex-grow: 1;
 }
 
@@ -2213,7 +2213,7 @@ ul.slide-menu-items {
     align-items: center;    /* Vertically align items in the bar */
     padding: 0;       /* <<< MINIMAL top/bottom and side padding for the entire bar */
     height: auto;           /* Let content define height, but will be constrained by items */
-    gap: 5px;      
+    gap: 2px;      
 	width: 100%;
 }
 footer {
@@ -2227,7 +2227,7 @@ footer {
     align-items: center;
     flex-shrink: 1;           /* Allow groups to shrink */
     flex-grow: 1;           /* Groups don't expand beyond content unless specified */
-    gap: 5px;               /* <<< MINIMAL gap between items *within* a group */
+    gap: 2px;               /* <<< MINIMAL gap between items *within* a group */
 }
 
 /* Specific group for Bible icon & Chapter Nav */
@@ -2462,7 +2462,7 @@ footer {
 	padding: 5px;
     box-sizing: border-box;
     flex-grow: 1;
-	overflow: hidden;
+	overflow-y: auto;
 }
 .hymn-content h4 {
 	padding: 0;
