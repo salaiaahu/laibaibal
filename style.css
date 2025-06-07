@@ -2392,8 +2392,8 @@ footer {
     flex-direction: column; /* This creates the two rows */
     background-color: var(--sidebar-bg-color);
     color: var(--sidebar-text-color);
-    padding: 8px 10px;
-    gap: 8px; /* Space between the two rows */
+    padding: 5px 5px;
+    gap: 5px; /* Space between the two rows */
     flex-shrink: 0;
 }
 
@@ -2509,7 +2509,7 @@ footer {
 .chapter-display {
     font-size: 1.2rem;
     font-weight: bold;
-    min-width: 65px;
+    min-width: 60px;
     text-align: center;
 }
     #toggleCommentaryUploadBtn, #toggleViewBtn,  #toggleSearchBtn, #toggleFileUploadBtn, #toggleUserDataBtn {
