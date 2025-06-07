@@ -519,6 +519,8 @@ html, body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 1;           /* Allow groups to shrink */
+    flex-grow: 1; 
 }
 
 .version-select,
@@ -2211,7 +2213,7 @@ ul.slide-menu-items {
     align-items: center;    /* Vertically align items in the bar */
     padding: 0;       /* <<< MINIMAL top/bottom and side padding for the entire bar */
     height: auto;           /* Let content define height, but will be constrained by items */
-    gap: 2px;      
+    gap: 5px;      
 	width: 100%;
 }
 footer {
@@ -2224,15 +2226,15 @@ footer {
     justify-content: center;
     align-items: center;
     flex-shrink: 1;           /* Allow groups to shrink */
-    flex-grow: 0;           /* Groups don't expand beyond content unless specified */
-    gap: 2px;               /* <<< MINIMAL gap between items *within* a group */
+    flex-grow: 1;           /* Groups don't expand beyond content unless specified */
+    gap: 5px;               /* <<< MINIMAL gap between items *within* a group */
 }
 
 /* Specific group for Bible icon & Chapter Nav */
 #top-bar-group-left {
     display: flex; /* Ensure it's flex if not already */
     align-items: center;
-	gap: 2px;
+	gap: 5px;
     /* flex-grow: 1; /* Remove or reduce grow, let content dictate size initially */
     /* min-width: auto; /* Allow to be more compact */
 }
@@ -2242,7 +2244,7 @@ footer {
 #top-bar-group-right {
     display: flex;
 	align-items: center;
-	gap: 2px;
+	gap: 5px;
 }
     #top-bar-group-right::-webkit-scrollbar { /* Chrome, Safari, Opera */
         display: none;
