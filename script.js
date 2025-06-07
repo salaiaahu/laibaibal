@@ -3350,6 +3350,10 @@ const allReadings = [
 console.log(`Hymns data loaded. Total hymns: ${allHymns.length}`);
 // --- Global Variables ---
 let SQL;
+
+let isExitConfirming = false;
+let exitConfirmTimeout = null;
+
 let loadedVersions = {}; // Stores Bible versions
 let activeVersions = { primary: null, secondary: null };
 let activeDbs = { primary: null, secondary: null }; // Stores active Bible DB instances
@@ -3504,6 +3508,7 @@ const itemTitleDisplay = document.getElementById('item-title-display');
 const decreaseReaderFontBtn = document.getElementById('decrease-reader-font-btn');
 const increaseReaderFontBtn = document.getElementById('increase-reader-font-btn');
 //---- end of hymns ---
+const toastNotification = document.getElementById('toast-notification');
 const hamburgerMenuBtn = document.getElementById('hamburgerMenuBtn');
 const slideMenu = document.getElementById('slideMenu');
 const slideMenuOverlay = document.getElementById('slideMenuOverlay');
@@ -4131,8 +4136,26 @@ function setupMobileBackButtonHandler() {
             }
             return; // Action handled
         }
-        
-        // --- 5. Check for other full-screen panels ---
+		        // Priority 5: Handle exit confirmation from the main view
+        if (isExitConfirming) {
+            // The user pressed back a second time. Allow exit.
+            window.history.back(); // This will now properly exit or go to previous page.
+            return;
+        }
+        // This is the first time they've pressed back on the main screen
+        isExitConfirming = true;
+        toastNotification.classList.add('show');
+
+        // Re-arm the history state so the *next* back press can be caught again
+        history.pushState(null, "", location.href);
+
+        // Set a timer to reset the confirmation state
+        exitConfirmTimeout = setTimeout(() => {
+            isExitConfirming = false;
+            toastNotification.classList.remove('show');
+        }, 2000); // User has 2 seconds to press back again
+		
+        // --- 6. Check for other full-screen panels ---
         if (searchPanel && !searchPanel.classList.contains('hidden')) {
              console.log("Back Action: Closing Search Panel.");
              if (closeSearchPanelBtn) closeSearchPanelBtn.click();
