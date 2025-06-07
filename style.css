@@ -2234,7 +2234,7 @@ footer {
 #top-bar-group-left {
     display: flex; /* Ensure it's flex if not already */
     align-items: center;
-	gap: 5px;
+	gap: 1px;
     /* flex-grow: 1; /* Remove or reduce grow, let content dictate size initially */
     /* min-width: auto; /* Allow to be more compact */
 }
@@ -2267,7 +2267,7 @@ footer {
         border: none !important;
         padding: 2px; /* Minimal padding around icon */
         margin: 1px; /* Minimal margin */
-        font-size: 1.2em; /* Adjust icon size as needed */
+        font-size: 0.9em; /* Adjust icon size as needed */
         color: var(--top-bar-text-color); /* Ensure icon color is from theme */
 
     }
@@ -2509,7 +2509,7 @@ footer {
 .chapter-display {
     font-size: 1.2rem;
     font-weight: bold;
-    min-width: 60px;
+    min-width: 55px;
     text-align: center;
 }
     #toggleCommentaryUploadBtn, #toggleViewBtn,  #toggleSearchBtn, #toggleFileUploadBtn, #toggleUserDataBtn {
