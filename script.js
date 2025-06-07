@@ -3731,7 +3731,7 @@ function setupContentReaderListeners() {
     };
 
     slideMenuHymnsBtn.addEventListener('click', () => {
-        showReaderPage({ data: allHymns, title: 'Hymn List' });
+        showReaderPage({ data: allHymns, title: 'Khrihfa Hlabu' });
         closeMenu();
     });
 
