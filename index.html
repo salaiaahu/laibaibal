@@ -186,7 +186,7 @@
                     <h2>Search Bible</h2>
                     <div class="search-controls">
                         <input type="text" id="searchQueryInput" placeholder="Enter search query">
-                        <button id="performSearchBtn">Search</button>			    
+                        <button id="performSearchBtn">Search</button>						
                         <select id="searchScopeSelect">
                             <option value="currentBook">Current Book</option>
                             <option value="oldTestament">Old Testament</option>
@@ -197,6 +197,7 @@
                             <option value="sentence">Match Sentence</option>
                             <option value="words">Match All Words</option>
                         </select>
+
                     </div>
                     <p id="searchStatusMessage" class="message"></p>
                     <div id="searchResultsList" class="search-results-list">
@@ -464,5 +465,6 @@
   <div class="color-option" data-color="pink" style="background-color: #ffc6ff;"></div>
   <div class="color-option" data-color="orange" style="background-color: #ffd6a5;"></div>
 </div>
+  <div id="toast-notification" class="hidden">Press back again to exit</div>
 </body>
 </html>
