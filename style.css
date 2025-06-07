@@ -1213,7 +1213,7 @@ footer p{
     left: 0;
     top: 0;
     width: 100%;
-    height: 100%;
+    height: 95%;
     background-color: rgba(0,0,0,0.5); /* Slightly darker overlay */
     display: flex; /* Keep this for centering */
     justify-content: center;
@@ -1238,7 +1238,7 @@ footer p{
 
 #commentaryModalTitle { /* This contains the title and the tabs */
     margin-top: 0;
-    margin-bottom: 0
+    margin-bottom: 0;
     padding-bottom: 0;
     border-bottom: 1px solid var(--modal-border-color);
     flex-shrink: 0; /* Prevent title/tabs from shrinking if text is long */
@@ -1246,8 +1246,9 @@ footer p{
 }
 
 #commentaryModalNav { /* The prev/next buttons container */
-    text-align:center; 
-    margin-bottom:10px;
+    text-align:center;
+		margin-top: 1px;
+    margin-bottom:5px;
     flex-shrink: 0; /* Prevent nav buttons from shrinking */
 }
 
@@ -1879,6 +1880,16 @@ ul.slide-menu-items {
     width: 20px; /* For alignment */
     text-align: center;
 }
+.hidden-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    overflow: hidden;
+}
 
 .slide-menu-footer {
     padding: 15px 20px;
@@ -1895,11 +1906,11 @@ ul.slide-menu-items {
 }
 
 .active-version-name-display {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: var(--top-bar-text-color);
     opacity: 0.8;
     margin-left: 1px; /* Space from the Bible icon */
-    margin-right: 3px;
+    margin-right: 2px;
     padding: 2px 2px;
     background-color: rgba(0,0,0,0.1);
     border-radius: 3px;
@@ -1954,6 +1965,7 @@ footer {
 	display: none;
 }
 .top-group {
+	display:flex;
     width: auto;            /* Group takes its content's width */
     margin-bottom: 0;
     justify-content: center;
@@ -2055,10 +2067,11 @@ footer {
 }
 
 .chapter-nav-btn { /* Class for #prevChapterBtn and #nextChapterBtn */
-    padding: 0;   /* Reduced padding */
+    padding: 1px;   /* Reduced padding */
     font-size: 0.85rem; /* Slightly smaller icon if using em-based icon sizing */
     line-height: 1;     /* Ensure icon is vertically centered if it's text-based */
 }
+
 
 /* Current Chapter Display (e.g., "Gen 1") */
 #currentChapterDisplay {
@@ -2066,7 +2079,7 @@ footer {
     font-weight: 500; /* Normal or slightly bolder */
     padding: 0;   /* <<< MINIMAL padding */
     margin: 0 1px;      /* <<< MINIMAL margin */
-    line-height: 1.2;   /* Adjust for tight vertical fit */
+    line-height: 1;   /* Adjust for tight vertical fit */
     width: auto;    /* Reduce max-width further if needed */
     white-space: nowrap;
     overflow: hidden;
@@ -2098,7 +2111,7 @@ footer {
 	#reader-view {
 		flex-grow: 1;
 		/* padding: 1.5rem; /* Original padding */
-		padding: 0.5rem 1.0rem 0.5rem 1.0rem; /* Reduced top/bottom padding, kept side for breathing room */
+		padding: 0.5rem 0.5rem 0.5rem 0.5rem; /* Reduced top/bottom padding, kept side for breathing room */
 		/* OR, if you want NO space around panels: padding: 0; */
 		display: flex;
 		flex-direction: column;
