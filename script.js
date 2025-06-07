@@ -3664,6 +3664,7 @@ let latestSelectedText = '';
 function showReaderPage(context) { // context is { data: [...], title: "..." }
     currentReaderContext = { ...context, activeId: null };
     showPanel(contentReaderPanel);
+	history.pushState({ view: 'readerList' }, context.title, `#${context.title.replace(/\s+/g, '')}`);
     displayContentList();
 }
 
@@ -3698,7 +3699,7 @@ function displayContentList(filteredData = null) {
 function displayItemContent(itemId) {
     const item = currentReaderContext.data.find(i => i.id === itemId);
     if (!item) return;
-
+	history.pushState({ view: 'readerItem', id: itemId }, item.name, `#${currentReaderContext.title.replace(/\s+/g, '')}/${itemId}`);
     // Hide the main list title and show the item navigation
     if (readerListTitle) readerListTitle.classList.add('hidden');
     if (readerItemNavGroup) readerItemNavGroup.classList.remove('hidden');
@@ -4059,116 +4060,103 @@ function processUserTextSelection(eventContext) { // eventContext can be the eve
 
 //-----------Back key control 
 function setupMobileBackButtonHandler() {
-    console.log("Setting up mobile back button (popstate) listener.");
+    console.log("Setting up the new, robust mobile back button (popstate) listener.");
 
-    // Push an initial state so we can intercept the first back press
-    // If the current URL doesn't have a hash, or to ensure our state is on top
-    if (window.location.hash !== "#appActive") {
-        history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-    }
-
-
+    // This function will be the single event listener for the 'popstate' event.
     window.addEventListener('popstate', function(event) {
-        console.log("POPSTATE event fired. Current state:", event.state, "Current hash:", window.location.hash);
+        console.log("POPSTATE event fired. Intercepting back navigation.");
 
-        // If a specific back action was queued, execute it
-        if (typeof inAppBackAction === 'function') {
-            console.log("Executing queued inAppBackAction.");
-            inAppBackAction();
-            inAppBackAction = null; // Clear it after execution
-            // Push a state again to "consume" this back press and stay in the app
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
+        // We check for open states in order of priority (most temporary first).
+        
+        // --- 1. Check for open modals ---
+        if (noteModal && !noteModal.classList.contains('hidden')) {
+            console.log("Back Action: Closing Note Modal.");
+            noteModal.classList.add('hidden');
+            return; // Action handled
+        }
+        if (bookmarkModal && !bookmarkModal.classList.contains('hidden')) {
+            console.log("Back Action: Closing Bookmark Modal.");
+            bookmarkModal.classList.add('hidden');
+            return; // Action handled
+        }
+        if (bibleVersionSelectModal && !bibleVersionSelectModal.classList.contains('hidden')) {
+            console.log("Back Action: Closing Version Select Modal.");
+            bibleVersionSelectModal.classList.add('hidden');
+            return;
+        }
+        if (commentarySelectModal && !commentarySelectModal.classList.contains('hidden')) {
+             console.log("Back Action: Closing Commentary Select Modal.");
+             commentarySelectModal.classList.add('hidden');
+             return;
+        }
+         if (themeSelectModal && !themeSelectModal.classList.contains('hidden')) {
+             console.log("Back Action: Closing Theme Select Modal.");
+             themeSelectModal.classList.add('hidden');
+             return;
+        }
+
+
+        // --- 2. Check for open Slide Menu ---
+        if (slideMenu && !slideMenu.classList.contains('hidden')) {
+            console.log("Back Action: Closing Slide Menu.");
+            slideMenu.classList.add('hidden');
+            slideMenuOverlay.classList.add('hidden');
+            return; // Action handled
+        }
+
+        // --- 3. Check if we are in the Content Reader (Hymns/Readings) ---
+        if (contentReaderPanel && !contentReaderPanel.classList.contains('hidden')) {
+            // If viewing a specific item, go back to the list
+            if (currentReaderContext.activeId) {
+                console.log("Back Action: In Reader Item View, going back to List View.");
+                displayContentList();
+            } else { // If on the list view, go back to the Bible
+                console.log("Back Action: In Reader List View, going back to Bible View.");
+                readerBackToBibleBtn.click();
+            }
+            return; // Action handled
+        }
+
+        // --- 4. Check for Book/Chapter/Verse Navigator ---
+        if (bookChapterVerseSelector && !bookChapterVerseSelector.classList.contains('hidden')) {
+            if (verseGridView && !verseGridView.classList.contains('hidden')) {
+                console.log("Back Action: In Verse Grid, going back to Chapter Grid.");
+                if (backToChapterGridBtn) backToChapterGridBtn.click();
+            } else if (chapterGridView && !chapterGridView.classList.contains('hidden')) {
+                console.log("Back Action: In Chapter Grid, going back to Book Grid.");
+                if (backToBookGridBtn) backToBookGridBtn.click();
+            } else {
+                console.log("Back Action: In Book Grid, closing navigator.");
+                if (closeNavigatorBtn) closeNavigatorBtn.click();
+            }
+            return; // Action handled
+        }
+        
+        // --- 5. Check for other full-screen panels ---
+        if (searchPanel && !searchPanel.classList.contains('hidden')) {
+             console.log("Back Action: Closing Search Panel.");
+             if (closeSearchPanelBtn) closeSearchPanelBtn.click();
+             return;
+        }
+         if (uploadPanel && !uploadPanel.classList.contains('hidden')) {
+             console.log("Back Action: Closing Upload Panel.");
+             if (closeUploadPanelBtn) closeUploadPanelBtn.click();
+             return;
+        }
+        if (commentaryUploadPanel && !commentaryUploadPanel.classList.contains('hidden')) {
+             console.log("Back Action: Closing Commentary Upload Panel.");
+             if (closeCommentaryUploadBtn) closeCommentaryUploadBtn.click();
+             return;
+        }
+        if (userDataPanel && !userDataPanel.classList.contains('hidden')) {
+            console.log("Back Action: Closing User Data Panel.");
+            if (closeUserDataPanelBtn) closeUserDataPanelBtn.click();
             return;
         }
 
-        // --- Default back button behavior if no specific action was queued ---
-        // Check for open modals or specific UI states in reverse order of opening
-        // Selection Modals (Theme, Commentary, Bible Versions)
-        if (themeSelectModal && !themeSelectModal.classList.contains('hidden')) {
-            console.log("Back button: Closing theme select modal.");
-            themeSelectModal.classList.add('hidden');
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        } else if (commentarySelectModal && !commentarySelectModal.classList.contains('hidden')) {
-            console.log("Back button: Closing commentary select modal.");
-            commentarySelectModal.classList.add('hidden');
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        } else if (bibleVersionSelectModal && !bibleVersionSelectModal.classList.contains('hidden')) {
-            console.log("Back button: Closing bible version select modal.");
-            bibleVersionSelectModal.classList.add('hidden');
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        }
-        // Note, Bookmark, Highlight Pickers, etc.
-        else if (noteModal && !noteModal.classList.contains('hidden')) {
-            console.log("Back button: Closing note modal via cancelNote.");
-            cancelNote(); // Assumes cancelNote hides the modal
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        } else if (bookmarkModal && !bookmarkModal.classList.contains('hidden')) {
-            console.log("Back button: Closing bookmark modal via cancelBookmark.");
-            cancelBookmark();
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        } else if (highlightPicker && !highlightPicker.classList.contains('hidden')) {
-            console.log("Back button: Closing highlightPicker.");
-            hideHighlightPicker();
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        } else if (highlightColorPicker && !highlightColorPicker.classList.contains('hidden')) {
-            console.log("Back button: Closing highlightColorPicker.");
-            highlightColorPicker.classList.add('hidden');
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        }
-        // Slide Menu
-        else if (slideMenu && !slideMenu.classList.contains('hidden')) {
-            console.log("Back button: Closing slide menu.");
-            slideMenu.classList.add('hidden');
-            slideMenuOverlay.classList.add('hidden');
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        }
-        // Book/Chapter/Verse Navigator Panel
-        else if (bookChapterVerseSelector && !bookChapterVerseSelector.classList.contains('hidden')) {
-            console.log("Back button: Navigator panel is open.");
-            if (verseGridView && !verseGridView.classList.contains('hidden')) {
-                console.log("Back button: In verse grid, going to chapter grid.");
-                if (backToChapterGridBtn) backToChapterGridBtn.click(); // Simulate back button click
-            } else if (chapterGridView && !chapterGridView.classList.contains('hidden')) {
-                console.log("Back button: In chapter grid, going to book grid.");
-                if (backToBookGridBtn) backToBookGridBtn.click();
-            } else if (bookGridView && !bookGridView.classList.contains('hidden')) {
-                console.log("Back button: In book grid, closing navigator panel.");
-                if (closeNavigatorBtn) closeNavigatorBtn.click();
-            }
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive"); // Consume back press
-        }
-        // Other panels like Upload, Search, UserData
-        else if (uploadPanel && !uploadPanel.classList.contains('hidden')) {
-            console.log("Back button: Closing upload panel.");
-            if (closeUploadPanelBtn) closeUploadPanelBtn.click(); // Or showPanel(bibleContentView);
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        } else if (searchPanel && !searchPanel.classList.contains('hidden')) {
-            console.log("Back button: Closing search panel.");
-            if (closeSearchPanelBtn) closeSearchPanelBtn.click();
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        } else if (commentaryUploadPanel && !commentaryUploadPanel.classList.contains('hidden')) {
-            console.log("Back button: Closing commentary upload panel.");
-            if (closeCommentaryUploadBtn) closeCommentaryUploadBtn.click();
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        } else if (userDataPanel && !userDataPanel.classList.contains('hidden')) {
-            console.log("Back button: Closing user data panel.");
-            if (closeUserDataPanelBtn) closeUserDataPanelBtn.click();
-            history.pushState({appState: 'activeRoot'}, "App Active", "#appActive");
-        }
-        // If nothing else was open, this is the "root" of the app view
-        else if (window.location.hash === "#appActive" && event.state && event.state.appState === 'activeRoot') {
-            // We are at what we consider the app's "base" after a back press.
-            // To prevent exiting on the next back press, we can push another state.
-            // Or, here you could implement a "Press back again to exit" toast.
-            console.log("Back button: At app root state. Pushing state again to prevent exit on next back, or allow exit.");
-            // For now, let's allow default (which might be exit or previous page in browser history)
-            // If you want to strictly control exit, you'd need a more complex state machine or counter.
-            // To try and "stay in app" one more level:
-            // history.pushState({appState: 'reallyExit?'}, "Confirm Exit", "#confirmExit");
-            // Or simply do nothing and let the browser go back further in its history / close.
-        } else {
-            console.log("Back button: No specific in-app action for current state. Default browser back may occur.");
-        }
+        // If no other state was handled, allow the browser to go back (which may exit the app)
+        console.log("Back Action: No specific in-app state found. Allowing default browser behavior.");
+        window.history.back();
     });
 }
 
@@ -4598,6 +4586,7 @@ console.log("LOG: setupPopupTriggersAndModals() called.");
             const modalToClose = btn.closest('.selection-modal');
             if (modalToClose) {
                 modalToClose.classList.add('hidden');
+
             }
         });
     });
@@ -4613,6 +4602,7 @@ console.log("LOG: After closeAllPopups()");
             populateBibleVersionModal(); // Populate with current selections and options
 console.log("LOG: After populateBibleVersionModal()"); 
             bibleVersionSelectModal.classList.remove('hidden');
+			history.pushState({ modal: 'versionSelect' }, "Select Version", "#versionSelectOpen");
             console.log("LOG: bibleVersionSelectModal 'hidden' class removed. Current classes:", bibleVersionSelectModal.classList.toString()); // LOG 4
             console.log("LOG: bibleVersionSelectModal computed display style:", window.getComputedStyle(bibleVersionSelectModal).display); // LOG 5
   
@@ -6985,7 +6975,7 @@ async function showNoteModal(verseRef, initialSelectedText = null) {
     }
     
     noteModal.classList.remove('hidden');
-history.pushState({modal: 'note'}, "Note", "#noteOpen"); 
+	history.pushState({ modal: 'note' }, "Note", "#noteOpen");
     
     // Try to ensure other potential overlays are hidden
     if (highlightPicker && !highlightPicker.classList.contains('hidden')) {
@@ -7159,6 +7149,7 @@ async function showBookmarkModal(verseRef) {
         deleteBookmarkBtn.classList.remove('hidden'); // Show delete button
     }
     bookmarkModal.classList.remove('hidden'); // Show modal
+	history.pushState({ modal: 'bookmark' }, "Bookmark", "#bookmarkOpen");
     bookmarkCategoryInput.focus(); // Focus on input
 }
 
@@ -8164,11 +8155,11 @@ async function initializeApp() {
         setupNavigationListeners();     // For book/chapter/verse navigator panel (triggered by currentChapterDisplay click & its internal back/close buttons)
         setupPopupTriggersAndModals();  // For Bible version, commentary, theme popups (opening them and handling selections)
 		setupSlideMenuListeners();
-		setupMobileBackButtonHandler();
 		setupGlobalSelectionListener();
 		updateActiveVersionNameDisplays();
 		updateViewModeDisplay();
 		setupContentReaderListeners();
+		setupMobileBackButtonHandler(); 
 
 
 
