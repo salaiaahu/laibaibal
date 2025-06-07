@@ -143,6 +143,7 @@ const closeSlideMenuBtn = document.getElementById('closeSlideMenuBtn');
 const slideMenuManageBiblesBtn = document.getElementById('slideMenuManageBiblesBtn');
 const slideMenuManageCommentariesBtn = document.getElementById('slideMenuManageCommentariesBtn');
 const slideMenuMyDataBtn = document.getElementById('slideMenuMyDataBtn');
+const slideMenuThemeBtn = document.getElementById('slideMenuThemeBtn'); 
 // Top Bar
 const primaryVersionIndicator = document.getElementById('primaryVersionIndicator');
 const secondaryVersionIndicator = document.getElementById('secondaryVersionIndicator');
@@ -314,6 +315,56 @@ function updateActiveVersionNameDisplays() {
 }
 
 // --------- Selection
+
+function restorePartialHighlightsDOM(verseEl, highlightsForVerse) {
+    if (!verseEl || !highlightsForVerse || highlightsForVerse.length === 0) {
+        return;
+    }
+
+    // Sort by length, longest first, to handle nested cases correctly (e.g., "his son" before "son").
+    highlightsForVerse.sort((a, b) => (b.text || '').length - (a.text || '').length);
+
+    for (const highlight of highlightsForVerse) {
+        const textToFind = highlight.text;
+        const color = highlight.color;
+        if (!textToFind || !color) continue;
+
+        // Use a TreeWalker to find all text nodes. We re-walk for each highlight
+        // to ensure we're working with an up-to-date DOM after previous modifications.
+        const walker = document.createTreeWalker(verseEl, NodeFilter.SHOW_TEXT, null, false);
+        const textNodesToProcess = [];
+        let currentNode;
+        while (currentNode = walker.nextNode()) {
+            // Do not search within text nodes that are already part of a highlight or other special span.
+            if (!currentNode.parentElement.closest('.partial-highlight, .commentary-link, .partial-note-anchor')) {
+                textNodesToProcess.push(currentNode);
+            }
+        }
+
+        for (const textNode of textNodesToProcess) {
+            const matchIndex = textNode.nodeValue.indexOf(textToFind);
+            if (matchIndex !== -1) {
+                try {
+                    const range = document.createRange();
+                    range.setStart(textNode, matchIndex);
+                    range.setEnd(textNode, matchIndex + textToFind.length);
+
+                    const highlightSpan = document.createElement('span');
+                    highlightSpan.className = `partial-highlight highlight-${color}`;
+                    
+                    // surroundContents is a robust way to wrap the text, automatically handling node splitting.
+                    range.surroundContents(highlightSpan);
+                    
+                    // Once found and wrapped, break from the inner loop to process the next highlight object.
+                    break; 
+                } catch (e) {
+                    console.error(`Failed to apply partial highlight for text "${textToFind}"`, e);
+                }
+            }
+        }
+    }
+}
+
 // New function to process selection
 function processTextSelection() {
     const selection = window.getSelection();
@@ -421,10 +472,30 @@ function setupSlideMenuListeners() {
                 closeMenu();
             });
         }
-        console.log("Slide menu listeners configured.");
+    if (slideMenuThemeBtn && themeSelectModal) {
+        slideMenuThemeBtn.addEventListener('click', () => {
+            console.log("EVENT: Change Theme from slide menu CLICKED.");
+            
+            const closeMenu = () => { // Helper to ensure slide menu closes
+                if(slideMenu) slideMenu.classList.add('hidden');
+                if(slideMenuOverlay) slideMenuOverlay.classList.add('hidden');
+            };
+            closeMenu(); 
+            
+            // Now, open the theme selection modal
+            // The modal needs to be populated with the currently selected theme
+            if (typeof populateThemeModal === "function") {
+                populateThemeModal();
+            } else {
+                console.error("populateThemeModal function not found!");
+            }
+            themeSelectModal.classList.remove('hidden');
+        });
+        console.log("DEBUG: Event listener for slideMenuThemeBtn ATTACHED.");
     } else {
-        console.error("One or more slide menu elements not found.");
+        console.error("ERROR: slideMenuThemeBtn or themeSelectModal not found.");
     }
+}
 }
 
 //------------------------
@@ -1077,27 +1148,22 @@ console.log("LOG: After populateBibleVersionModal()");
     }
 
     // --- Theme Selection Modal ---
-    if (themePopupBtn && themeSelectModal && popupThemeList) {
-        themePopupBtn.addEventListener('click', () => {
-            closeAllPopups();
-            populateThemeModal(); // Marks the current theme as selected
-            themeSelectModal.classList.remove('hidden');
-        });
+    if (popupThemeList) {
+        // Use event delegation on the parent list for simplicity and efficiency
+        popupThemeList.addEventListener('click', (event) => {
+            const themeButton = event.target.closest('.theme-option-button');
+            if (!themeButton) return; // Click was not on a theme button
 
-        // Event listeners for theme buttons within the popup
-        popupThemeList.querySelectorAll('.theme-option-button').forEach(button => {
-            // Remove old listener before adding new one to prevent duplication if this setup runs multiple times
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
+            const themeValue = themeButton.dataset.value;
+            console.log("THEME POPUP: Theme button clicked:", themeValue);
 
-            newButton.addEventListener('click', () => {
-                applyTheme(newButton.dataset.value); // Applies the theme
-                populateThemeModal();             // Updates the selected item in the popup
-                themeSelectModal.classList.add('hidden'); // Auto-close
-            });
+            applyTheme(themeValue);           // Applies the theme
+            populateThemeModal();           // Updates which button is marked 'selected'
+            themeSelectModal.classList.add('hidden'); // Auto-close the modal
         });
+        console.log("DEBUG: Event listener for theme options in popup ATTACHED.");
     } else {
-        console.error("Theme popup trigger or modal elements not found.");
+        console.error("ERROR: popupThemeList element not found.");
     }
 }
 
@@ -2978,6 +3044,27 @@ if (multiMode) {
         if (contentDiv) contentDiv.innerHTML = contentHtml.trim() === '' ? `<p class="placeholder">No content found for this chapter.</p>` : contentHtml;
         
         console.log(`loadVersionContent: Base HTML set for ${versionType}. Ready to layer partials.`);
+        
+		// Restore Partial Highlights
+        if (processingChapterString !== 'introduction' && allHighlightsInChapter && allHighlightsInChapter.length > 0) {
+            const partialHighlights = allHighlightsInChapter.filter(h => h.text && h.text.trim() !== '');
+            if (partialHighlights.length > 0) {
+                const highlightsByVerse = new Map();
+                partialHighlights.forEach(h => {
+                    if (!highlightsByVerse.has(h.verse)) {
+                        highlightsByVerse.set(h.verse, []);
+                    }
+                    highlightsByVerse.get(h.verse).push(h);
+                });
+
+                highlightsByVerse.forEach((highlightsForVerse, verseNumber) => {
+                    const verseEl = contentDiv.querySelector(`#${versionType}-verse-${verseNumber}`);
+                    if (verseEl) {
+                        restorePartialHighlightsDOM(verseEl, highlightsForVerse);
+                    }
+                });
+            }
+        }
 
         if (processingChapterString !== 'introduction' && allHighlightsInChapter && Array.isArray(allHighlightsInChapter)) {
             const numericCh_hl = parseInt(processingChapterString);
@@ -4562,7 +4649,6 @@ async function initializeApp() {
         // ----- Setup UI Listeners -----
         // These functions should be defined globally
         setupNavigationListeners();     // For book/chapter/verse navigator panel (triggered by currentChapterDisplay click & its internal back/close buttons)
-        setupThemeControls();           // For theme modal trigger and theme application
         setupPopupTriggersAndModals();  // For Bible version, commentary, theme popups (opening them and handling selections)
 		setupSlideMenuListeners();
 		setupMobileBackButtonHandler();
