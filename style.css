@@ -2401,7 +2401,7 @@ footer {
 .reader-main-controls {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     width: 100%;
 }
 
@@ -2505,6 +2505,12 @@ footer {
     border: none; 
     background-color: transparent;
     color: var(--top-bar-text-color);
+}
+.chapter-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    min-width: 65px;
+    text-align: center;
 }
     #toggleCommentaryUploadBtn, #toggleViewBtn,  #toggleSearchBtn, #toggleFileUploadBtn, #toggleUserDataBtn {
         width: auto;
