@@ -3512,6 +3512,9 @@ const floatingFontControls = document.getElementById('floating-font-controls');
 //---- end of hymns ---
 const toastNotification = document.getElementById('toast-notification');
 const hamburgerMenuBtn = document.getElementById('hamburgerMenuBtn');
+const pageMenuBtn = document.getElementById('pageMenuBtn');
+const pageHeader = document.getElementById('pageHeader');
+const pageHeaderTitle = document.getElementById('pageHeaderTitle');
 const slideMenu = document.getElementById('slideMenu');
 const slideMenuOverlay = document.getElementById('slideMenuOverlay');
 const closeSlideMenuBtn = document.getElementById('closeSlideMenuBtn');
@@ -4014,6 +4017,13 @@ function setupSlideMenuListeners() {
             closeSlideMenuBtn.addEventListener('click', closeMenu);
         }
         slideMenuOverlay.addEventListener('click', closeMenu);
+
+        if (pageMenuBtn) {
+            pageMenuBtn.addEventListener('click', () => {
+                slideMenu.classList.remove('hidden');
+                slideMenuOverlay.classList.remove('hidden');
+            });
+        }
 
         // Listeners for items within the slide menu
         if (slideMenuBibleBtn) {
@@ -5092,12 +5102,23 @@ function syncScroll(scrollingElement, targetElement) {
 function showPanel(panelToShow) {
     const appContainer = document.getElementById('app-container');
     const allPanels = document.querySelectorAll('.panel'); // Get all panels
+    const pageTitles = new Map([
+        [uploadPanel, 'Manage Bibles'],
+        [commentaryUploadPanel, 'Manage Commentaries'],
+        [userDataPanel, 'My Data']
+    ]);
+    const isDedicatedPage = pageTitles.has(panelToShow);
 
     // Add or remove the 'reader-active' class from the main app container
     if (panelToShow === contentReaderPanel) {
         appContainer.classList.add('reader-active');
     } else {
         appContainer.classList.remove('reader-active');
+    }
+    appContainer.classList.toggle('page-active', isDedicatedPage);
+    if (pageHeader && pageHeaderTitle) {
+        pageHeader.classList.toggle('hidden', !isDedicatedPage);
+        pageHeaderTitle.textContent = pageTitles.get(panelToShow) || '';
     }
 
     allPanels.forEach(panel => {

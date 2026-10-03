@@ -3177,3 +3177,51 @@ footer {
     border-radius: 8px;
     background: var(--main-bg-color);
 }
+
+/* Dedicated management views use the app header instead of reader controls. */
+.page-header {
+    display: none;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: 10px;
+}
+.page-header h1 {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--top-bar-text-color);
+    font-size: 1.05rem;
+    font-weight: 650;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+#app-container.page-active #top-bar-group-left,
+#app-container.page-active #top-bar-group-right {
+    display: none;
+}
+#app-container.page-active #top-bar {
+    min-height: 52px;
+    padding: 0 10px;
+}
+#app-container.page-active .page-header {
+    display: flex;
+}
+#app-container.page-active #upload-panel,
+#app-container.page-active #commentary-upload-panel,
+#app-container.page-active #user-data-panel {
+    width: min(100%, 880px);
+    min-height: calc(100vh - 84px);
+    margin: 0 auto;
+    border-top: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+#app-container.page-active #upload-panel > h2,
+#app-container.page-active #commentary-upload-panel > h2,
+#app-container.page-active #user-data-panel > h2,
+#app-container.page-active #closeUploadPanelBtn,
+#app-container.page-active #closeCommentaryUploadBtn,
+#app-container.page-active #closeUserDataPanelBtn {
+    display: none;
+}
