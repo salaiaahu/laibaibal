@@ -1988,6 +1988,57 @@ ul.slide-menu-items {
 .slide-menu-items li button:hover {
     background-color: var(--sidebar-hover-bg-color, #4a6582);
 }
+.slide-menu-section-label {
+    padding: 18px 20px 7px;
+    color: var(--sidebar-text-color);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+    text-transform: uppercase;
+}
+.slide-menu-toggle,
+.slide-menu-font-controls {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 51px;
+    padding: 12px 20px;
+    color: var(--sidebar-text-color);
+    border-bottom: 1px solid var(--sidebar-border-color, rgba(255,255,255,0.1));
+    cursor: pointer;
+}
+.slide-menu-toggle input {
+    width: 18px;
+    height: 18px;
+    margin-left: auto;
+    accent-color: var(--accent-color);
+}
+.slide-menu-font-controls {
+    justify-content: space-between;
+}
+.slide-menu-font-controls > span {
+    display: flex;
+    align-items: center;
+}
+.menu-compact-button {
+    width: 36px;
+    height: 36px;
+    margin-left: 6px;
+    border: 1px solid var(--sidebar-border-color, rgba(255,255,255,0.25));
+    border-radius: 6px;
+    background: transparent;
+    color: var(--sidebar-text-color);
+    cursor: pointer;
+}
+.menu-compact-button:hover:not(:disabled) {
+    background: var(--sidebar-hover-bg-color, #4a6582);
+}
+.menu-compact-button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
 .menu-item-icon {
     font-size: 1.1em;
     margin-right: 15px;
@@ -2232,7 +2283,7 @@ ul.slide-menu-items {
     justify-content: space-between;/* Space out the main groups */
     align-items: center;    /* Vertically align items in the bar */
     padding: 0;       /* <<< MINIMAL top/bottom and side padding for the entire bar */
-    height: auto;           /* Let content define height, but will be constrained by items */
+    min-height: 52px;
     gap: 2px;      
 	width: 100%;
 }
@@ -2245,8 +2296,8 @@ footer {
     margin-bottom: 0;
     justify-content: center;
     align-items: center;
-    flex-shrink: 1;           /* Allow groups to shrink */
-    flex-grow: 1;           /* Groups don't expand beyond content unless specified */
+    flex-shrink: 1;
+    flex-grow: 0;
     gap: 2px;               /* <<< MINIMAL gap between items *within* a group */
 }
 
@@ -2254,7 +2305,8 @@ footer {
 #top-bar-group-left {
     display: flex; /* Ensure it's flex if not already */
     align-items: center;
-	gap: 2px;
+	gap: 4px;
+    min-width: 0;
     /* flex-grow: 1; /* Remove or reduce grow, let content dictate size initially */
     /* min-width: auto; /* Allow to be more compact */
 }
@@ -2264,7 +2316,20 @@ footer {
 #top-bar-group-right {
     display: flex;
 	align-items: center;
-	gap: 5px;
+	gap: 4px;
+    padding-right: 8px;
+}
+#hamburgerMenuBtn {
+    margin: 0 2px;
+}
+.chapter-display {
+    min-width: 58px;
+    font-size: 1rem;
+}
+.active-version-name-display {
+    max-width: 42px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
     #top-bar-group-right::-webkit-scrollbar { /* Chrome, Safari, Opera */
         display: none;
@@ -2285,8 +2350,10 @@ footer {
     .top-bar-icon-btn {
         background-color: transparent !important; /* Remove buttony background */
         border: none !important;
-        padding: 2px; /* Minimal padding around icon */
-        margin: 1px; /* Minimal margin */
+        width: 40px;
+        min-height: 40px;
+        padding: 4px;
+        margin: 0;
         font-size: 1.2em; /* Adjust icon size as needed */
         color: var(--top-bar-text-color); /* Ensure icon color is from theme */
 
@@ -2383,7 +2450,9 @@ footer {
 }
 
 .chapter-nav-btn { /* Class for #prevChapterBtn and #nextChapterBtn */
-    padding: 1px;   /* Reduced padding */
+    width: 28px;
+    min-height: 40px;
+    padding: 1px;
     font-size: 0.95rem; /* Slightly smaller icon if using em-based icon sizing */
     line-height: 1;     /* Ensure icon is vertically centered if it's text-based */
 }

@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parallel Bible Reader</title>
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="description" content="Read the Bible, commentaries, hymns, and daily readings offline.">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+    <title>Lai Baibal</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -24,22 +28,9 @@
 					<span id="currentChapterDisplay" class="chapter-display"></span>
 					<button id="nextChapterBtn" class="nav-btn chapter-nav-btn" title="Next Chapter"><i class="fas fa-chevron-right"></i></button>
 
-					<div class="font-size-controls top-group-item">
-						<button id="decreaseFontSizeBtn" class="top-bar-icon-btn" title="Decrease Font Size">
-							<i class="fas fa-font" style="font-size: 0.7em;"></i><i class="fas fa-minus" style="font-size: 0.5em; vertical-align: text-top; margin-left: -2px;"></i>
-						</button>
-						<button id="increaseFontSizeBtn" class="top-bar-icon-btn" title="Increase Font Size">
-							<i class="fas fa-font" style="font-size: 0.8em;"></i><i class="fas fa-plus" style="font-size: 0.5em; vertical-align: text-top; margin-left: -2px;"></i>
-						</button>
-					</div>
 				</div>
 
 				<div class="top-group" id="top-bar-group-right">
-					<button id="commentaryPopupBtn" class="top-bar-icon-btn" title="Select Commentary"><i class="fas fa-book-reader"></i></button>
-					<label class="icon-toggle-label" title="Show all commentaries for current verse">
-						<input type="checkbox" id="multiCommentaryToggle" class="hidden-checkbox"> 
-						<i class="fas fa-layer-group multi-commentary-icon"></i> 
-					</label>
 					<button id="toggleSearchBtn" class="top-bar-icon-btn" title="Search Bible"><i class="fas fa-search"></i></button>
 				</div>
 			</header>
@@ -87,6 +78,27 @@
 							<i class="fas fa-palette menu-item-icon"></i>
 							<span>Change Theme</span>
 						</button>
+					</li>
+					<li class="slide-menu-section-label">Reading tools</li>
+					<li>
+						<button id="commentaryPopupBtn">
+							<i class="fas fa-book-reader menu-item-icon"></i>
+							<span>Select Commentary</span>
+						</button>
+					</li>
+					<li>
+						<label class="slide-menu-toggle" for="multiCommentaryToggle">
+							<i class="fas fa-layer-group menu-item-icon"></i>
+							<span>Show all commentaries</span>
+							<input type="checkbox" id="multiCommentaryToggle">
+						</label>
+					</li>
+					<li class="slide-menu-font-controls">
+						<span><i class="fas fa-font menu-item-icon"></i>Text size</span>
+						<div>
+							<button id="decreaseFontSizeBtn" class="menu-compact-button" title="Decrease text size" aria-label="Decrease text size"><i class="fas fa-minus"></i></button>
+							<button id="increaseFontSizeBtn" class="menu-compact-button" title="Increase text size" aria-label="Increase text size"><i class="fas fa-plus"></i></button>
+						</div>
 					</li>
 					</ul>
 				<div class="slide-menu-footer">
@@ -387,6 +399,11 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script src="script.js"></script>
+	<script>
+		if ('serviceWorker' in navigator) {
+			window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
+		}
+	</script>
 <div id="verseImageModal" class="modal hidden">
     <div class="modal-content" style="max-width: 650px;"> <span id="closeVerseImageModal" class="close-button">&times;</span>
         <h2 style="text-align:center;">Shareable Verse Card</h2>

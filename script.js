@@ -4658,6 +4658,10 @@ console.log("LOG: After populateBibleVersionModal()");
     // --- Commentary Selection Modal ---
     if (commentaryPopupBtn && commentarySelectModal && popupCommentaryList) {
         commentaryPopupBtn.addEventListener('click', () => {
+            if (slideMenu && !slideMenu.classList.contains('hidden')) {
+                slideMenu.classList.add('hidden');
+                slideMenuOverlay.classList.add('hidden');
+            }
             closeAllPopups();
             populateCommentaryModal(); // Populates the list and sets up internal click listeners
             commentarySelectModal.classList.remove('hidden');
