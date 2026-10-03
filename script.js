@@ -3497,6 +3497,7 @@ const slideMenuReadingsBtn = document.getElementById('slideMenuReadingsBtn');
 const contentReaderPanel = document.getElementById('content-reader-panel');
 const readerBackToBibleBtn = document.getElementById('reader-back-to-bible-btn');
 const readerHamburgerMenuBtn = document.getElementById('readerHamburgerMenuBtn');
+const readerMainControls = document.querySelector('.reader-main-controls');
 const readerSearchBox = document.getElementById('reader-search-box');
 const toggleReaderSearchBtn = document.getElementById('toggle-reader-search-btn');
 const closeReaderSearchBtn = document.getElementById('close-reader-search-btn');
@@ -3683,6 +3684,8 @@ function displayContentList(filteredData = null) {
         if (readerSearchBox.classList.contains('hidden')) readerListTitle.classList.remove('hidden');
     }
     if (readerItemNavGroup) readerItemNavGroup.classList.add('hidden');
+    if (readerMainControls) readerMainControls.classList.remove('reader-detail-active');
+    if (toggleReaderSearchBtn) toggleReaderSearchBtn.classList.remove('hidden');
     
     currentReaderContext.activeId = null;
     readerContentArea.innerHTML = '';
@@ -3709,10 +3712,11 @@ function displayItemContent(itemId) {
     // Hide the main list title and show the item navigation
     if (readerListTitle) readerListTitle.classList.add('hidden');
     if (readerItemNavGroup) readerItemNavGroup.classList.remove('hidden');
+    if (readerMainControls) readerMainControls.classList.add('reader-detail-active');
     
     currentReaderContext.activeId = parseInt(itemId);
     readerContentArea.innerHTML = `<div class="hymn-content">${item.destext}</div>`;
-    itemTitleDisplay.textContent = item.name;
+    itemTitleDisplay.textContent = `${currentReaderContext.title} No. ${item.id}`;
     
     prevItemBtn.disabled = currentReaderContext.activeId <= 1;
     nextItemBtn.disabled = currentReaderContext.activeId >= currentReaderContext.data.length;

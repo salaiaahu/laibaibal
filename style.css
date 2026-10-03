@@ -2930,6 +2930,36 @@ footer {
 #reader-search-box.hidden {
     display: none;
 }
+.hymn-list-item {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.reader-main-controls.reader-detail-active .reader-title-area,
+.reader-main-controls.reader-detail-active #toggle-reader-search-btn,
+.reader-main-controls.reader-detail-active #close-reader-search-btn {
+    display: none;
+}
+.reader-main-controls #reader-item-nav-group {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 4px;
+    padding: 0;
+}
+.reader-main-controls #reader-item-nav-group .nav-btn {
+    width: 32px;
+    min-width: 32px;
+    height: 36px;
+    padding: 0;
+}
+.reader-main-controls #item-title-display {
+    min-width: 0;
+    padding: 0 4px;
+    color: var(--sidebar-text-color);
+    font-size: 0.95rem;
+}
 .reader-song-navigation {
     width: auto;
 }
