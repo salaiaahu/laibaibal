@@ -3517,6 +3517,7 @@ const slideMenuOverlay = document.getElementById('slideMenuOverlay');
 const closeSlideMenuBtn = document.getElementById('closeSlideMenuBtn');
 
 const slideMenuManageBiblesBtn = document.getElementById('slideMenuManageBiblesBtn');
+const slideMenuBibleBtn = document.getElementById('slideMenuBibleBtn');
 const slideMenuManageCommentariesBtn = document.getElementById('slideMenuManageCommentariesBtn');
 const slideMenuMyDataBtn = document.getElementById('slideMenuMyDataBtn');
 const slideMenuThemeBtn = document.getElementById('slideMenuThemeBtn'); 
@@ -4015,6 +4016,14 @@ function setupSlideMenuListeners() {
         slideMenuOverlay.addEventListener('click', closeMenu);
 
         // Listeners for items within the slide menu
+        if (slideMenuBibleBtn) {
+            slideMenuBibleBtn.addEventListener('click', () => {
+                if (currentBook && currentChapter) showPanel(bibleContentView);
+                else if (Object.keys(loadedVersions).length > 0) openBookNavigator();
+                else showPanel(uploadPanel);
+                closeMenu();
+            });
+        }
         if (slideMenuManageBiblesBtn && uploadPanel) {
             slideMenuManageBiblesBtn.addEventListener('click', () => {
                 console.log("Manage Bibles from slide menu clicked");

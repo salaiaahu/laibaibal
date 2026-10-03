@@ -2973,7 +2973,12 @@ footer {
     bottom: max(18px, env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--accent-color) 75%, transparent);
+    border-radius: 20px;
+    background: var(--accent-color);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
     transition: opacity 180ms ease, transform 180ms ease;
 }
 .floating-font-controls.is-hidden-on-scroll {
@@ -2983,21 +2988,58 @@ footer {
 }
 .floating-font-controls button {
     display: grid;
-    width: 46px;
-    height: 46px;
+    width: 38px;
+    height: 38px;
     place-items: center;
     border: 0;
-    border-radius: 50%;
-    background: var(--accent-color);
+    border-radius: 0;
+    background: transparent;
     color: var(--accent-text-color);
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     font-size: 1.05rem;
 }
 .floating-font-controls button:hover:not(:disabled) {
-    filter: brightness(0.92);
+    background: color-mix(in srgb, var(--accent-text-color) 16%, transparent);
+}
+.floating-font-controls button + button {
+    border-top: 1px solid color-mix(in srgb, var(--accent-text-color) 35%, transparent);
 }
 .floating-font-controls button:disabled {
     opacity: 0.48;
     cursor: not-allowed;
+}
+
+/* Reader detail navigation: compact, neutral controls that match every theme. */
+.reader-main-controls.reader-detail-active {
+    gap: 5px;
+}
+.reader-main-controls #reader-item-nav-group {
+    gap: 5px;
+}
+.reader-main-controls #reader-item-nav-group .nav-btn {
+    display: grid;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 7px;
+    background: rgba(0, 0, 0, 0.12);
+    color: var(--sidebar-text-color);
+    box-shadow: none;
+}
+.reader-main-controls #reader-item-nav-group .nav-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+}
+.reader-main-controls #reader-item-nav-group .nav-btn:disabled {
+    background: rgba(0, 0, 0, 0.06);
+    opacity: 0.4;
+}
+.reader-main-controls #item-title-display {
+    display: block;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.12);
+    font-size: 0.88rem;
+    line-height: 34px;
 }
