@@ -2889,3 +2889,85 @@ footer {
     font-weight: bold;
     border-color: var(--accent-color);         /* Border matches accent */
 }
+
+/* Compact reader header and context-aware floating text controls. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+#reader-top-bar {
+    gap: 6px;
+}
+.reader-main-controls {
+    gap: 6px;
+    min-width: 0;
+}
+.reader-title-area {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: center;
+}
+#reader-list-title {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+#reader-search-box {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+}
+#reader-search-box.hidden {
+    display: none;
+}
+.reader-song-navigation {
+    width: auto;
+}
+.reader-song-navigation:has(#reader-item-nav-group.hidden) {
+    display: none;
+}
+.floating-font-controls {
+    position: fixed;
+    z-index: 1080;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+.floating-font-controls.is-hidden-on-scroll {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(18px);
+}
+.floating-font-controls button {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--accent-color);
+    color: var(--accent-text-color);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    font-size: 1.05rem;
+}
+.floating-font-controls button:hover:not(:disabled) {
+    filter: brightness(0.92);
+}
+.floating-font-controls button:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}

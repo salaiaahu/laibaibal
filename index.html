@@ -88,13 +88,6 @@
 						</button>
 					</li>
 					<li class="slide-menu-section-label">Reading tools</li>
-					<li class="slide-menu-font-controls">
-						<span><i class="fas fa-font menu-item-icon"></i>Text size</span>
-						<div>
-							<button id="decreaseFontSizeBtn" class="menu-compact-button" title="Decrease text size" aria-label="Decrease text size"><i class="fas fa-minus"></i></button>
-							<button id="increaseFontSizeBtn" class="menu-compact-button" title="Increase text size" aria-label="Increase text size"><i class="fas fa-plus"></i></button>
-						</div>
-					</li>
 					</ul>
 				<div class="slide-menu-footer">
 					© Salai AaHu
@@ -292,21 +285,15 @@
 							<button id="readerHamburgerMenuBtn" class="top-bar-icon-btn" title="Menu">
 								<i class="fas fa-bars"></i>
 							</button>
-							<button id="reader-back-to-bible-btn" class="nav-btn" title="Back to Bible">
-								<i class="fas fa-book-bible"></i> Bible
-							</button>
-							<input type="text" id="reader-search-box" placeholder="Search Title...">
-							<div class="font-size-controls">
-								<button id="decrease-reader-font-btn" class="top-bar-icon-btn" title="Decrease Font Size">
-									<i class="fas fa-font" style="font-size: 0.7em;"></i><i class="fas fa-minus" style="font-size: 0.5em;"></i>
-								</button>
-								<button id="increase-reader-font-btn" class="top-bar-icon-btn" title="Increase Font Size">
-									<i class="fas fa-font" style="font-size: 0.8em;"></i><i class="fas fa-plus" style="font-size: 0.5em;"></i>
-								</button>
+							<button id="reader-back-to-bible-btn" class="visually-hidden" title="Back to Bible">Bible</button>
+							<div class="reader-title-area">
+								<span id="reader-list-title"></span>
+								<input type="text" id="reader-search-box" class="hidden" placeholder="Search Title..." aria-label="Search titles">
 							</div>
+							<button id="toggle-reader-search-btn" class="top-bar-icon-btn" title="Search titles" aria-label="Search titles"><i class="fas fa-search"></i></button>
+							<button id="close-reader-search-btn" class="top-bar-icon-btn hidden" title="Close search" aria-label="Close search"><i class="fas fa-times"></i></button>
 						</div>
 						<div class="reader-song-navigation">
-							<span id="reader-list-title"></span>
 							
 							<div id="reader-item-nav-group" class="hidden">
 								<button id="reader-back-to-list-btn" class="nav-btn chapter-nav-btn" title="Back to List">
@@ -332,6 +319,11 @@
             <p>&copy; 2025 My Bible Reader by Salai AaHu</p>
         </footer>
     </div>
+
+    <div id="floating-font-controls" class="floating-font-controls" aria-label="Text size controls">
+		<button id="decreaseFontSizeBtn" title="Decrease text size" aria-label="Decrease text size"><i class="fas fa-minus"></i></button>
+		<button id="increaseFontSizeBtn" title="Increase text size" aria-label="Increase text size"><i class="fas fa-plus"></i></button>
+	</div>
 
     <div id="introModal" class="modal hidden">
         <div class="modal-content">

@@ -3498,6 +3498,8 @@ const contentReaderPanel = document.getElementById('content-reader-panel');
 const readerBackToBibleBtn = document.getElementById('reader-back-to-bible-btn');
 const readerHamburgerMenuBtn = document.getElementById('readerHamburgerMenuBtn');
 const readerSearchBox = document.getElementById('reader-search-box');
+const toggleReaderSearchBtn = document.getElementById('toggle-reader-search-btn');
+const closeReaderSearchBtn = document.getElementById('close-reader-search-btn');
 const readerContentArea = document.getElementById('reader-content-area');
 const readerListTitle = document.getElementById('reader-list-title');
 const readerItemNavGroup = document.getElementById('reader-item-nav-group');
@@ -3505,8 +3507,7 @@ const readerBackToListBtn = document.getElementById('reader-back-to-list-btn');
 const prevItemBtn = document.getElementById('prev-item-btn');
 const nextItemBtn = document.getElementById('next-item-btn');
 const itemTitleDisplay = document.getElementById('item-title-display');
-const decreaseReaderFontBtn = document.getElementById('decrease-reader-font-btn');
-const increaseReaderFontBtn = document.getElementById('increase-reader-font-btn');
+const floatingFontControls = document.getElementById('floating-font-controls');
 //---- end of hymns ---
 const toastNotification = document.getElementById('toast-notification');
 const hamburgerMenuBtn = document.getElementById('hamburgerMenuBtn');
@@ -3679,7 +3680,7 @@ function displayContentList(filteredData = null) {
     // Show the main list title and hide the item navigation
     if (readerListTitle) {
         readerListTitle.textContent = currentReaderContext.title;
-        readerListTitle.classList.remove('hidden');
+        if (readerSearchBox.classList.contains('hidden')) readerListTitle.classList.remove('hidden');
     }
     if (readerItemNavGroup) readerItemNavGroup.classList.add('hidden');
     
@@ -3723,11 +3724,52 @@ function applyReaderFontSize(sizeRem) {
     currentReaderFontSizeRem = Math.max(0.7, Math.min(2.0, sizeRem));
     readerContentArea.style.fontSize = `${currentReaderFontSizeRem}rem`;
     localStorage.setItem(READER_FONT_SIZE_KEY, currentReaderFontSizeRem.toString());
+    updateFloatingFontControlState();
 }
 
 function loadSavedReaderFontSize() {
     const savedSize = localStorage.getItem(READER_FONT_SIZE_KEY);
     applyReaderFontSize(savedSize ? parseFloat(savedSize) : 1.0);
+}
+
+function isReaderViewActive() {
+    return contentReaderPanel && !contentReaderPanel.classList.contains('hidden');
+}
+
+function updateFloatingFontControlState() {
+    if (!floatingFontControls) return;
+    const inReader = isReaderViewActive();
+    const inBible = bibleContentView && !bibleContentView.classList.contains('hidden');
+    floatingFontControls.classList.toggle('hidden', !inReader && !inBible);
+
+    if (decreaseFontSizeBtn) {
+        decreaseFontSizeBtn.disabled = inReader
+            ? currentReaderFontSizeRem <= 0.7
+            : currentAppFontSizeRem <= MIN_FONT_SIZE_REM;
+    }
+    if (increaseFontSizeBtn) {
+        increaseFontSizeBtn.disabled = inReader
+            ? currentReaderFontSizeRem >= 2.0
+            : currentAppFontSizeRem >= MAX_FONT_SIZE_REM;
+    }
+}
+
+function setupFloatingFontControls() {
+    let lastScrollTop = 0;
+    const handleScroll = event => {
+        const target = event.currentTarget;
+        const scrollTop = target === window ? window.scrollY : target.scrollTop;
+        if (scrollTop > lastScrollTop + 4) {
+            floatingFontControls.classList.add('is-hidden-on-scroll');
+        } else if (scrollTop < lastScrollTop - 4) {
+            floatingFontControls.classList.remove('is-hidden-on-scroll');
+        }
+        lastScrollTop = Math.max(0, scrollTop);
+    };
+
+    [primaryBibleContent, secondaryBibleContent, readerContentArea].filter(Boolean)
+        .forEach(element => element.addEventListener('scroll', handleScroll, { passive: true }));
+    window.addEventListener('scroll', handleScroll, { passive: true });
 }
 
 function setupContentReaderListeners() {
@@ -3786,8 +3828,22 @@ function setupContentReaderListeners() {
         }
     });
 
-    decreaseReaderFontBtn.addEventListener('click', () => applyReaderFontSize(currentReaderFontSizeRem - 0.1));
-    increaseReaderFontBtn.addEventListener('click', () => applyReaderFontSize(currentReaderFontSizeRem + 0.1));
+    toggleReaderSearchBtn.addEventListener('click', () => {
+        readerListTitle.classList.add('hidden');
+        readerSearchBox.classList.remove('hidden');
+        toggleReaderSearchBtn.classList.add('hidden');
+        closeReaderSearchBtn.classList.remove('hidden');
+        readerSearchBox.focus();
+    });
+
+    closeReaderSearchBtn.addEventListener('click', () => {
+        readerSearchBox.value = '';
+        readerSearchBox.classList.add('hidden');
+        toggleReaderSearchBtn.classList.remove('hidden');
+        closeReaderSearchBtn.classList.add('hidden');
+        if (!currentReaderContext.activeId) readerListTitle.classList.remove('hidden');
+        displayContentList();
+    });
     
     loadSavedReaderFontSize();
 }
@@ -4316,13 +4372,7 @@ function applyFontSize(sizeRem) {
     localStorage.setItem(FONT_SIZE_STORAGE_KEY, currentAppFontSizeRem.toString());
     console.log(`Font size applied: ${currentAppFontSizeRem}rem`);
 
-    // Disable buttons if at min/max
-    if (decreaseFontSizeBtn) {
-        decreaseFontSizeBtn.disabled = currentAppFontSizeRem <= MIN_FONT_SIZE_REM;
-    }
-    if (increaseFontSizeBtn) {
-        increaseFontSizeBtn.disabled = currentAppFontSizeRem >= MAX_FONT_SIZE_REM;
-    }
+    updateFloatingFontControlState();
 }
 
 function loadSavedFontSize() {
@@ -5044,6 +5094,7 @@ function showPanel(panelToShow) {
             panel.classList.add('hidden');
         }
     });
+    updateFloatingFontControlState();
 }
 
 function updateViewModeDisplay() {
@@ -8078,7 +8129,8 @@ async function initializeApp() {
     }
 	    if (decreaseFontSizeBtn) {
         decreaseFontSizeBtn.addEventListener('click', () => {
-            applyFontSize(currentAppFontSizeRem - FONT_SIZE_STEP_REM);
+            if (isReaderViewActive()) applyReaderFontSize(currentReaderFontSizeRem - 0.1);
+            else applyFontSize(currentAppFontSizeRem - FONT_SIZE_STEP_REM);
         });
     } else {
         console.error("decreaseFontSizeBtn not found");
@@ -8086,7 +8138,8 @@ async function initializeApp() {
 
     if (increaseFontSizeBtn) {
         increaseFontSizeBtn.addEventListener('click', () => {
-            applyFontSize(currentAppFontSizeRem + FONT_SIZE_STEP_REM);
+            if (isReaderViewActive()) applyReaderFontSize(currentReaderFontSizeRem + 0.1);
+            else applyFontSize(currentAppFontSizeRem + FONT_SIZE_STEP_REM);
         });
     } else {
         console.error("increaseFontSizeBtn not found");
@@ -8200,6 +8253,8 @@ async function initializeApp() {
 		updateActiveVersionNameDisplays();
 		updateViewModeDisplay();
 		setupContentReaderListeners();
+		setupFloatingFontControls();
+		updateFloatingFontControlState();
 		setupMobileBackButtonHandler(); 
 
 
