@@ -4407,6 +4407,69 @@ function loadSavedFontSize() {
     }
 }
 
+function enhanceSelect(select) {
+    if (!select || select.dataset.customSelectReady) return;
+    select.dataset.customSelectReady = 'true';
+    select.classList.add('native-select-hidden');
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select';
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'custom-select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+    const menu = document.createElement('div');
+    menu.className = 'custom-select-menu hidden';
+    menu.setAttribute('role', 'listbox');
+    wrapper.append(trigger, menu);
+    select.insertAdjacentElement('afterend', wrapper);
+
+    const render = () => {
+        trigger.textContent = select.options[select.selectedIndex]?.text || 'Select an option';
+        menu.innerHTML = '';
+        Array.from(select.options).forEach(option => {
+            const optionButton = document.createElement('button');
+            optionButton.type = 'button';
+            optionButton.className = 'custom-select-option';
+            optionButton.textContent = option.text;
+            optionButton.setAttribute('role', 'option');
+            optionButton.setAttribute('aria-selected', String(option.selected));
+            optionButton.disabled = option.disabled;
+            optionButton.addEventListener('click', () => {
+                select.value = option.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                close();
+                render();
+            });
+            menu.appendChild(optionButton);
+        });
+    };
+    const close = () => {
+        menu.classList.add('hidden');
+        trigger.setAttribute('aria-expanded', 'false');
+    };
+    trigger.addEventListener('click', () => {
+        const isOpen = !menu.classList.contains('hidden');
+        document.querySelectorAll('.custom-select-menu').forEach(item => item.classList.add('hidden'));
+        if (!isOpen) {
+            menu.classList.remove('hidden');
+            trigger.setAttribute('aria-expanded', 'true');
+        } else close();
+    });
+    select.addEventListener('change', render);
+    new MutationObserver(render).observe(select, { childList: true, subtree: true, attributes: true });
+    document.addEventListener('click', event => {
+        if (!wrapper.contains(event.target)) close();
+    });
+    render();
+}
+
+function setupCustomSelects() {
+    [popupPrimaryVersionSelect, popupSecondaryVersionSelect, searchScopeSelect, matchTypeSelect, bookmarkCategorySelect]
+        .forEach(enhanceSelect);
+}
+
 // NEW function to manage views within the navigator panel
 function closeAllSelectionModals() {
     bibleVersionSelectModal.classList.add('hidden');
@@ -8156,6 +8219,7 @@ function setupGlobalSelectionListener() {
 async function initializeApp() {
     console.log('DEBUG: initializeApp() function started execution.');
 	loadSavedFontSize();
+	setupCustomSelects();
 	if (toggleViewBtn) {
         toggleViewBtn.addEventListener('click', () => {
             setViewMode(currentViewMode === 'parallel' ? 'single' : 'parallel');
