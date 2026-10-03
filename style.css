@@ -2083,6 +2083,69 @@ ul.slide-menu-items {
     display: none; /* Hide by default, JS will show them */
 }
 
+#top-bar .version-picker-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-height: 36px;
+    padding: 4px 7px;
+    border: 0;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.14);
+    color: var(--top-bar-text-color);
+    cursor: pointer;
+}
+#top-bar .version-picker-button:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+#top-bar .version-picker-button .active-version-name-display {
+    margin: 0;
+    background: transparent;
+}
+.version-picker-chevron {
+    font-size: 0.65rem;
+    opacity: 0.75;
+}
+#top-bar .chapter-navigator {
+    display: inline-flex;
+    align-items: center;
+    height: 38px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 7px;
+    background: rgba(0, 0, 0, 0.14);
+}
+#top-bar .chapter-navigator .chapter-nav-btn {
+    display: inline-grid;
+    width: 34px;
+    height: 100%;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--top-bar-text-color);
+    cursor: pointer;
+}
+#top-bar .chapter-navigator .chapter-nav-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+}
+#top-bar .chapter-navigator .chapter-nav-btn:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+#top-bar .top-bar-icon-btn.is-active {
+    color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+#top-bar .chapter-navigator .chapter-display {
+    min-width: 62px;
+    padding: 0 6px;
+    color: var(--top-bar-text-color);
+    font-size: 1rem;
+    line-height: 38px;
+}
+
 #activePrimaryVersionNameDisplay:not(:empty) { 
     /* display: inline; /* JS handles this */
 }
@@ -2322,10 +2385,6 @@ footer {
 #hamburgerMenuBtn {
     margin: 0 2px;
 }
-.chapter-display {
-    min-width: 58px;
-    font-size: 1rem;
-}
 .active-version-name-display {
     max-width: 42px;
     overflow: hidden;
@@ -2361,21 +2420,22 @@ footer {
     .top-bar-icon-btn:hover {
         background-color: var(--top-bar-button-hover-bg-color, rgba(255,255,255,0.15)) !important; /* Subtle hover */
     }
-/* Specific styling for the Bible Version popup trigger with indicators */
-#bibleVersionPopupBtn {
-    padding: 1px 1px; /* Base padding */
-    padding-right: 1px; /* Extra space on the right if indicators are absolutely positioned there */
+#top-bar .version-picker-button {
+    min-height: 40px;
+    padding: 4px 5px;
 }
-
-#bibleVersionPopupBtn .version-indicator {
-    /* Your existing styles for indicators are likely fine, just ensure they fit with smaller button */
-    font-size: 0.5em; /* Even smaller */
-    width: 10px;
-    height: 10px;
-    /* Adjust top/right if needed */
+#top-bar .chapter-navigator {
+    height: 40px;
 }
-#bibleVersionPopupBtn .version-indicator.primary { top: 1px; right: 6px; }
-#bibleVersionPopupBtn .version-indicator.secondary { bottom: 1px; right: -2px; }
+#top-bar .chapter-navigator .chapter-nav-btn {
+    width: 30px;
+    min-height: 0;
+}
+#top-bar .chapter-navigator .chapter-display {
+    min-width: 52px;
+    padding: 0 3px;
+    line-height: 40px;
+}
 
 
 /*---------- SEARCH ---------- */
@@ -2449,12 +2509,9 @@ footer {
     /* e.g., Font Awesome duotone icons can have primary/secondary opacity changes */
 }
 
-.chapter-nav-btn { /* Class for #prevChapterBtn and #nextChapterBtn */
-    width: 28px;
-    min-height: 40px;
-    padding: 1px;
-    font-size: 0.95rem; /* Slightly smaller icon if using em-based icon sizing */
-    line-height: 1;     /* Ensure icon is vertically centered if it's text-based */
+#top-bar .chapter-navigator .chapter-nav-btn {
+    font-size: 0.9rem;
+    line-height: 1;
 }
 
 /* --- START: reader SECTION STYLES --- */

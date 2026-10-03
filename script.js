@@ -5064,6 +5064,15 @@ function updateViewModeDisplay() {
     if (popupShowSecondaryToggle) {
         popupShowSecondaryToggle.checked = (currentViewMode === 'parallel');
     }
+
+    if (toggleViewBtn) {
+        const isParallel = currentViewMode === 'parallel';
+        toggleViewBtn.title = isParallel ? 'Switch to single view' : 'Switch to parallel view';
+        toggleViewBtn.setAttribute('aria-label', toggleViewBtn.title);
+        toggleViewBtn.classList.toggle('is-active', isParallel);
+        const icon = toggleViewBtn.querySelector('i');
+        if (icon) icon.className = isParallel ? 'fas fa-columns' : 'fas fa-book-open';
+    }
 }
 
 async function setViewMode(newMode) { // newMode will be 'single' or 'parallel'
@@ -8062,6 +8071,11 @@ function setupGlobalSelectionListener() {
 async function initializeApp() {
     console.log('DEBUG: initializeApp() function started execution.');
 	loadSavedFontSize();
+	if (toggleViewBtn) {
+        toggleViewBtn.addEventListener('click', () => {
+            setViewMode(currentViewMode === 'parallel' ? 'single' : 'parallel');
+        });
+    }
 	    if (decreaseFontSizeBtn) {
         decreaseFontSizeBtn.addEventListener('click', () => {
             applyFontSize(currentAppFontSizeRem - FONT_SIZE_STEP_REM);

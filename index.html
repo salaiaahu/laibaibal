@@ -18,19 +18,27 @@
 					<button id="hamburgerMenuBtn" class="top-bar-icon-btn" title="Menu">
 						<i class="fas fa-bars"></i>
 					</button>
-					<button id="bibleVersionPopupBtn" class="top-bar-icon-btn" title="Select Bible Versions">
-						<i class="fas fa-book-bible"></i>
+					<button id="bibleVersionPopupBtn" class="version-picker-button" title="Select Bible Versions" aria-label="Select Bible Versions">
+						<span id="activePrimaryVersionNameDisplay" class="active-version-name-display"></span>
+						<span id="activeSecondaryVersionNameDisplay" class="active-version-name-display"></span>
+						<i class="fas fa-chevron-down version-picker-chevron" aria-hidden="true"></i>
 					</button>
-					<span id="activePrimaryVersionNameDisplay" class="active-version-name-display"></span>
-					<span id="activeSecondaryVersionNameDisplay" class="active-version-name-display"></span>
 
-					<button id="prevChapterBtn" class="nav-btn chapter-nav-btn" title="Previous Chapter"><i class="fas fa-chevron-left"></i></button>
-					<span id="currentChapterDisplay" class="chapter-display"></span>
-					<button id="nextChapterBtn" class="nav-btn chapter-nav-btn" title="Next Chapter"><i class="fas fa-chevron-right"></i></button>
+					<div class="chapter-navigator" aria-label="Chapter navigation">
+						<button id="prevChapterBtn" class="chapter-nav-btn" title="Previous Chapter" aria-label="Previous Chapter"><i class="fas fa-chevron-left"></i></button>
+						<span id="currentChapterDisplay" class="chapter-display"></span>
+						<button id="nextChapterBtn" class="chapter-nav-btn" title="Next Chapter" aria-label="Next Chapter"><i class="fas fa-chevron-right"></i></button>
+					</div>
 
 				</div>
 
 				<div class="top-group" id="top-bar-group-right">
+					<button id="toggleViewBtn" class="top-bar-icon-btn" title="Switch to parallel view" aria-label="Switch to parallel view"><i class="fas fa-columns"></i></button>
+					<button id="commentaryPopupBtn" class="top-bar-icon-btn" title="Select Commentary" aria-label="Select Commentary"><i class="fas fa-book-reader"></i></button>
+					<label class="icon-toggle-label" title="Show all commentaries for current verse">
+						<input type="checkbox" id="multiCommentaryToggle" class="hidden-checkbox">
+						<i class="fas fa-layer-group multi-commentary-icon"></i>
+					</label>
 					<button id="toggleSearchBtn" class="top-bar-icon-btn" title="Search Bible"><i class="fas fa-search"></i></button>
 				</div>
 			</header>
@@ -80,19 +88,6 @@
 						</button>
 					</li>
 					<li class="slide-menu-section-label">Reading tools</li>
-					<li>
-						<button id="commentaryPopupBtn">
-							<i class="fas fa-book-reader menu-item-icon"></i>
-							<span>Select Commentary</span>
-						</button>
-					</li>
-					<li>
-						<label class="slide-menu-toggle" for="multiCommentaryToggle">
-							<i class="fas fa-layer-group menu-item-icon"></i>
-							<span>Show all commentaries</span>
-							<input type="checkbox" id="multiCommentaryToggle">
-						</label>
-					</li>
 					<li class="slide-menu-font-controls">
 						<span><i class="fas fa-font menu-item-icon"></i>Text size</span>
 						<div>
