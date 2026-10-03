@@ -5133,9 +5133,9 @@ function updateViewModeDisplay() {
         const isParallel = currentViewMode === 'parallel';
         toggleViewBtn.title = isParallel ? 'Switch to single view' : 'Switch to parallel view';
         toggleViewBtn.setAttribute('aria-label', toggleViewBtn.title);
-        toggleViewBtn.classList.toggle('is-active', isParallel);
+        toggleViewBtn.classList.remove('is-active');
         const icon = toggleViewBtn.querySelector('i');
-        if (icon) icon.className = isParallel ? 'fas fa-columns' : 'fas fa-book-open';
+        if (icon) icon.className = isParallel ? 'fas fa-book-open' : 'fas fa-columns';
     }
 }
 

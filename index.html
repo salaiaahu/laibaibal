@@ -35,10 +35,6 @@
 				<div class="top-group" id="top-bar-group-right">
 					<button id="toggleViewBtn" class="top-bar-icon-btn" title="Switch to parallel view" aria-label="Switch to parallel view"><i class="fas fa-columns"></i></button>
 					<button id="commentaryPopupBtn" class="top-bar-icon-btn" title="Select Commentary" aria-label="Select Commentary"><i class="fas fa-book-reader"></i></button>
-					<label class="icon-toggle-label" title="Show all commentaries for current verse">
-						<input type="checkbox" id="multiCommentaryToggle" class="hidden-checkbox">
-						<i class="fas fa-layer-group multi-commentary-icon"></i>
-					</label>
 					<button id="toggleSearchBtn" class="top-bar-icon-btn" title="Search Bible"><i class="fas fa-search"></i></button>
 				</div>
 			</header>
@@ -135,6 +131,10 @@
         </div>
         <div id="popupCommentaryList" class="popup-item-list">
             </div>
+		<label class="commentary-all-toggle" for="multiCommentaryToggle">
+			<input type="checkbox" id="multiCommentaryToggle">
+			<span>Show all available commentaries</span>
+		</label>
     </div>
 </div>
 
