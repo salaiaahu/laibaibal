@@ -3340,3 +3340,35 @@ footer {
         flex: 1 1 145px;
     }
 }
+
+/* Native-app feel: no zoom, no double-tap delay */
+html, body { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+button, a, select, label { touch-action: manipulation; }
+
+/* Splash screen */
+#splash-screen {
+  position: fixed; inset: 0; z-index: 100000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px;
+  background: linear-gradient(160deg, #3d5872, #203447);
+  transition: opacity .6s ease, visibility .6s ease;
+}
+#splash-screen.splash-hide { opacity: 0; visibility: hidden; }
+.splash-title { color: #fff; font: 600 1.6rem/1 Georgia, serif; letter-spacing: .12em; opacity: 0; animation: splashFade .8s ease 1s forwards; }
+.splash-book { position: relative; width: 120px; height: 160px; perspective: 900px; transform: translateX(60px); animation: bookCenter 1.2s ease .3s forwards; }
+.splash-book > div { position: absolute; top: 0; left: 0; width: 120px; height: 160px; }
+.sb-back { background: #5b3a1e; border-radius: 4px 8px 8px 4px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.sb-page { background: #f6efe0; border-radius: 2px 6px 6px 2px; left: 4px !important; width: 112px !important; top: 6px !important; height: 148px !important; transform-origin: left center; border-right: 1px solid #d9cdb2; }
+.sb-page-1 { animation: pageFlip 1s ease 1s forwards; }
+.sb-page-2 { animation: pageFlip 1s ease 1.2s forwards; }
+.sb-page-3 { animation: pageFlip 1s ease 1.4s forwards; }
+.sb-cover { transform-style: preserve-3d; transform-origin: left center; animation: coverOpen 1.2s cubic-bezier(.5,0,.2,1) .5s forwards; }
+.sb-cover-front, .sb-cover-inside { position: absolute; inset: 0; border-radius: 4px 8px 8px 4px; backface-visibility: hidden; }
+.sb-cover-front { background: linear-gradient(135deg, #7a4a24, #4a2c14); border: 2px solid #c9a24b; display: flex; align-items: center; justify-content: center; }
+.sb-cover-inside { background: #f1e6cd; transform: rotateY(180deg); }
+.sb-cross { position: relative; width: 8px; height: 56px; background: #e3c577; border-radius: 2px; }
+.sb-cross::before { content: ""; position: absolute; left: -16px; top: 14px; width: 40px; height: 8px; background: #e3c577; border-radius: 2px; }
+@keyframes coverOpen { to { transform: rotateY(-165deg); } }
+@keyframes pageFlip { to { transform: rotateY(-155deg); } }
+@keyframes bookCenter { to { transform: translateX(0); } }
+@keyframes splashFade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #splash-screen *, .splash-title { animation-duration: .01s !important; animation-delay: 0s !important; } }

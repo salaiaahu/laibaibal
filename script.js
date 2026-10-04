@@ -8056,7 +8056,22 @@ function showVersePopup(verseEl) {
 
 
 // --- Search Feature Functions ---
-async function performSearch() {
+let searchRunning = false, searchQueued = false, searchDebounce = null;
+async function performSearch(auto = false) {
+    if (searchRunning) { searchQueued = true; return; }
+    searchRunning = true;
+    try { await runSearch(auto === true); }
+    finally {
+        searchRunning = false;
+        if (searchQueued) { searchQueued = false; performSearch(true); }
+    }
+}
+function scheduleAutoSearch(delay = 300) {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => performSearch(true), delay);
+}
+
+async function runSearch(auto) {
     const query = searchQueryInput.value.trim();
     const scope = searchScopeSelect.value;
     const matchType = matchTypeSelect.value;
@@ -8070,8 +8085,10 @@ async function performSearch() {
     }
 
     if (!query) {
-        searchStatusMessage.textContent = 'Please enter a search query.';
-        searchStatusMessage.classList.add('error');
+        if (!auto) {
+            searchStatusMessage.textContent = 'Please enter a search query.';
+            searchStatusMessage.classList.add('error');
+        }
         return;
     }
 
@@ -8453,7 +8470,12 @@ if (commentaryModal) { // Check if modal element exists
                 }
             });
         }
-        if (performSearchBtn) performSearchBtn.addEventListener('click', performSearch);
+        if (performSearchBtn) performSearchBtn.addEventListener('click', () => { clearTimeout(searchDebounce); performSearch(false); });
+        if (searchQueryInput) {
+            searchQueryInput.addEventListener('input', () => scheduleAutoSearch());
+            searchQueryInput.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(searchDebounce); performSearch(false); } });
+        }
+        [searchScopeSelect, matchTypeSelect].forEach(el => el && el.addEventListener('change', () => scheduleAutoSearch(0)));
         if (closeSearchPanelBtn) closeSearchPanelBtn.addEventListener('click', () => {
              if (currentBook && currentChapter) showPanel(bibleContentView); else openBookNavigator();
         });
@@ -8871,3 +8893,28 @@ console.log('DEBUG: Script file loaded. Calling initializeApp().');
 initializeApp();
 
 
+
+// Lock zoom for a native-app feel
+['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTouchEnd < 300) e.preventDefault();
+    lastTouchEnd = now;
+}, { passive: false });
+
+// Dismiss splash screen
+(function () {
+    const splash = document.getElementById('splash-screen');
+    if (!splash) return;
+    const start = performance.now();
+    const hide = () => {
+        const wait = Math.max(0, 2200 - (performance.now() - start));
+        setTimeout(() => {
+            splash.classList.add('splash-hide');
+            setTimeout(() => splash.remove(), 600);
+        }, wait);
+    };
+    if (document.readyState === 'complete') hide(); else window.addEventListener('load', hide);
+})();
