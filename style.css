@@ -3353,15 +3353,15 @@ button, a, select, label { touch-action: manipulation; }
   transition: opacity .6s ease, visibility .6s ease;
 }
 #splash-screen.splash-hide { opacity: 0; visibility: hidden; }
-.splash-title { color: #fff; font: 600 1.6rem/1 Georgia, serif; letter-spacing: .12em; opacity: 0; animation: splashFade .8s ease 1s forwards; }
-.splash-book { position: relative; width: 120px; height: 160px; perspective: 900px; transform: translateX(60px); animation: bookCenter 1.2s ease .3s forwards; }
+.splash-title { color: #fff; font: 600 1.6rem/1 Georgia, serif; letter-spacing: .12em; opacity: 0; animation: splashFade 1s ease 2.4s forwards; }
+.splash-book { position: relative; width: 120px; height: 160px; perspective: 900px; transform: translateX(0); animation: bookCenter 1.8s ease .5s forwards; }
 .splash-book > div { position: absolute; top: 0; left: 0; width: 120px; height: 160px; }
 .sb-back { background: #5b3a1e; border-radius: 4px 8px 8px 4px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
 .sb-page { background: #f6efe0; border-radius: 2px 6px 6px 2px; left: 4px !important; width: 112px !important; top: 6px !important; height: 148px !important; transform-origin: left center; border-right: 1px solid #d9cdb2; }
-.sb-page-1 { animation: pageFlip 1s ease 1s forwards; }
-.sb-page-2 { animation: pageFlip 1s ease 1.2s forwards; }
-.sb-page-3 { animation: pageFlip 1s ease 1.4s forwards; }
-.sb-cover { transform-style: preserve-3d; transform-origin: left center; animation: coverOpen 1.2s cubic-bezier(.5,0,.2,1) .5s forwards; }
+.sb-page-1 { animation: pageFlip 1.4s ease 1.8s forwards; }
+.sb-page-2 { animation: pageFlip 1.4s ease 2.2s forwards; }
+.sb-page-3 { animation: pageFlip 1.4s ease 2.6s forwards; }
+.sb-cover { transform-style: preserve-3d; transform-origin: left center; animation: coverOpen 1.8s cubic-bezier(.5,0,.2,1) .8s forwards; }
 .sb-cover-front, .sb-cover-inside { position: absolute; inset: 0; border-radius: 4px 8px 8px 4px; backface-visibility: hidden; }
 .sb-cover-front { background: linear-gradient(135deg, #7a4a24, #4a2c14); border: 2px solid #c9a24b; display: flex; align-items: center; justify-content: center; }
 .sb-cover-inside { background: #f1e6cd; transform: rotateY(180deg); }
@@ -3369,6 +3369,75 @@ button, a, select, label { touch-action: manipulation; }
 .sb-cross::before { content: ""; position: absolute; left: -16px; top: 14px; width: 40px; height: 8px; background: #e3c577; border-radius: 2px; }
 @keyframes coverOpen { to { transform: rotateY(-165deg); } }
 @keyframes pageFlip { to { transform: rotateY(-155deg); } }
-@keyframes bookCenter { to { transform: translateX(0); } }
+@keyframes bookCenter { to { transform: translateX(60px); } }
 @keyframes splashFade { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { #splash-screen *, .splash-title { animation-duration: .01s !important; animation-delay: 0s !important; } }
+
+/* Reader header: centered titles */
+.reader-title-area { justify-content: center; }
+#reader-list-title { flex: 1 1 auto; text-align: center; }
+.reader-main-controls #reader-item-nav-group { justify-content: center; }
+.reader-main-controls #item-title-display { flex: 1 1 auto; text-align: center; }
+
+/* Verse action popup: roomy, colorful touch targets */
+.verse-action-popup { gap: 14px; padding: 10px 14px; border-radius: 14px; align-items: center; }
+.verse-action-popup .action-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 50%;
+  font-size: 1.15rem; color: #fff; transition: transform .12s ease, filter .12s ease;
+}
+.verse-action-popup .action-icon:hover { color: #fff; filter: brightness(1.1); }
+.verse-action-popup .action-icon:active { transform: scale(.9); }
+.verse-action-popup .fa-share-alt { background: #1e88e5; }
+.verse-action-popup .fa-highlighter { background: #f9a825; }
+.verse-action-popup .fa-sticky-note { background: #43a047; }
+.verse-action-popup .fa-bookmark { background: #e53935; }
+.verse-action-popup .fa-image { background: #8e24aa; }
+
+/* Docked at the bottom so it never covers verses while multi-selecting */
+.verse-action-popup {
+  position: fixed;
+  top: auto !important;
+  left: 50% !important;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 56px);
+  transform: translateX(-50%);
+}
+
+/* Extended highlight palette */
+:root {
+  --highlight-purple: #bdb2ff;
+  --highlight-red: #ffadad;
+  --highlight-teal: #9bf6ff;
+  --highlight-lime: #e4f7a1;
+  --highlight-peach: #ffcfb3;
+  --highlight-lavender: #d8c7f5;
+  --highlight-mint: #c4f1d9;
+  --highlight-coral: #ff9e8a;
+  --highlight-sky: #bde0fe;
+  --highlight-gray: #d3d3d3;
+}
+.highlight-purple { background-color: var(--highlight-purple); }
+.highlight-red { background-color: var(--highlight-red); }
+.highlight-teal { background-color: var(--highlight-teal); }
+.highlight-lime { background-color: var(--highlight-lime); }
+.highlight-peach { background-color: var(--highlight-peach); }
+.highlight-lavender { background-color: var(--highlight-lavender); }
+.highlight-mint { background-color: var(--highlight-mint); }
+.highlight-coral { background-color: var(--highlight-coral); }
+.highlight-sky { background-color: var(--highlight-sky); }
+.highlight-gray { background-color: var(--highlight-gray); }
+
+/* Pickers: centered on screen, 5 colors per row */
+.highlight-picker, .highlight-color-picker {
+  position: fixed !important;
+  top: 50% !important; left: 50% !important;
+  transform: translate(-50%, -50%);
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px; padding: 14px; border-radius: 14px;
+  z-index: 10001;
+}
+.highlight-picker.hidden, .highlight-color-picker.hidden { display: none !important; }
+.highlight-picker .color-swatch { width: 40px; height: 40px; }
+.highlight-picker .color-swatch.clear { grid-column: 1 / -1; width: auto; border-radius: 20px; }
+.highlight-color-picker .color-option { width: 40px; height: 40px; border-radius: 50%; }

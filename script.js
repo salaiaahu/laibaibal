@@ -3613,6 +3613,7 @@ const closeCommentaryModalButton = commentaryModal.querySelector('.close-button'
 
 const noteModal = document.getElementById('noteModal');
 const noteModalTitle = document.getElementById('noteModalTitle');
+let currentNoteMultiRefs = [];
 let currentNoteVerseRef = null; // { versionName, bookNumber, chapter, verse }
 const noteTextarea = document.getElementById('noteTextarea');
 const saveNoteBtn = document.getElementById('saveNoteBtn');
@@ -3622,6 +3623,7 @@ const closeNoteModalButton = noteModal.querySelector('.close-button');
 
 const bookmarkModal = document.getElementById('bookmarkModal');
 const bookmarkModalTitle = document.getElementById('bookmarkModalTitle');
+let currentBookmarkMultiRefs = [];
 let currentBookmarkVerseRef = null; // { versionName, bookNumber, chapter, verse }
 const bookmarkCategoryInput = document.getElementById('bookmarkCategoryInput');
 const saveBookmarkBtn = document.getElementById('saveBookmarkBtn');
@@ -6810,6 +6812,9 @@ if (multiMode) {
 
 async function loadChapterContent(bookNumber, chapterOrSpecial, selectedVerse = null) {
     showPanel(bibleContentView);
+    selectedVerses.clear();
+    lastClickedVerseId = null;
+    document.getElementById('verseActionPopup')?.classList.add('hidden');
 
     currentChapterDisplay.textContent = `${currentBook.short_name} ${chapterOrSpecial === 'introduction' ? 'Intro' : chapterOrSpecial}`;
 
@@ -6933,49 +6938,85 @@ link.parentNode.replaceChild(newLink, link);
     statusMessage.textContent = `${currentBook.long_name} ${chapterOrSpecial === 'introduction' ? 'Introduction' : 'Chapter ' + chapterOrSpecial} loaded.`;
 }
 
-// NEW: Handle Verse Clicks (for selecting for highlight/note/bookmark)
+// Tap/click toggles a verse in the selection; the action popup follows the selection.
 function handleVerseClick(event) {
     const verseEl = event.target.closest('.verse-paragraph');
     if (!verseEl) return;
 
-    const verseId = `${verseEl.dataset.bookNumber}-${verseEl.dataset.chapter}-${verseEl.dataset.verse}`;
+    const verseId = getVerseId(verseEl);
+    const textSel = window.getSelection();
+    const hasTextSelection = !!textSel && !textSel.isCollapsed && verseEl.contains(textSel.anchorNode);
 
-    const isCtrl = event.ctrlKey || event.metaKey;
-    const isShift = event.shiftKey;
-
-    if (isCtrl) {
-        if (selectedVerses.has(verseId)) {
-            selectedVerses.delete(verseId);
-            verseEl.classList.remove('selected-verse');
-        } else {
-            selectedVerses.add(verseId);
-            verseEl.classList.add('selected-verse');
-        }
-        lastClickedVerseId = verseId;
-    } else if (isShift && lastClickedVerseId) {
+    if (event.shiftKey && lastClickedVerseId) {
         const allVerses = [...document.querySelectorAll('.verse-paragraph')];
         const startIndex = allVerses.findIndex(v => getVerseId(v) === lastClickedVerseId);
         const endIndex = allVerses.findIndex(v => getVerseId(v) === verseId);
         const [from, to] = [startIndex, endIndex].sort((a, b) => a - b);
-
         for (let i = from; i <= to; i++) {
-            const el = allVerses[i];
-            const id = getVerseId(el);
-            selectedVerses.add(id);
-            el.classList.add('selected-verse');
+            selectedVerses.add(getVerseId(allVerses[i]));
+            allVerses[i].classList.add('selected-verse');
         }
+    } else if (selectedVerses.has(verseId) && !hasTextSelection) {
+        selectedVerses.delete(verseId);
+        verseEl.classList.remove('selected-verse');
     } else {
-        // Clear all previous
-        document.querySelectorAll('.verse-paragraph.selected-verse').forEach(el => el.classList.remove('selected-verse'));
-        selectedVerses.clear();
-
         selectedVerses.add(verseId);
         verseEl.classList.add('selected-verse');
-        lastClickedVerseId = verseId;
     }
+    lastClickedVerseId = verseId;
 
-    // Position popup to the last clicked
-    showVersePopup(verseEl);
+    const remaining = getSelectedVerseEls();
+    if (!remaining.length) {
+        clearVerseSelection();
+        return;
+    }
+    showVersePopup(selectedVerses.has(verseId) ? verseEl : remaining[remaining.length - 1]);
+}
+
+function getSelectedVerseEls() {
+    return [...document.querySelectorAll('.verse-paragraph')].filter(el => selectedVerses.has(getVerseId(el)));
+}
+
+function refFromVerseEl(el) {
+    return {
+        versionName: el.dataset.versionName,
+        bookNumber: parseInt(el.dataset.bookNumber),
+        chapter: parseInt(el.dataset.chapter),
+        verse: parseInt(el.dataset.verse)
+    };
+}
+
+function getSelectedRefs() {
+    return getSelectedVerseEls().map(refFromVerseEl);
+}
+
+function clearVerseSelection() {
+    document.querySelectorAll('.verse-paragraph.selected-verse').forEach(el => el.classList.remove('selected-verse'));
+    selectedVerses.clear();
+    lastClickedVerseId = null;
+    document.getElementById('verseActionPopup')?.classList.add('hidden');
+    highlightColorPicker?.classList.add('hidden');
+}
+
+// "1-3, 5" style label for a list of refs in one chapter
+function formatVerseLabel(refs) {
+    const nums = [...new Set(refs.map(r => r.verse))].sort((a, b) => a - b);
+    const parts = [];
+    for (let i = 0; i < nums.length; i++) {
+        let j = i;
+        while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+        parts.push(j > i ? `${nums[i]}-${nums[j]}` : `${nums[i]}`);
+        i = j;
+    }
+    return parts.join(', ');
+}
+
+function getVerseTextFromDb(ref) {
+    const stmt = activeDbs.primary.prepare("SELECT text FROM verses WHERE book_number = ? AND chapter = ? AND verse = ?;");
+    stmt.bind([ref.bookNumber, ref.chapter, ref.verse]);
+    const text = stmt.step() ? stmt.getAsObject().text : '';
+    stmt.free();
+    return text;
 }
 
 function getVerseId(el) {
@@ -7029,6 +7070,17 @@ function hideHighlightPicker() {
 
 // --- Highlight Management ---
 async function applyHighlight(color) {
+    const els = getSelectedVerseEls();
+    if (els.length < 2 || !currentHighlightVerseElement) return applyHighlightOne(color, true);
+    for (let i = 0; i < els.length; i++) {
+        currentHighlightVerseElement = els[i];
+        currentHighlightVerseRef = refFromVerseEl(els[i]);
+        await applyHighlightOne(color, i === els.length - 1);
+    }
+    clearVerseSelection();
+}
+
+async function applyHighlightOne(color, isLast = true) {
     console.log("WHOLE VERSE DEBUG: applyHighlight CALLED. Color:", color, "Ref from global:", JSON.stringify(currentHighlightVerseRef));
     console.log("WHOLE VERSE DEBUG: applyHighlight - currentHighlightVerseElement value AT FUNCTION ENTRY:", currentHighlightVerseElement);
 
@@ -7051,7 +7103,7 @@ async function applyHighlight(color) {
 
     try {
         console.log("WHOLE VERSE DEBUG: applyHighlight - About to remove classes from:", elementToWorkOn);
-        elementToWorkOn.classList.remove('highlight-yellow', 'highlight-green', 'highlight-blue', 'highlight-purple', 'highlight-pink', 'highlight-orange');
+        elementToWorkOn.classList.remove(...[...elementToWorkOn.classList].filter(c => c.startsWith('highlight-')));
     } catch (e) {
         console.error("WHOLE VERSE DEBUG: applyHighlight - ERROR during classList.remove. Element was:", elementToWorkOn, "Error:", e);
         statusMessage.textContent = 'Error modifying verse style.';
@@ -7105,6 +7157,7 @@ async function applyHighlight(color) {
         statusMessage.classList.add('error');
     }
 
+    if (!isLast) return;
     hideHighlightPicker(); // This will nullify the global currentHighlightVerseElement and currentHighlightVerseRef
     updateUserDataPanel('highlights');
     if (currentBook && currentChapter) { // currentBook and currentChapter are global navigation state
@@ -7118,6 +7171,7 @@ async function applyHighlight(color) {
 async function showNoteModal(verseRef, initialSelectedText = null) {
     console.log("showNoteModal called with verseRef:", verseRef, "and initialSelectedText:", initialSelectedText);
     currentNoteVerseRef = verseRef; // For save/delete context
+    currentNoteMultiRefs = [];
 
     let noteModalTitleText = `${loadedVersions[verseRef.versionName]?.books.find(b => b.book_number === verseRef.bookNumber)?.short_name || `Book ${verseRef.bookNumber}`} ${verseRef.chapter}:${verseRef.verse} (${verseRef.versionName})`;
     let existingNoteToLoad = null;
@@ -7191,6 +7245,7 @@ async function openExistingNoteById(noteId) {
     console.log("openExistingNoteById called for ID:", noteId);
     const note = await getIndexedDB(NOTES_STORE_NAME, noteId);
     if (note) {
+        currentNoteMultiRefs = [];
         currentNoteVerseRef = { // Set global context for save/delete
             versionName: note.versionName,
             bookNumber: note.bookNumber,
@@ -7241,6 +7296,29 @@ async function saveNote() {
         return;
     }
     // currentNoteVerseRef holds {versionName, bookNumber, chapter, verse}
+    if (currentNoteMultiRefs.length > 1) {
+        const refs = currentNoteMultiRefs;
+        const multiText = noteTextarea.value.trim();
+        try {
+            for (const ref of refs) {
+                const existing = (await getAllIndexedDB(NOTES_STORE_NAME, 'byVerse', IDBKeyRange.only([ref.versionName, ref.bookNumber, ref.chapter, ref.verse]))).find(n => !n.selectedText);
+                const data = { ...ref, noteText: multiText, selectedText: null, timestamp: Date.now() };
+                if (existing) data.id = existing.id;
+                await putIndexedDB(NOTES_STORE_NAME, data);
+            }
+            statusMessage.textContent = `Note saved for ${refs.length} verses.`;
+            currentNoteMultiRefs = [];
+            noteModal.classList.add('hidden');
+            if (location.hash === "#noteOpen") history.back();
+            loadChapterContent(refs[0].bookNumber, refs[0].chapter);
+            updateUserDataPanel('notes');
+        } catch (e) {
+            console.error('Error saving notes:', e);
+            statusMessage.textContent = 'Error saving note.';
+            statusMessage.classList.add('error');
+        }
+        return;
+    }
     const { versionName, bookNumber, chapter, verse } = currentNoteVerseRef;
     const noteText = noteTextarea.value.trim();
     const noteId = noteTextarea.dataset.id ? parseInt(noteTextarea.dataset.id) : null;
@@ -7310,6 +7388,7 @@ async function deleteNote() {
 }
 
 function cancelNote() {
+    currentNoteMultiRefs = [];
     noteModal.classList.add('hidden');
  if (location.hash === "#noteOpen") history.back(); 
 }
@@ -7318,6 +7397,7 @@ function cancelNote() {
 // --- Bookmark Management ---
 async function showBookmarkModal(verseRef) {
     currentBookmarkVerseRef = verseRef; // Store verse reference
+    currentBookmarkMultiRefs = [];
     bookmarkModalTitle.textContent = `Bookmark for ${currentBook.short_name} ${verseRef.chapter}:${verseRef.verse} (${verseRef.versionName})`;
     bookmarkCategoryInput.value = ''; // Clear category input
     bookmarkCategoryInput.dataset.id = ''; // Clear ID for new bookmark
@@ -7354,6 +7434,28 @@ async function saveBookmark() {
     if (!currentBookmarkVerseRef || !bookmarkCategoryInput.value.trim()) {
         statusMessage.textContent = 'Category cannot be empty.';
         statusMessage.classList.add('error');
+        return;
+    }
+    if (currentBookmarkMultiRefs.length > 1) {
+        const refs = currentBookmarkMultiRefs;
+        const multiCategory = bookmarkCategoryInput.value.trim();
+        try {
+            for (const ref of refs) {
+                const existing = (await getAllIndexedDB(BOOKMARKS_STORE_NAME, 'byVerse', IDBKeyRange.only([ref.versionName, ref.bookNumber, ref.chapter, ref.verse])))[0];
+                const data = { ...ref, category: multiCategory, timestamp: Date.now() };
+                if (existing) data.id = existing.id;
+                await putIndexedDB(BOOKMARKS_STORE_NAME, data);
+            }
+            statusMessage.textContent = `Bookmarked ${refs.length} verses.`;
+            currentBookmarkMultiRefs = [];
+            bookmarkModal.classList.add('hidden');
+            loadChapterContent(refs[0].bookNumber, refs[0].chapter);
+            updateUserDataPanel('bookmarks');
+        } catch (e) {
+            console.error('Error saving bookmarks:', e);
+            statusMessage.textContent = 'Error saving bookmark.';
+            statusMessage.classList.add('error');
+        }
         return;
     }
     const { versionName, bookNumber, chapter, verse } = currentBookmarkVerseRef;
@@ -7496,19 +7598,16 @@ function createVerseCardDOM({
 
 let lastVerseCardData = null;
 
-async function generateVerseImage(verseRef) {
+async function generateVerseImage(verseRefOrRefs) {
+    const refs = Array.isArray(verseRefOrRefs) ? verseRefOrRefs : [verseRefOrRefs];
+    const verseRef = refs[0];
     const db = activeDbs.primary;
     const book = loadedVersions[verseRef.versionName]?.books.find(b => b.book_number === verseRef.bookNumber);
     const bookName = book?.long_name || `Book ${verseRef.bookNumber}`;
     let verseText = '';
 
     try {
-        const stmt = db.prepare("SELECT text FROM verses WHERE book_number = ? AND chapter = ? AND verse = ?;");
-        stmt.bind([verseRef.bookNumber, verseRef.chapter, verseRef.verse]);
-        if (stmt.step()) {
-            verseText = stmt.getAsObject().text;
-        }
-        stmt.free();
+        verseText = refs.map(r => getVerseTextFromDb(r)).join(' ');
     } catch (err) {
         alert("Failed to load verse text.");
         return;
@@ -7518,7 +7617,7 @@ async function generateVerseImage(verseRef) {
     lastVerseCardData = {
         bookName,
         chapter: verseRef.chapter,
-        verse: verseRef.verse,
+        verse: refs.length > 1 ? formatVerseLabel(refs) : verseRef.verse,
         text: verseText,
         versionName: verseRef.versionName
     };
@@ -7753,22 +7852,22 @@ async function navigateToUserItem(itemRef) {
 }
 
 // --- Sharing Functionality ---
-async function shareVerse(verseRef) {
+async function shareVerse(verseRefOrRefs) {
+    const refs = Array.isArray(verseRefOrRefs) ? verseRefOrRefs : [verseRefOrRefs];
+    const verseRef = refs[0];
     if (!verseRef || !activeDbs.primary || !currentBook) {
         console.warn('No verse selected to share.');
         return;
     }
 
     try {
-        const stmt = activeDbs.primary.prepare(
-            "SELECT text FROM verses WHERE book_number = ? AND chapter = ? AND verse = ?;"
-        );
-        stmt.bind([verseRef.bookNumber, verseRef.chapter, verseRef.verse]);
-        let verseText = stmt.step() ? stmt.getAsObject().text : '';
-        stmt.free();
-
-        const fullText = `${currentBook.long_name} ${verseRef.chapter}:${verseRef.verse} (${verseRef.versionName}): ${verseText}`;
-        console.log('Prepared verse text:', fullText);
+        let fullText;
+        if (refs.length === 1) {
+            fullText = `${currentBook.long_name} ${verseRef.chapter}:${verseRef.verse} (${verseRef.versionName}): ${getVerseTextFromDb(verseRef)}`;
+        } else {
+            fullText = `${currentBook.long_name} ${verseRef.chapter}:${formatVerseLabel(refs)} (${verseRef.versionName})\n` +
+                refs.map(r => `${r.verse}. ${getVerseTextFromDb(r)}`).join('\n');
+        }
 
         if (navigator.share) {
             console.log('Using navigator.share...');
@@ -8533,7 +8632,20 @@ if (verseActionPopup) {
     // Note Icon
     const noteIcon = verseActionPopup.querySelector('.fa-sticky-note');
 if (noteIcon) {
-    noteIcon.addEventListener('click', () => {
+    noteIcon.addEventListener('click', async () => {
+        const multiRefs = getSelectedRefs();
+        if (multiRefs.length > 1) {
+            await showNoteModal(multiRefs[0], null);
+            currentNoteMultiRefs = multiRefs;
+            noteTextarea.value = '';
+            noteTextarea.dataset.id = '';
+            noteTextarea.dataset.selectedText = '';
+            deleteNoteBtn.classList.add('hidden');
+            noteModalTitle.textContent = `Note for ${currentBook.short_name} ${multiRefs[0].chapter}:${formatVerseLabel(multiRefs)} (${multiRefs[0].versionName})`;
+            verseActionPopup.classList.add('hidden');
+            clearVerseSelection();
+            return;
+        }
         console.log("EVENT: Note icon in verseActionPopup CLICKED.");
         const verseRef = getPopupRef(); // Reads from verseActionPopup.dataset (book, chapter, verse, version)
         
@@ -8595,7 +8707,7 @@ if (verseActionPopupHighlightIcon) {
         console.log("HIGHLIGHT ICON CLICK: Global latestSelection (Range) for DOM ops:", rangeForPartialAction);
 
         let proceedWithPartialHighlightAction = false;
-        if (textForPartialAction && textForPartialAction.trim() !== '') {
+        if (textForPartialAction && textForPartialAction.trim() !== '' && getSelectedVerseEls().length <= 1) {
             // We have text, check if we also have a valid Range object if we intend to add a new highlight
             // If we are clearing an existing one, textForPartialAction is enough to identify it.
             proceedWithPartialHighlightAction = true;
@@ -8738,10 +8850,20 @@ if (verseActionPopupHighlightIcon) {
     // Bookmark Icon
     const bookmarkIcon = verseActionPopup.querySelector('.fa-bookmark');
     if (bookmarkIcon) {
-        bookmarkIcon.addEventListener('click', () => {
+        bookmarkIcon.addEventListener('click', async () => {
             console.log("EVENT: Bookmark icon in verseActionPopup CLICKED.");
-            const ref = getPopupRef();
-            showBookmarkModal(ref);
+            const multiRefs = getSelectedRefs();
+            if (multiRefs.length > 1) {
+                await showBookmarkModal(multiRefs[0]);
+                currentBookmarkMultiRefs = multiRefs;
+                bookmarkCategoryInput.value = '';
+                bookmarkCategoryInput.dataset.id = '';
+                deleteBookmarkBtn.classList.add('hidden');
+                bookmarkModalTitle.textContent = `Bookmark for ${currentBook.short_name} ${multiRefs[0].chapter}:${formatVerseLabel(multiRefs)} (${multiRefs[0].versionName})`;
+                clearVerseSelection();
+                return;
+            }
+            showBookmarkModal(getPopupRef());
         });
     } else { console.error("Bookmark icon not found in verseActionPopup."); }
 
@@ -8750,8 +8872,8 @@ if (verseActionPopupHighlightIcon) {
     if (shareIcon) {
         shareIcon.addEventListener('click', () => {
             console.log("EVENT: Share icon in verseActionPopup CLICKED.");
-            const ref = getPopupRef();
-            shareVerse(ref);
+            const refs = getSelectedRefs();
+            shareVerse(refs.length > 1 ? refs : getPopupRef());
         });
     } else { console.error("Share icon not found in verseActionPopup."); }
 
@@ -8760,8 +8882,8 @@ if (verseActionPopupHighlightIcon) {
     if (imageIcon) {
         imageIcon.addEventListener('click', () => {
             console.log("EVENT: Image icon in verseActionPopup CLICKED.");
-            const ref = getPopupRef();
-            generateVerseImage(ref);
+            const refs = getSelectedRefs();
+            generateVerseImage(refs.length > 1 ? refs : getPopupRef());
         });
     } else { console.error("Image icon not found in verseActionPopup."); }
 
@@ -8910,7 +9032,7 @@ document.addEventListener('touchend', e => {
     if (!splash) return;
     const start = performance.now();
     const hide = () => {
-        const wait = Math.max(0, 2200 - (performance.now() - start));
+        const wait = Math.max(0, 4200 - (performance.now() - start));
         setTimeout(() => {
             splash.classList.add('splash-hide');
             setTimeout(() => splash.remove(), 600);
