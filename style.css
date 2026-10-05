@@ -1,3 +1,16 @@
+html,
+body,
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
 :root {
     /* Backgrounds */
     --main-bg-color: #f4f4f4;
@@ -3560,7 +3573,7 @@ button, a, select, label { touch-action: manipulation; }
     background: var(--panel-bg-color);
     color: var(--panel-text-color);
     font: inherit;
-    font-size: clamp(0.64rem, 3.5vw, 0.9rem);
+    font-size: clamp(0.64rem, 4.5vw, 1rem);
     line-height: 1.15;
     cursor: pointer;
     text-align: center;
