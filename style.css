@@ -3512,3 +3512,11 @@ button, a, select, label { touch-action: manipulation; }
 .home-card-arrow { opacity: .5; }
 .home-hint { margin: 0; text-align: center; font-size: .78rem; opacity: .5; }
 #ptr-indicator { z-index: 100000; }
+
+/* Secondary version picker */
+.secondary-picker { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 18px; text-align: center; }
+.secondary-picker h4 { margin: 4px 0 0; font-size: 1.05rem; }
+.secondary-picker p { margin: 0 0 6px; opacity: .7; font-size: .9rem; }
+.secondary-picker-icon { font-size: 2.2rem; color: #c9892f; }
+.secondary-picker-btn { width: 100%; max-width: 260px; min-height: 44px; padding: 10px 16px; border: 1px solid rgba(127,127,127,.3); border-radius: 12px; background: rgba(127,127,127,.1); color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.secondary-picker-btn:active { transform: scale(.98); }

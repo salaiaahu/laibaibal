@@ -3825,6 +3825,7 @@ function displayItemContent(itemId) {
     if (readerItemNavGroup) readerItemNavGroup.classList.remove('hidden');
     if (readerMainControls) readerMainControls.classList.add('reader-detail-active');
     
+    const previousId = currentReaderContext.activeId;
     currentReaderContext.activeId = parseInt(itemId);
     readerContentArea.innerHTML = `<div class="hymn-content">${item.destext}</div>`;
     itemTitleDisplay.textContent = `${currentReaderContext.title} No. ${item.id}`;
@@ -3834,6 +3835,7 @@ function displayItemContent(itemId) {
     
     updateFavoriteButton();
     readerContentArea.scrollTop = 0;
+    if (previousId) playSlideIn(readerContentArea, currentReaderContext.activeId > previousId ? 1 : -1);
 }
 
 function applyReaderFontSize(sizeRem) {
@@ -3883,8 +3885,12 @@ function setupFloatingFontControls() {
         lastScrollTop = Math.max(0, scrollTop);
     };
 
-    [primaryBibleContent, secondaryBibleContent, readerContentArea].filter(Boolean)
-        .forEach(element => element.addEventListener('scroll', handleScroll, { passive: true }));
+    document.addEventListener('scroll', e => {
+        const t = e.target;
+        if (t && t.nodeType === 1 && t.closest('#content-reader-panel, #bibleContentView') && t.scrollHeight > t.clientHeight) {
+            handleScroll({ currentTarget: t });
+        }
+    }, { passive: true, capture: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
 }
 
@@ -6542,7 +6548,17 @@ async function populateVerseGrid(book, chapter) { // Takes book object, chapter 
 
 
 // --- Chapter Navigation Functions ---
+let pendingSlideDirection = 0;
+function playSlideIn(el, direction) {
+    if (!el || !direction || !el.animate) return;
+    el.animate(
+        [{ transform: `translateX(${direction * 48}px)`, opacity: 0 }, { transform: 'translateX(0)', opacity: 1 }],
+        { duration: 280, easing: 'cubic-bezier(.22,.8,.3,1)' }
+    );
+}
+
 async function navigateChapter(direction) {
+    pendingSlideDirection = direction;
     if (!currentBook || !currentChapter || !activeDbs.primary) {
         statusMessage.textContent = 'Please select a book and chapter first.';
         statusMessage.classList.add('error');
@@ -6642,6 +6658,39 @@ async function navigateChapter(direction) {
 
 
 // --- Content Loading Functions ---
+function renderSecondaryVersionPicker(contentDiv, titleEl) {
+    if (titleEl) titleEl.textContent = 'Secondary version';
+    const options = Object.keys(loadedVersions).filter(v => v !== activeVersions.primary);
+    contentDiv.innerHTML = '';
+    const box = document.createElement('div');
+    box.className = 'secondary-picker';
+    box.innerHTML = '<i class="fas fa-book-open secondary-picker-icon"></i><h4>Choose a second version</h4><p>Pick a Bible version to read side by side.</p>';
+    if (!options.length) {
+        const note = document.createElement('p');
+        note.className = 'secondary-picker-empty';
+        note.textContent = 'No other versions are installed yet.';
+        box.appendChild(note);
+        const add = document.createElement('button');
+        add.type = 'button';
+        add.className = 'secondary-picker-btn';
+        add.innerHTML = '<i class="fas fa-plus"></i> Add a version';
+        add.addEventListener('click', () => document.getElementById('slideMenuManageBiblesBtn')?.click());
+        box.appendChild(add);
+    }
+    options.forEach(name => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'secondary-picker-btn';
+        btn.textContent = name;
+        btn.addEventListener('click', async () => {
+            await setActiveVersion('secondary', name);
+            populateBibleVersionModal();
+        });
+        box.appendChild(btn);
+    });
+    contentDiv.appendChild(box);
+}
+
 // loadVersionContent is a helper for loadChapterContent
 async function loadVersionContent(versionType) {
     const dbInstance = activeDbs[versionType];
@@ -6659,6 +6708,11 @@ async function loadVersionContent(versionType) {
     const processingBookNumber = currentBook.book_number;
     const processingChapterString = currentChapter; // This is defined early and reliably
     const selectedVerseToScrollTo = currentVerse;
+
+    if (!dbInstance && versionType === 'secondary' && !processingVersionName) {
+        renderSecondaryVersionPicker(contentDiv, chapterTitleEl);
+        return;
+    }
 
     if (!dbInstance) {
         if (contentDiv) contentDiv.innerHTML = `<p class="placeholder">Bible version '${processingVersionName || versionType}' not loaded.</p>`;
@@ -6955,6 +7009,10 @@ async function loadChapterContent(bookNumber, chapterOrSpecial, selectedVerse = 
     }
 
     await Promise.all(loadPromises);
+    if (pendingSlideDirection) {
+        playSlideIn(document.querySelector('#bibleContentView .parallel-container'), pendingSlideDirection);
+        pendingSlideDirection = 0;
+    }
 
     if (selectedVerse !== null) {
         requestAnimationFrame(() => {
@@ -9343,8 +9401,10 @@ document.querySelectorAll('#home-screen .home-card').forEach(card => {
 // --- Swipe navigation ---
 async function navigateBook(direction) {
     if (!currentBook) return;
+    pendingSlideDirection = direction;
     const book = direction === 1 ? getNextBook(currentBook.book_number) : getPreviousBook(currentBook.book_number);
     if (!book) {
+        pendingSlideDirection = 0;
         showToast(direction === 1 ? 'This is the last book' : 'This is the first book');
         return;
     }
