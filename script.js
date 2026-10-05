@@ -3904,6 +3904,11 @@ function setupContentReaderListeners() {
         closeMenu();
     });
 
+    document.getElementById('slideMenuHomeBtn').addEventListener('click', () => {
+        showHome();
+        closeMenu();
+    });
+
     document.getElementById('reader-favorites-btn').addEventListener('click', showFavoritesPage);
 
     document.getElementById('reader-favorite-btn').addEventListener('click', () => {
@@ -9281,7 +9286,7 @@ async function refreshApp() {
 
     document.addEventListener('touchstart', e => {
         if (busy || e.touches.length !== 1) return;
-        if (e.target.closest('.modal, .app-dialog-overlay, #verseActionPopup, .highlight-picker, .highlight-color-picker, .custom-select-menu, textarea, input')) return;
+        if (!e.target.closest('#home-screen')) return;
         scroller = findScroller(e.target);
         if (scroller && scroller.scrollTop > 0) return;
         startY = e.touches[0].clientY;
@@ -9316,3 +9321,91 @@ async function refreshApp() {
 })();
 
 window.addEventListener('load', () => setupCustomSelects());
+
+
+// --- Landing page ---
+function showHome() {
+    document.getElementById('home-screen')?.classList.remove('hidden');
+}
+function hideHome() {
+    document.getElementById('home-screen')?.classList.add('hidden');
+}
+document.querySelectorAll('#home-screen .home-card').forEach(card => {
+    card.addEventListener('click', () => {
+        const target = card.dataset.target;
+        hideHome();
+        if (target === 'bible') document.getElementById('slideMenuBibleBtn').click();
+        else if (target === 'hymns') document.getElementById('slideMenuHymnsBtn').click();
+        else document.getElementById('slideMenuReadingsBtn').click();
+    });
+});
+
+// --- Swipe navigation ---
+async function navigateBook(direction) {
+    if (!currentBook) return;
+    const book = direction === 1 ? getNextBook(currentBook.book_number) : getPreviousBook(currentBook.book_number);
+    if (!book) {
+        showToast(direction === 1 ? 'This is the last book' : 'This is the first book');
+        return;
+    }
+    currentBook = book;
+    currentChapter = 1;
+    currentVerse = null;
+    showBooksList();
+    saveLastReadPosition();
+    loadChapterContent(book.book_number, 1, null);
+}
+
+(function setupSwipeNavigation() {
+    const MIN_DIST = 70;
+    let startX = 0, startY = 0, lastX = 0, lastY = 0, maxTouches = 0, tracking = false;
+
+    const centroid = touches => {
+        let x = 0, y = 0;
+        for (const t of touches) { x += t.clientX; y += t.clientY; }
+        return [x / touches.length, y / touches.length];
+    };
+    const blocked = target => target.closest('.modal, .app-dialog-overlay, #verseActionPopup, #highlightPicker, #highlightColorPicker, #slideMenu, .custom-select-menu, textarea, input, #home-screen');
+    const activeArea = () => {
+        if (!document.getElementById('home-screen').classList.contains('hidden')) return null;
+        if (!contentReaderPanel.classList.contains('hidden')) return currentReaderContext.activeId ? 'reader' : null;
+        if (!bibleContentView.classList.contains('hidden')) return 'bible';
+        return null;
+    };
+
+    document.addEventListener('touchstart', e => {
+        if (!tracking) {
+            if (blocked(e.target) || !activeArea()) return;
+            tracking = true;
+            maxTouches = 0;
+        }
+        maxTouches = Math.max(maxTouches, e.touches.length);
+        [startX, startY] = centroid(e.touches);
+        [lastX, lastY] = [startX, startY];
+    }, { passive: true });
+
+    document.addEventListener('touchmove', e => {
+        if (!tracking || !e.touches.length) return;
+        [lastX, lastY] = centroid(e.touches);
+    }, { passive: true });
+
+    document.addEventListener('touchcancel', () => { tracking = false; }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+        if (!tracking || e.touches.length > 0) return;
+        tracking = false;
+        const dx = lastX - startX, dy = lastY - startY;
+        if (Math.abs(dx) < MIN_DIST || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && sel.toString().trim()) return;
+        const direction = dx < 0 ? 1 : -1;
+        const area = activeArea();
+        if (area === 'reader') {
+            const btn = direction === 1 ? nextItemBtn : prevItemBtn;
+            if (!btn.disabled) btn.click();
+        } else if (area === 'bible') {
+            if (maxTouches >= 2) navigateBook(direction);
+            else navigateChapter(direction);
+        }
+    }, { passive: true });
+})();

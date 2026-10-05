@@ -3490,3 +3490,25 @@ button, a, select, label { touch-action: manipulation; }
 #toggle-reader-search-btn.hidden + #reader-favorites-btn,
 .reader-main-controls.reader-detail-active #reader-favorites-btn { display: none; }
 .hymn-list-item.favorite-row { white-space: normal; text-overflow: clip; }
+
+/* Landing page */
+#home-screen { position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; background: linear-gradient(170deg, #3d5872 0%, #203447 100%); color: #fff; transition: opacity .25s ease; }
+#home-screen.hidden { display: none; }
+.home-scroll { flex: 1; overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 40px) 22px 30px; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+.home-hero { text-align: center; }
+.home-logo { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+.home-hero h1 { margin: 14px 0 4px; font: 600 1.9rem/1.1 Georgia, serif; letter-spacing: .08em; }
+.home-hero p { margin: 0; opacity: .75; font-size: .95rem; }
+.home-cards { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 420px; margin: 0 auto; }
+.home-card { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px; border: 1px solid rgba(255,255,255,.14); border-radius: 20px; background: rgba(255,255,255,.1); color: #fff; font: inherit; text-align: left; cursor: pointer; backdrop-filter: blur(6px); transition: transform .12s ease, background .12s ease; }
+.home-card:active { transform: scale(.98); background: rgba(255,255,255,.18); }
+.home-card-icon { display: grid; flex: none; width: 56px; height: 56px; place-items: center; border-radius: 16px; font-size: 1.6rem; color: #fff; }
+.home-card-bible .home-card-icon { background: linear-gradient(135deg, #c9892f, #8a5a1c); }
+.home-card-hymns .home-card-icon { background: linear-gradient(135deg, #3fa7d6, #2468a2); }
+.home-card-readings .home-card-icon { background: linear-gradient(135deg, #4cae7d, #2a7a53); }
+.home-card-text { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
+.home-card-text strong { font-size: 1.1rem; }
+.home-card-text small { opacity: .7; font-size: .85rem; }
+.home-card-arrow { opacity: .5; }
+.home-hint { margin: 0; text-align: center; font-size: .78rem; opacity: .5; }
+#ptr-indicator { z-index: 100000; }

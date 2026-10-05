@@ -12,6 +12,34 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <div id="home-screen">
+        <div class="home-scroll">
+            <div class="home-hero">
+                <img src="icons/icon.svg" alt="" class="home-logo">
+                <h1>Lai Baibal</h1>
+                <p>Read, study and worship</p>
+            </div>
+            <div class="home-cards">
+                <button type="button" class="home-card home-card-bible" data-target="bible">
+                    <span class="home-card-icon"><i class="fas fa-book-bible"></i></span>
+                    <span class="home-card-text"><strong>Bible</strong><small>Read the Holy Bible</small></span>
+                    <i class="fas fa-chevron-right home-card-arrow"></i>
+                </button>
+                <button type="button" class="home-card home-card-hymns" data-target="hymns">
+                    <span class="home-card-icon"><i class="fas fa-music"></i></span>
+                    <span class="home-card-text"><strong>Khrihfa Hlabu</strong><small>Hymns</small></span>
+                    <i class="fas fa-chevron-right home-card-arrow"></i>
+                </button>
+                <button type="button" class="home-card home-card-readings" data-target="readings">
+                    <span class="home-card-icon"><i class="fas fa-users"></i></span>
+                    <span class="home-card-text"><strong>Chawnghlang Relnak</strong><small>Group reading</small></span>
+                    <i class="fas fa-chevron-right home-card-arrow"></i>
+                </button>
+            </div>
+            <p class="home-hint">Pull down to check for updates</p>
+        </div>
+    </div>
+
     <div id="splash-screen" aria-hidden="true">
         <div class="splash-book">
             <div class="sb-back"></div>
@@ -64,6 +92,12 @@
 					<button id="closeSlideMenuBtn" class="top-bar-icon-btn menu-close-btn">&times;</button>
 				</div>
 				<ul class="slide-menu-items">
+					<li>
+						<button id="slideMenuHomeBtn">
+							<i class="fas fa-house menu-item-icon"></i>
+							<span>Home</span>
+						</button>
+					</li>
 					<li>
 						<button id="slideMenuBibleBtn">
 							<i class="fas fa-book-bible menu-item-icon"></i>
