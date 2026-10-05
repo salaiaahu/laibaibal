@@ -3474,3 +3474,19 @@ button, a, select, label { touch-action: manipulation; }
 
 /* Multi-verse note badge */
 .note-indicator[data-label]::after { content: attr(data-label); margin-left: 4px; font: 600 .7em/1 system-ui, sans-serif; vertical-align: middle; }
+
+/* Favorites */
+.hymn-list-item.favorite-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.favorite-star { flex: none; width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; color: #9aa5b1; font-size: 1.15rem; cursor: pointer; }
+.favorite-star.is-favorite, #reader-favorite-btn.is-favorite { color: #f5b301; }
+.favorites-group-title { margin: 16px 12px 6px; font-size: .95rem; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+.favorites-empty { padding: 60px 24px; text-align: center; opacity: .75; }
+.favorites-empty i { font-size: 2.6rem; color: #f5b301; margin-bottom: 12px; }
+
+/* Favorites fit + header shortcut */
+.hymn-list-item.favorite-row > span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.hymn-list-item.favorite-row { box-sizing: border-box; max-width: 100%; padding-right: 6px; }
+#reader-favorites-btn { color: #f5b301; }
+#toggle-reader-search-btn.hidden + #reader-favorites-btn,
+.reader-main-controls.reader-detail-active #reader-favorites-btn { display: none; }
+.hymn-list-item.favorite-row { white-space: normal; text-overflow: clip; }

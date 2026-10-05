@@ -3681,7 +3681,93 @@ function showReaderPage(context) { // context is { data: [...], title: "..." }
     displayContentList();
 }
 
+const FAVORITES_KEY = 'laibaibal_reader_favorites';
+function getFavorites() {
+    try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || []; } catch { return []; }
+}
+function isFavorite(type, id) {
+    return getFavorites().some(f => f.type === type && f.id === Number(id));
+}
+function toggleFavorite(type, item) {
+    let favs = getFavorites();
+    const exists = favs.some(f => f.type === type && f.id === Number(item.id));
+    favs = exists
+        ? favs.filter(f => !(f.type === type && f.id === Number(item.id)))
+        : [...favs, { type, id: Number(item.id), name: item.name, addedAt: Date.now() }];
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+    return !exists;
+}
+function updateFavoriteButton() {
+    const btn = document.getElementById('reader-favorite-btn');
+    if (!btn) return;
+    const active = currentReaderContext.activeId != null && isFavorite(currentReaderContext.title, currentReaderContext.activeId);
+    btn.setAttribute('aria-pressed', String(active));
+    btn.title = active ? 'Remove from favorites' : 'Add to favorites';
+    btn.classList.toggle('is-favorite', active);
+    btn.querySelector('i').className = active ? 'fas fa-star' : 'far fa-star';
+}
+
+function showFavoritesPage() {
+    currentReaderContext = { data: [], title: 'Favorites', activeId: null, isFavorites: true };
+    showPanel(contentReaderPanel);
+    history.pushState({ view: 'readerList' }, 'Favorites', '#Favorites');
+    displayFavoritesList();
+}
+
+function displayFavoritesList() {
+    currentReaderContext.isFavorites = true;
+    currentReaderContext.activeId = null;
+    currentReaderContext.title = 'Favorites';
+    readerListTitle.textContent = 'Favorites';
+    if (readerSearchBox.classList.contains('hidden')) readerListTitle.classList.remove('hidden');
+    readerItemNavGroup.classList.add('hidden');
+    readerMainControls.classList.remove('reader-detail-active');
+    toggleReaderSearchBtn.classList.add('hidden');
+    readerContentArea.innerHTML = '';
+
+    const favs = getFavorites();
+    if (!favs.length) {
+        readerContentArea.innerHTML = '<div class="favorites-empty"><i class="far fa-star"></i><p>No favorites yet.</p><small>Open a hymn or reading and tap the star to save it here.</small></div>';
+        return;
+    }
+    const sources = { 'Khrihfa Hlabu': allHymns, 'Chawnghlang Relnak': allReadings };
+    ['Khrihfa Hlabu', 'Chawnghlang Relnak'].forEach(type => {
+        const group = favs.filter(f => f.type === type).sort((a, b) => a.id - b.id);
+        if (!group.length) return;
+        const heading = document.createElement('h3');
+        heading.className = 'favorites-group-title';
+        heading.textContent = type;
+        readerContentArea.appendChild(heading);
+        const list = document.createElement('div');
+        list.className = 'hymn-list';
+        group.forEach(f => {
+            const row = document.createElement('div');
+            row.className = 'hymn-list-item favorite-row';
+            const label = document.createElement('span');
+            label.textContent = `${f.id}. ${f.name}`;
+            const star = document.createElement('button');
+            star.type = 'button';
+            star.className = 'favorite-star is-favorite';
+            star.title = 'Remove from favorites';
+            star.innerHTML = '<i class="fas fa-star"></i>';
+            star.addEventListener('click', e => {
+                e.stopPropagation();
+                toggleFavorite(f.type, f);
+                displayFavoritesList();
+            });
+            row.append(label, star);
+            row.addEventListener('click', () => {
+                currentReaderContext = { data: sources[type], title: type, activeId: null };
+                displayItemContent(f.id);
+            });
+            list.appendChild(row);
+        });
+        readerContentArea.appendChild(list);
+    });
+}
+
 function displayContentList(filteredData = null) {
+    if (currentReaderContext.isFavorites) { displayFavoritesList(); return; }
     const dataToDisplay = filteredData || currentReaderContext.data;
 
     // Show the main list title and hide the item navigation
@@ -3702,7 +3788,26 @@ function displayContentList(filteredData = null) {
     dataToDisplay.forEach(item => {
         const itemEl = document.createElement('div');
         itemEl.className = 'hymn-list-item';
-        itemEl.textContent = `${item.id}. ${item.name}`;
+        itemEl.classList.add('favorite-row');
+        const label = document.createElement('span');
+        label.textContent = `${item.id}. ${item.name}`;
+        const star = document.createElement('button');
+        star.type = 'button';
+        star.className = 'favorite-star';
+        const syncStar = () => {
+            const fav = isFavorite(currentReaderContext.title, item.id);
+            star.classList.toggle('is-favorite', fav);
+            star.title = fav ? 'Remove from favorites' : 'Add to favorites';
+            star.innerHTML = `<i class="${fav ? 'fas' : 'far'} fa-star"></i>`;
+        };
+        syncStar();
+        star.addEventListener('click', e => {
+            e.stopPropagation();
+            const added = toggleFavorite(currentReaderContext.title, item);
+            syncStar();
+            showToast(added ? 'Added to favorites' : 'Removed from favorites');
+        });
+        itemEl.append(label, star);
         itemEl.dataset.itemId = item.id;
         itemEl.addEventListener('click', () => displayItemContent(item.id));
         listContainer.appendChild(itemEl);
@@ -3712,7 +3817,7 @@ function displayContentList(filteredData = null) {
 }
 
 function displayItemContent(itemId) {
-    const item = currentReaderContext.data.find(i => i.id === itemId);
+    const item = currentReaderContext.data.find(i => String(i.id) === String(itemId));
     if (!item) return;
 	history.pushState({ view: 'readerItem', id: itemId }, item.name, `#${currentReaderContext.title.replace(/\s+/g, '')}/${itemId}`);
     // Hide the main list title and show the item navigation
@@ -3727,6 +3832,7 @@ function displayItemContent(itemId) {
     prevItemBtn.disabled = currentReaderContext.activeId <= 1;
     nextItemBtn.disabled = currentReaderContext.activeId >= currentReaderContext.data.length;
     
+    updateFavoriteButton();
     readerContentArea.scrollTop = 0;
 }
 
@@ -3791,6 +3897,21 @@ function setupContentReaderListeners() {
     slideMenuHymnsBtn.addEventListener('click', () => {
         showReaderPage({ data: allHymns, title: 'Khrihfa Hlabu' });
         closeMenu();
+    });
+
+    document.getElementById('slideMenuFavoritesBtn').addEventListener('click', () => {
+        showFavoritesPage();
+        closeMenu();
+    });
+
+    document.getElementById('reader-favorites-btn').addEventListener('click', showFavoritesPage);
+
+    document.getElementById('reader-favorite-btn').addEventListener('click', () => {
+        const item = currentReaderContext.data.find(i => Number(i.id) === currentReaderContext.activeId);
+        if (!item) return;
+        const added = toggleFavorite(currentReaderContext.title, item);
+        updateFavoriteButton();
+        showToast(added ? 'Added to favorites' : 'Removed from favorites');
     });
 
     slideMenuReadingsBtn.addEventListener('click', () => {

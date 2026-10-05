@@ -95,6 +95,12 @@
 						</button>
 					</li>
 					<li>
+						<button id="slideMenuFavoritesBtn">
+							<i class="fas fa-star menu-item-icon"></i>
+							<span>Favorites</span>
+						</button>
+					</li>
+					<li>
 						<button id="slideMenuMyDataBtn">
 							<i class="fas fa-user-circle menu-item-icon"></i>
 							<span>My Data</span>
@@ -313,6 +319,7 @@
 								<input type="text" id="reader-search-box" class="hidden" placeholder="Search Title..." aria-label="Search titles">
 							</div>
 							<button id="toggle-reader-search-btn" class="top-bar-icon-btn" title="Search titles" aria-label="Search titles"><i class="fas fa-search"></i></button>
+							<button id="reader-favorites-btn" class="top-bar-icon-btn" title="Favorites" aria-label="Open favorites"><i class="fas fa-star"></i></button>
 							<button id="close-reader-search-btn" class="top-bar-icon-btn hidden" title="Close search" aria-label="Close search"><i class="fas fa-times"></i></button>
 							<div id="reader-item-nav-group" class="hidden">
 								<button id="reader-back-to-list-btn" class="nav-btn chapter-nav-btn" title="Back to List">
@@ -324,6 +331,9 @@
 								<span id="item-title-display" class="chapter-display"></span>
 								<button id="next-item-btn" class="nav-btn chapter-nav-btn" title="Next Item">
 									<i class="fas fa-chevron-right"></i>
+								</button>
+								<button id="reader-favorite-btn" class="nav-btn chapter-nav-btn" title="Add to favorites" aria-label="Toggle favorite" aria-pressed="false">
+									<i class="far fa-star"></i>
 								</button>
 							</div>
 						</div>
