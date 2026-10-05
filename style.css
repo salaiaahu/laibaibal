@@ -3526,3 +3526,30 @@ button, a, select, label { touch-action: manipulation; }
 .bible-content::-webkit-scrollbar, #reader-content-area::-webkit-scrollbar, .hymn-list::-webkit-scrollbar, .home-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .secondary-picker .custom-select { width: 100%; max-width: 260px; text-align: left; }
 .secondary-picker .custom-select-menu { z-index: 50; }
+
+/* Swipe follow-finger */
+#bibleContentView .parallel-container, #reader-content-area { touch-action: pan-y; will-change: transform; }
+
+/* Visible note / bookmark indicators */
+.verse-paragraph .verse-indicator { opacity: 1; }
+.verse-paragraph .note-indicator, .verse-paragraph .verse-indicator.bookmark {
+    display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+    min-width: 26px; height: 26px; padding: 0 7px; margin-left: 8px; border-radius: 13px;
+    font-size: .8rem; vertical-align: middle; line-height: 1; box-sizing: border-box;
+}
+.verse-paragraph .note-indicator { background: #1f9d55; color: #fff; box-shadow: 0 1px 4px rgba(31,157,85,.45); }
+.verse-paragraph .verse-indicator.bookmark { background: #1e6fd9; color: #fff; box-shadow: 0 1px 4px rgba(30,111,217,.45); }
+.note-indicator[data-label]::after { font-size: .72rem; margin-left: 0; }
+
+/* Compact My Data on mobile */
+#user-data-panel { padding: 10px 10px 14px; }
+#user-data-panel .user-data-tabs { gap: 3px; padding: 3px; margin-bottom: 4px; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+#user-data-panel .user-data-tabs::-webkit-scrollbar { display: none; }
+#user-data-panel .tab-button { flex: 1 0 auto; padding: 7px 10px; font-size: .85rem; white-space: nowrap; }
+#user-data-panel .tab-content { padding: 8px 0 2px; }
+#user-data-panel .tab-content h3 { margin: 0 0 6px; font-size: .95rem; }
+#user-data-panel .user-data-list { margin: 0; padding: 0; gap: 0; }
+#user-data-panel .placeholder, #user-data-panel .user-data-list li { padding: 8px 10px; margin: 0 0 6px; border-radius: 8px; font-size: .88rem; line-height: 1.3; }
+#user-data-panel .user-data-list li .meta { font-size: .8rem; margin-top: 2px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#user-data-panel .user-data-list { max-height: none; border: 0; background: transparent; }
+#user-data-panel .tab-content > .placeholder { padding: 0; border: 0; background: transparent; font-size: .78rem; opacity: .65; margin: 0 0 8px; }

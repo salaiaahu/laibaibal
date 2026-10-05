@@ -6574,11 +6574,27 @@ function playSlideIn(el, direction) {
     el.animate(
         [{ transform: `translateX(${direction * 48}px)`, opacity: 0 }, { transform: 'translateX(0)', opacity: 1 }],
         { duration: 280, easing: 'cubic-bezier(.22,.8,.3,1)' }
-    );
+    ).onfinish = () => releaseSwipeHold(el);
 }
 
+function releaseSwipeHold(el) {
+    if (!el) return;
+    el.style.transition = '';
+    el.style.transform = '';
+    el.style.opacity = '';
+}
+
+let chapterLoadCounter = 0;
 async function navigateChapter(direction) {
+    const before = chapterLoadCounter;
     pendingSlideDirection = direction;
+    await navigateChapterInner(direction);
+    const loaded = chapterLoadCounter !== before;
+    if (!loaded) pendingSlideDirection = 0;
+    return loaded;
+}
+
+async function navigateChapterInner(direction) {
     if (!currentBook || !currentChapter || !activeDbs.primary) {
         statusMessage.textContent = 'Please select a book and chapter first.';
         statusMessage.classList.add('error');
@@ -7010,6 +7026,7 @@ if (multiMode) {
 
 
 async function loadChapterContent(bookNumber, chapterOrSpecial, selectedVerse = null) {
+    chapterLoadCounter++;
     showPanel(bibleContentView);
     selectedVerses.clear();
     lastClickedVerseId = null;
@@ -9421,13 +9438,13 @@ document.querySelectorAll('#home-screen .home-card').forEach(card => {
 
 // --- Swipe navigation ---
 async function navigateBook(direction) {
-    if (!currentBook) return;
+    if (!currentBook) return false;
     pendingSlideDirection = direction;
     const book = direction === 1 ? getNextBook(currentBook.book_number) : getPreviousBook(currentBook.book_number);
     if (!book) {
         pendingSlideDirection = 0;
         showToast(direction === 1 ? 'This is the last book' : 'This is the first book');
-        return;
+        return false;
     }
     currentBook = book;
     currentChapter = 1;
@@ -9435,11 +9452,13 @@ async function navigateBook(direction) {
     showBooksList();
     saveLastReadPosition();
     loadChapterContent(book.book_number, 1, null);
+    return true;
 }
 
 (function setupSwipeNavigation() {
-    const MIN_DIST = 70;
-    let startX = 0, startY = 0, lastX = 0, lastY = 0, maxTouches = 0, tracking = false;
+    const COMMIT_DIST = 90, LOCK_DIST = 12;
+    let startX = 0, startY = 0, lastX = 0, lastY = 0, maxTouches = 0;
+    let tracking = false, dragging = false, locked = false, el = null, area = null;
 
     const centroid = touches => {
         let x = 0, y = 0;
@@ -9453,40 +9472,103 @@ async function navigateBook(direction) {
         if (!bibleContentView.classList.contains('hidden')) return 'bible';
         return null;
     };
+    const targetFor = a => a === 'reader' ? readerContentArea : document.querySelector('#bibleContentView .parallel-container');
+    const canMove = (a, direction) => {
+        if (a === 'reader') return !(direction === 1 ? nextItemBtn : prevItemBtn).disabled;
+        return true;
+    };
+
+    function springBack() {
+        if (!el) return;
+        const node = el;
+        node.style.transition = 'transform .22s cubic-bezier(.22,.8,.3,1), opacity .22s ease';
+        node.style.transform = 'translateX(0)';
+        node.style.opacity = '1';
+        setTimeout(() => releaseSwipeHold(node), 240);
+    }
+
+    async function commit(direction) {
+        const node = el;
+        const width = window.innerWidth;
+        node.style.transition = 'transform .16s ease-in, opacity .16s ease-in';
+        node.style.transform = `translateX(${-direction * width * 0.6}px)`;
+        node.style.opacity = '0';
+        await new Promise(r => setTimeout(r, 160));
+        node.style.transition = 'none';
+        let ok;
+        if (area === 'reader') {
+            (direction === 1 ? nextItemBtn : prevItemBtn).click();
+            ok = true;
+        } else if (maxTouches >= 2) {
+            ok = await navigateBook(direction);
+        } else {
+            ok = await navigateChapter(direction);
+        }
+        if (!ok) { springBack(); return; }
+        // Safety net in case the slide-in never fires
+        setTimeout(() => { if (node.style.opacity === '0') releaseSwipeHold(node); }, 1500);
+    }
 
     document.addEventListener('touchstart', e => {
         if (!tracking) {
-            if (blocked(e.target) || !activeArea()) return;
+            if (blocked(e.target)) return;
+            area = activeArea();
+            if (!area) return;
+            el = targetFor(area);
+            if (!el) return;
             tracking = true;
+            dragging = false;
+            locked = false;
             maxTouches = 0;
         }
         maxTouches = Math.max(maxTouches, e.touches.length);
         [startX, startY] = centroid(e.touches);
         [lastX, lastY] = [startX, startY];
+        if (dragging) {
+            dragging = false;
+            springBack();
+        }
     }, { passive: true });
 
     document.addEventListener('touchmove', e => {
         if (!tracking || !e.touches.length) return;
         [lastX, lastY] = centroid(e.touches);
+        const dx = lastX - startX, dy = lastY - startY;
+        if (!locked) {
+            if (Math.abs(dx) < LOCK_DIST && Math.abs(dy) < LOCK_DIST) return;
+            if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+                const sel = window.getSelection();
+                if (sel && !sel.isCollapsed && sel.toString().trim()) { tracking = false; return; }
+                locked = true;
+                dragging = true;
+                el.style.transition = 'none';
+            } else {
+                tracking = false; // vertical scroll
+                return;
+            }
+        }
+        if (dragging) {
+            const direction = dx < 0 ? 1 : -1;
+            const resist = canMove(area, direction) ? 1 : 0.25;
+            const shown = dx * resist;
+            el.style.transform = `translateX(${shown}px)`;
+            el.style.opacity = String(Math.max(0.35, 1 - Math.abs(shown) / (window.innerWidth * 0.9)));
+        }
     }, { passive: true });
 
-    document.addEventListener('touchcancel', () => { tracking = false; }, { passive: true });
+    document.addEventListener('touchcancel', () => {
+        if (dragging) springBack();
+        tracking = dragging = false;
+    }, { passive: true });
 
     document.addEventListener('touchend', e => {
         if (!tracking || e.touches.length > 0) return;
-        tracking = false;
-        const dx = lastX - startX, dy = lastY - startY;
-        if (Math.abs(dx) < MIN_DIST || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-        const sel = window.getSelection();
-        if (sel && !sel.isCollapsed && sel.toString().trim()) return;
+        const wasDragging = dragging;
+        tracking = dragging = false;
+        if (!wasDragging) return;
+        const dx = lastX - startX;
         const direction = dx < 0 ? 1 : -1;
-        const area = activeArea();
-        if (area === 'reader') {
-            const btn = direction === 1 ? nextItemBtn : prevItemBtn;
-            if (!btn.disabled) btn.click();
-        } else if (area === 'bible') {
-            if (maxTouches >= 2) navigateBook(direction);
-            else navigateChapter(direction);
-        }
+        if (Math.abs(dx) >= COMMIT_DIST && canMove(area, direction)) commit(direction);
+        else springBack();
     }, { passive: true });
 })();
