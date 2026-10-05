@@ -3353,6 +3353,12 @@ let SQL;
 
 let isExitConfirming = false;
 let exitConfirmTimeout = null;
+let appHistoryEntries = 0;
+
+function pushAppHistoryState(state, title, url) {
+    history.pushState(state, title, url);
+    appHistoryEntries++;
+}
 
 let loadedVersions = {}; // Stores Bible versions
 let activeVersions = { primary: null, secondary: null };
@@ -3677,7 +3683,7 @@ let latestSelectedText = '';
 function showReaderPage(context) { // context is { data: [...], title: "..." }
     currentReaderContext = { ...context, activeId: null };
     showPanel(contentReaderPanel);
-	history.pushState({ view: 'readerList' }, context.title, `#${context.title.replace(/\s+/g, '')}`);
+	pushAppHistoryState({ view: 'readerList' }, context.title, `#${context.title.replace(/\s+/g, '')}`);
     displayContentList();
 }
 
@@ -3710,7 +3716,7 @@ function updateFavoriteButton() {
 function showFavoritesPage() {
     currentReaderContext = { data: [], title: 'Favorites', activeId: null, isFavorites: true };
     showPanel(contentReaderPanel);
-    history.pushState({ view: 'readerList' }, 'Favorites', '#Favorites');
+    pushAppHistoryState({ view: 'readerList' }, 'Favorites', '#Favorites');
     displayFavoritesList();
 }
 
@@ -3744,8 +3750,7 @@ function displayFavoritesList() {
         group.forEach(f => {
             const row = document.createElement('div');
             row.className = 'hymn-list-item favorite-row';
-            const label = document.createElement('span');
-            label.textContent = `${f.id}. ${f.name}`;
+            const label = createReaderItemLabel(f.id, f.name);
             const star = document.createElement('button');
             star.type = 'button';
             star.className = 'favorite-star is-favorite';
@@ -3791,8 +3796,7 @@ function displayContentList(filteredData = null) {
         const itemEl = document.createElement('div');
         itemEl.className = 'hymn-list-item';
         itemEl.classList.add('favorite-row');
-        const label = document.createElement('span');
-        label.textContent = `${item.id}. ${item.name}`;
+        const label = createReaderItemLabel(item.id, item.name);
         const star = document.createElement('button');
         star.type = 'button';
         star.className = 'favorite-star';
@@ -3818,10 +3822,23 @@ function displayContentList(filteredData = null) {
     readerContentArea.appendChild(listContainer);
 }
 
+function createReaderItemLabel(id, name) {
+    const label = document.createElement('span');
+    label.className = 'reader-item-label';
+    const number = document.createElement('span');
+    number.className = 'reader-item-number';
+    number.textContent = `${id}.`;
+    const title = document.createElement('span');
+    title.className = 'reader-item-title';
+    title.textContent = name;
+    label.append(number, title);
+    return label;
+}
+
 function displayItemContent(itemId) {
     const item = currentReaderContext.data.find(i => String(i.id) === String(itemId));
     if (!item) return;
-	history.pushState({ view: 'readerItem', id: itemId }, item.name, `#${currentReaderContext.title.replace(/\s+/g, '')}/${itemId}`);
+	pushAppHistoryState({ view: 'readerItem', id: itemId }, item.name, `#${currentReaderContext.title.replace(/\s+/g, '')}/${itemId}`);
     // Hide the main list title and show the item navigation
     if (readerListTitle) readerListTitle.classList.add('hidden');
     if (readerItemNavGroup) readerItemNavGroup.classList.remove('hidden');
@@ -3829,7 +3846,29 @@ function displayItemContent(itemId) {
     
     const previousId = currentReaderContext.activeId;
     currentReaderContext.activeId = parseInt(itemId);
-    readerContentArea.innerHTML = `<div class="hymn-content">${item.destext}</div>`;
+    const content = document.createElement('div');
+    content.className = 'hymn-content';
+    content.innerHTML = item.destext;
+    if (currentReaderContext.title === 'Khrihfa Hlabu') {
+        content.querySelectorAll('p').forEach(paragraph => {
+            if (/^\s*Doh\s*(?:is|:)/i.test(paragraph.textContent)) {
+                paragraph.classList.add('hymn-key-line');
+                return;
+            }
+            const label = paragraph.querySelector('b');
+            if (!label) return;
+            if (/^\s*CHO\s*:/i.test(label.textContent)) {
+                label.classList.add('hymn-chorus-label');
+            } else if (/^\s*\d+[.)]?\s*$/.test(label.textContent)) {
+                label.classList.add('hymn-verse-number');
+            }
+        });
+    }
+    const credit = document.createElement('p');
+    credit.className = 'reader-credit';
+    credit.textContent = 'Brought to you by LaiTech Group LLC';
+    content.appendChild(credit);
+    readerContentArea.replaceChildren(content);
     itemTitleDisplay.textContent = `${currentReaderContext.title} No. ${item.id}`;
     
     prevItemBtn.disabled = currentReaderContext.activeId <= 1;
@@ -4298,121 +4337,53 @@ function processUserTextSelection(eventContext) { // eventContext can be the eve
 
 //-----------Back key control 
 function setupMobileBackButtonHandler() {
-    console.log("Setting up the new, robust mobile back button (popstate) listener.");
+    let allowBrowserBack = false;
+    const backGuard = { laiBaibalBackGuard: true };
+    pushAppHistoryState(backGuard, '', location.href);
 
-    // This function will be the single event listener for the 'popstate' event.
-    window.addEventListener('popstate', function(event) {
-        console.log("POPSTATE event fired. Intercepting back navigation.");
+    window.addEventListener('popstate', () => {
+        if (allowBrowserBack) return;
+        appHistoryEntries = Math.max(0, appHistoryEntries - 1);
 
-        // We check for open states in order of priority (most temporary first).
-        
-        // --- 1. Check for open modals ---
-        if (noteModal && !noteModal.classList.contains('hidden')) {
-            console.log("Back Action: Closing Note Modal.");
-            noteModal.classList.add('hidden');
-            return; // Action handled
-        }
-        if (bookmarkModal && !bookmarkModal.classList.contains('hidden')) {
-            console.log("Back Action: Closing Bookmark Modal.");
-            bookmarkModal.classList.add('hidden');
-            return; // Action handled
-        }
-        if (bibleVersionSelectModal && !bibleVersionSelectModal.classList.contains('hidden')) {
-            console.log("Back Action: Closing Version Select Modal.");
-            bibleVersionSelectModal.classList.add('hidden');
-            return;
-        }
-        if (commentarySelectModal && !commentarySelectModal.classList.contains('hidden')) {
-             console.log("Back Action: Closing Commentary Select Modal.");
-             commentarySelectModal.classList.add('hidden');
-             return;
-        }
-         if (themeSelectModal && !themeSelectModal.classList.contains('hidden')) {
-             console.log("Back Action: Closing Theme Select Modal.");
-             themeSelectModal.classList.add('hidden');
-             return;
-        }
+        const isOpen = element => element && !element.classList.contains('hidden');
+        const rearmBack = () => pushAppHistoryState(backGuard, '', location.href);
 
-
-        // --- 2. Check for open Slide Menu ---
-        if (slideMenu && !slideMenu.classList.contains('hidden')) {
-            console.log("Back Action: Closing Slide Menu.");
+        if (isOpen(noteModal)) noteModal.classList.add('hidden');
+        else if (isOpen(bookmarkModal)) bookmarkModal.classList.add('hidden');
+        else if (isOpen(bibleVersionSelectModal)) bibleVersionSelectModal.classList.add('hidden');
+        else if (isOpen(commentarySelectModal)) commentarySelectModal.classList.add('hidden');
+        else if (isOpen(themeSelectModal)) themeSelectModal.classList.add('hidden');
+        else if (!document.getElementById('home-screen')?.classList.contains('hidden')) {
+            if (isExitConfirming) {
+                clearTimeout(exitConfirmTimeout);
+                isExitConfirming = false;
+                allowBrowserBack = true;
+                history.go(-(appHistoryEntries + 1));
+                return;
+            }
+            isExitConfirming = true;
+            showToast('Press back again to exit');
+            exitConfirmTimeout = setTimeout(() => { isExitConfirming = false; }, 2000);
+        }
+        else if (isOpen(slideMenu)) {
             slideMenu.classList.add('hidden');
-            slideMenuOverlay.classList.add('hidden');
-            return; // Action handled
+            slideMenuOverlay?.classList.add('hidden');
+        } else if (isOpen(searchPanel)) closeSearchPanelBtn?.click();
+        else if (isOpen(uploadPanel)) closeUploadPanelBtn?.click();
+        else if (isOpen(commentaryUploadPanel)) closeCommentaryUploadBtn?.click();
+        else if (isOpen(userDataPanel)) closeUserDataPanelBtn?.click();
+        else if (isOpen(contentReaderPanel)) {
+            if (currentReaderContext.activeId) displayContentList();
+            else readerBackToBibleBtn.click();
+        } else if (isOpen(bookChapterVerseSelector)) {
+            if (isOpen(verseGridView)) backToChapterGridBtn?.click();
+            else if (isOpen(chapterGridView)) backToBookGridBtn?.click();
+            else closeNavigatorBtn?.click();
+        } else {
+            showHome();
         }
 
-        // --- 3. Check if we are in the Content Reader (Hymns/Readings) ---
-        if (contentReaderPanel && !contentReaderPanel.classList.contains('hidden')) {
-            // If viewing a specific item, go back to the list
-            if (currentReaderContext.activeId) {
-                console.log("Back Action: In Reader Item View, going back to List View.");
-                displayContentList();
-            } else { // If on the list view, go back to the Bible
-                console.log("Back Action: In Reader List View, going back to Bible View.");
-                readerBackToBibleBtn.click();
-            }
-            return; // Action handled
-        }
-
-        // --- 4. Check for Book/Chapter/Verse Navigator ---
-        if (bookChapterVerseSelector && !bookChapterVerseSelector.classList.contains('hidden')) {
-            if (verseGridView && !verseGridView.classList.contains('hidden')) {
-                console.log("Back Action: In Verse Grid, going back to Chapter Grid.");
-                if (backToChapterGridBtn) backToChapterGridBtn.click();
-            } else if (chapterGridView && !chapterGridView.classList.contains('hidden')) {
-                console.log("Back Action: In Chapter Grid, going back to Book Grid.");
-                if (backToBookGridBtn) backToBookGridBtn.click();
-            } else {
-                console.log("Back Action: In Book Grid, closing navigator.");
-                if (closeNavigatorBtn) closeNavigatorBtn.click();
-            }
-            return; // Action handled
-        }
-		        // Priority 5: Handle exit confirmation from the main view
-        if (isExitConfirming) {
-            // The user pressed back a second time. Allow exit.
-            window.history.back(); // This will now properly exit or go to previous page.
-            return;
-        }
-        // This is the first time they've pressed back on the main screen
-        isExitConfirming = true;
-        toastNotification.classList.add('show');
-
-        // Re-arm the history state so the *next* back press can be caught again
-        history.pushState(null, "", location.href);
-
-        // Set a timer to reset the confirmation state
-        exitConfirmTimeout = setTimeout(() => {
-            isExitConfirming = false;
-            toastNotification.classList.remove('show');
-        }, 2000); // User has 2 seconds to press back again
-		
-        // --- 6. Check for other full-screen panels ---
-        if (searchPanel && !searchPanel.classList.contains('hidden')) {
-             console.log("Back Action: Closing Search Panel.");
-             if (closeSearchPanelBtn) closeSearchPanelBtn.click();
-             return;
-        }
-         if (uploadPanel && !uploadPanel.classList.contains('hidden')) {
-             console.log("Back Action: Closing Upload Panel.");
-             if (closeUploadPanelBtn) closeUploadPanelBtn.click();
-             return;
-        }
-        if (commentaryUploadPanel && !commentaryUploadPanel.classList.contains('hidden')) {
-             console.log("Back Action: Closing Commentary Upload Panel.");
-             if (closeCommentaryUploadBtn) closeCommentaryUploadBtn.click();
-             return;
-        }
-        if (userDataPanel && !userDataPanel.classList.contains('hidden')) {
-            console.log("Back Action: Closing User Data Panel.");
-            if (closeUserDataPanelBtn) closeUserDataPanelBtn.click();
-            return;
-        }
-
-        // If no other state was handled, allow the browser to go back (which may exit the app)
-        console.log("Back Action: No specific in-app state found. Allowing default browser behavior.");
-        window.history.back();
+        rearmBack();
     });
 }
 
@@ -4687,7 +4658,7 @@ function populateBibleVersionModal() {
     const versions = Object.keys(loadedVersions);
     
     // Populate Primary Select
-    popupPrimaryVersionSelect.innerHTML = '<option value="">-- Select Primary --</option>';
+    popupPrimaryVersionSelect.innerHTML = '<option value="">-- Pakhatnak Thimnak --</option>';
     versions.forEach(versionName => {
         const option = document.createElement('option');
         option.value = versionName;
@@ -4702,7 +4673,7 @@ function populateBibleVersionModal() {
     }
 
     // Populate Secondary Select
-    popupSecondaryVersionSelect.innerHTML = '<option value="">-- Select Secondary (None) --</option>';
+    popupSecondaryVersionSelect.innerHTML = '<option value="">-- Pahnihnak Thimnak (None) --</option>';
     versions.forEach(versionName => {
         const option = document.createElement('option');
         option.value = versionName;
@@ -4915,7 +4886,7 @@ console.log("LOG: After closeAllPopups()");
             populateBibleVersionModal(); // Populate with current selections and options
 console.log("LOG: After populateBibleVersionModal()"); 
             bibleVersionSelectModal.classList.remove('hidden');
-			history.pushState({ modal: 'versionSelect' }, "Select Version", "#versionSelectOpen");
+			pushAppHistoryState({ modal: 'versionSelect' }, "Select Version", "#versionSelectOpen");
             console.log("LOG: bibleVersionSelectModal 'hidden' class removed. Current classes:", bibleVersionSelectModal.classList.toString()); // LOG 4
             console.log("LOG: bibleVersionSelectModal computed display style:", window.getComputedStyle(bibleVersionSelectModal).display); // LOG 5
   
@@ -7437,7 +7408,7 @@ async function showNoteModal(verseRef, initialSelectedText = null) {
     }
     
     noteModal.classList.remove('hidden');
-	history.pushState({ modal: 'note' }, "Note", "#noteOpen");
+	pushAppHistoryState({ modal: 'note' }, "Note", "#noteOpen");
     
     // Try to ensure other potential overlays are hidden
     if (highlightPicker && !highlightPicker.classList.contains('hidden')) {
@@ -7636,7 +7607,7 @@ async function showBookmarkModal(verseRef) {
         deleteBookmarkBtn.classList.remove('hidden'); // Show delete button
     }
     bookmarkModal.classList.remove('hidden'); // Show modal
-	history.pushState({ modal: 'bookmark' }, "Bookmark", "#bookmarkOpen");
+	pushAppHistoryState({ modal: 'bookmark' }, "Bookmark", "#bookmarkOpen");
     bookmarkCategoryInput.focus(); // Focus on input
 }
 

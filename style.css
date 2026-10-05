@@ -3491,6 +3491,38 @@ button, a, select, label { touch-action: manipulation; }
 .reader-main-controls.reader-detail-active #reader-favorites-btn { display: none; }
 .hymn-list-item.favorite-row { white-space: normal; text-overflow: clip; }
 
+/* Reader list labels use a separate number column so wrapped titles stay aligned. */
+.reader-item-label {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: start;
+    gap: 0.4em;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.reader-item-number { font-weight: 700; white-space: nowrap; }
+.reader-item-title { min-width: 0; }
+
+/* Distinguish hymn keys, verse numbers and chorus labels. */
+.hymn-content .hymn-key-line {
+    padding: 5px 8px;
+    border-left: 3px solid #d97706;
+    border-radius: 3px;
+    background: rgba(217, 119, 6, 0.1);
+    color: #a34f00;
+    font-weight: 700;
+}
+.hymn-content .hymn-verse-number { color: #6d28d9; }
+.hymn-content .hymn-chorus-label { color: #087f8c; }
+.reader-credit {
+    margin: 10px 0 2px;
+    padding: 0 8px 6px;
+    color: var(--secondary-text-color, #727b84);
+    font-size: 0.75rem;
+    font-style: italic;
+    text-align: center;
+}
+
 /* Landing page */
 #home-screen { position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; background: linear-gradient(170deg, #3d5872 0%, #203447 100%); color: #fff; transition: opacity .25s ease; }
 #home-screen.hidden { display: none; }
