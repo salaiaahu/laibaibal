@@ -4416,6 +4416,7 @@ function enhanceSelect(select) {
 
     const wrapper = document.createElement('div');
     wrapper.className = 'custom-select';
+    if (select.style.flexGrow) wrapper.style.flexGrow = select.style.flexGrow;
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'custom-select-trigger';
@@ -4468,8 +4469,7 @@ function enhanceSelect(select) {
 }
 
 function setupCustomSelects() {
-    [popupPrimaryVersionSelect, popupSecondaryVersionSelect, searchScopeSelect, matchTypeSelect, bookmarkCategorySelect]
-        .forEach(enhanceSelect);
+    document.querySelectorAll('select').forEach(enhanceSelect);
 }
 
 // NEW function to manage views within the navigator panel
@@ -4913,7 +4913,7 @@ function openBookNavigator() {
 
     if (!activeVersions.primary || !loadedVersions[activeVersions.primary]) {
         console.warn("LOG: openBookNavigator - No primary version active or loaded. Alerting.");
-        alert("Please load and select a primary Bible version first.");
+        showToast("Please load and select a primary Bible version first.");
         showPanel(uploadPanel); // Or your default panel for loading versions
         return;
     }
@@ -5778,8 +5778,8 @@ async function addBibleVersion() {
     }
 }
 
-function removeBibleVersion(versionName) {
-    if (confirm(`Are you sure you want to remove "${versionName}"?`)) {
+async function removeBibleVersion(versionName) {
+    if (await showConfirm(`Are you sure you want to remove "${versionName}"?`, { title: 'Remove Bible version', confirmText: 'Remove', danger: true })) {
         deleteIndexedDB(OBJECT_STORE_NAME, versionName)
             .then(() => console.log(`Deleted ${versionName} from IndexedDB.`))
             .catch(err => {
@@ -6087,8 +6087,8 @@ async function addCommentary() {
     }
 }
 
-function removeCommentary(commentaryName) {
-    if (confirm(`Are you sure you want to remove "${commentaryName}"?`)) {
+async function removeCommentary(commentaryName) {
+    if (await showConfirm(`Are you sure you want to remove "${commentaryName}"?`, { title: 'Remove commentary', confirmText: 'Remove', danger: true })) {
         deleteIndexedDB(COMMENTARY_STORE_NAME, commentaryName)
             .then(() => console.log(`Deleted ${commentaryName} from IndexedDB.`))
             .catch(err => {
@@ -6716,7 +6716,7 @@ if (multiMode) {
                     );
 
                     if (wholeVerseNotesMap.has(verse_number) && !hasAnyPartialNoteForThisVerse) { 
-                        indicatorIcons += `<i class="fas fa-sticky-note verse-indicator note-indicator" data-book-number="${processingBookNumber}" data-chapter="${numericChapterForQuery}" data-verse="${verse_number}" data-version-name="${processingVersionName}" title="Verse Note exists"></i>`;
+                        indicatorIcons += `<i class="fas fa-sticky-note verse-indicator note-indicator" data-book-number="${processingBookNumber}" data-chapter="${numericChapterForQuery}" data-verse="${verse_number}" data-version-name="${processingVersionName}" title="${wholeVerseNotesMap.get(verse_number).groupVerses?.length > 1 ? 'Note on verses ' + wholeVerseNotesMap.get(verse_number).groupVerses.join(', ') : 'Verse Note exists'}"${wholeVerseNotesMap.get(verse_number).groupVerses?.length > 1 ? ` data-label="${formatVerseLabel(wholeVerseNotesMap.get(verse_number).groupVerses.map(v => ({ verse: v })))}"` : ''}></i>`;
                     }
                     if (bookmarksMap.has(verse_number)) {
                         indicatorIcons += `<i class="fas fa-bookmark verse-indicator bookmark-indicator" data-book-number="${processingBookNumber}" data-chapter="${numericChapterForQuery}" data-verse="${verse_number}" data-version-name="${processingVersionName}" title="Bookmarked"></i>`;
@@ -7210,6 +7210,10 @@ async function showNoteModal(verseRef, initialSelectedText = null) {
             noteModalTitle.textContent = `Note for text: "${existingNoteToLoad.selectedText.substring(0, 30)}${existingNoteToLoad.selectedText.length > 30 ? '...' : ''}" (in ${originalVerseContextTitle})`;
         }
         deleteNoteBtn.classList.remove('hidden');
+        if (existingNoteToLoad.groupVerses?.length > 1) {
+            currentNoteMultiRefs = existingNoteToLoad.groupVerses.map(v => ({ ...verseRef, verse: v }));
+            noteModalTitle.textContent = `Note for ${loadedVersions[verseRef.versionName]?.books.find(b => b.book_number === verseRef.bookNumber)?.short_name || `Book ${verseRef.bookNumber}`} ${verseRef.chapter}:${formatVerseLabel(currentNoteMultiRefs)} (${verseRef.versionName})`;
+        }
     }
     
     noteModal.classList.remove('hidden');
@@ -7298,22 +7302,21 @@ async function saveNote() {
     // currentNoteVerseRef holds {versionName, bookNumber, chapter, verse}
     if (currentNoteMultiRefs.length > 1) {
         const refs = currentNoteMultiRefs;
-        const multiText = noteTextarea.value.trim();
+        const anchor = refs[0];
         try {
-            for (const ref of refs) {
-                const existing = (await getAllIndexedDB(NOTES_STORE_NAME, 'byVerse', IDBKeyRange.only([ref.versionName, ref.bookNumber, ref.chapter, ref.verse]))).find(n => !n.selectedText);
-                const data = { ...ref, noteText: multiText, selectedText: null, timestamp: Date.now() };
-                if (existing) data.id = existing.id;
-                await putIndexedDB(NOTES_STORE_NAME, data);
-            }
-            statusMessage.textContent = `Note saved for ${refs.length} verses.`;
+            const existing = (await getAllIndexedDB(NOTES_STORE_NAME, 'byVerse', IDBKeyRange.only([anchor.versionName, anchor.bookNumber, anchor.chapter, anchor.verse]))).find(n => !n.selectedText);
+            const data = { ...anchor, noteText: noteTextarea.value.trim(), selectedText: null, groupVerses: refs.map(r => r.verse), timestamp: Date.now() };
+            const editingId = noteTextarea.dataset.id ? parseInt(noteTextarea.dataset.id) : existing?.id;
+            if (editingId) data.id = editingId;
+            await putIndexedDB(NOTES_STORE_NAME, data);
+            statusMessage.textContent = `Note saved for verses ${formatVerseLabel(refs)}.`;
             currentNoteMultiRefs = [];
             noteModal.classList.add('hidden');
             if (location.hash === "#noteOpen") history.back();
-            loadChapterContent(refs[0].bookNumber, refs[0].chapter);
+            loadChapterContent(anchor.bookNumber, anchor.chapter);
             updateUserDataPanel('notes');
         } catch (e) {
-            console.error('Error saving notes:', e);
+            console.error('Error saving note:', e);
             statusMessage.textContent = 'Error saving note.';
             statusMessage.classList.add('error');
         }
@@ -7362,7 +7365,7 @@ async function saveNote() {
 }
 
 async function deleteNote() {
-    if (!currentNoteVerseRef || !confirm('Are you sure you want to delete this note?')) {
+    if (!currentNoteVerseRef || !(await showConfirm('Are you sure you want to delete this note?', { title: 'Delete note', confirmText: 'Delete', danger: true }))) {
         return;
     }
     const noteId = noteTextarea.dataset.id; // Get ID to delete
@@ -7422,11 +7425,16 @@ async function populateBookmarkCategoriesDatalist() {
     const allBookmarks = await getAllIndexedDB(BOOKMARKS_STORE_NAME);
     allBookmarks.forEach(b => categories.add(b.category));
 
-    bookmarkCategoriesDatalist.innerHTML = '';
+    const box = document.getElementById('bookmarkCategorySuggestions');
+    if (!box) return;
+    box.innerHTML = '';
     categories.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat;
-        bookmarkCategoriesDatalist.appendChild(option);
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'category-chip';
+        chip.textContent = cat;
+        chip.addEventListener('click', () => { bookmarkCategoryInput.value = cat; });
+        box.appendChild(chip);
     });
 }
 
@@ -7484,7 +7492,7 @@ async function saveBookmark() {
 }
 
 async function deleteBookmark() {
-    if (!currentBookmarkVerseRef || !confirm('Are you sure you want to delete this bookmark?')) {
+    if (!currentBookmarkVerseRef || !(await showConfirm('Are you sure you want to delete this bookmark?', { title: 'Delete bookmark', confirmText: 'Delete', danger: true }))) {
         return;
     }
     const bookmarkId = bookmarkCategoryInput.dataset.id;
@@ -7609,7 +7617,7 @@ async function generateVerseImage(verseRefOrRefs) {
     try {
         verseText = refs.map(r => getVerseTextFromDb(r)).join(' ');
     } catch (err) {
-        alert("Failed to load verse text.");
+        showToast("Failed to load verse text.");
         return;
     }
 
@@ -7761,7 +7769,7 @@ async function populateNotesList() {
         allNotes.forEach(n => {
             const li = document.createElement('li');
             const notePreview = n.noteText.length > 50 ? n.noteText.substring(0, 50) + '...' : n.noteText;
-            li.innerHTML = `<span>${n.versionName}: ${loadedVersions[n.versionName]?.books.find(b => b.book_number === n.bookNumber)?.short_name || `Book ${n.bookNumber}`} ${n.chapter}:${n.verse}</span>
+            li.innerHTML = `<span>${n.versionName}: ${loadedVersions[n.versionName]?.books.find(b => b.book_number === n.bookNumber)?.short_name || `Book ${n.bookNumber}`} ${n.chapter}:${n.groupVerses?.length > 1 ? formatVerseLabel(n.groupVerses.map(v => ({ verse: v }))) : n.verse}</span>
                             <span class="meta">${notePreview}</span>`;
             li.dataset.versionName = n.versionName;
             li.dataset.bookNumber = n.bookNumber;
@@ -7876,11 +7884,11 @@ async function shareVerse(verseRefOrRefs) {
                 text: fullText,
                 url: window.location.href
             });
-            alert('Verse shared via native share!');
+            showToast('Verse shared via native share!');
         } else if (navigator.clipboard?.writeText) {
             console.log('Using navigator.clipboard...');
             await navigator.clipboard.writeText(fullText);
-            alert('Verse copied to clipboard!');
+            showToast('Verse copied to clipboard!');
         } else {
             console.log('Using fallback copy method...');
             const textarea = document.createElement('textarea');
@@ -7889,11 +7897,11 @@ async function shareVerse(verseRefOrRefs) {
             textarea.select();
             document.execCommand('copy');
             document.body.removeChild(textarea);
-            alert('Verse copied using fallback.');
+            showToast('Verse copied using fallback.');
         }
     } catch (err) {
         console.error('Error sharing verse:', err);
-        alert('Failed to share verse: ' + err.message);
+        showToast('Failed to share verse: ' + err.message);
     }
 }
 
@@ -8692,7 +8700,7 @@ if (verseActionPopupHighlightIcon) {
 
         if (!verseElement) {
             console.error("Highlight action: Verse element not found for ", verseRefFromPopup);
-            alert("Could not find the verse element to highlight.");
+            showToast("Could not find the verse element to highlight.");
             verseActionPopup.classList.add('hidden'); // Hide popup if error
             return;
         }
@@ -8723,7 +8731,7 @@ if (verseActionPopupHighlightIcon) {
 
             if (matchingExistingPartial) {
                 verseActionPopup.classList.add('hidden'); // Hide before confirm
-                if (confirm(`This text ("${matchingExistingPartial.text.substring(0,30)}...") is highlighted in ${matchingExistingPartial.color}.\nDo you want to clear this specific highlight?`)) {
+                if (await showConfirm(`This text ("${matchingExistingPartial.text.substring(0,30)}...") is highlighted in ${matchingExistingPartial.color}.\nDo you want to clear this specific highlight?`, { title: 'Clear highlight', confirmText: 'Clear', danger: true })) {
                     try {
                         await deleteIndexedDB(HIGHLIGHTS_STORE_NAME, matchingExistingPartial.id);
                         statusMessage.textContent = 'Partial highlight cleared.';
@@ -8749,7 +8757,7 @@ if (verseActionPopupHighlightIcon) {
                 // For this, we absolutely need the Range object (rangeForPartialAction)
                 if (!rangeForPartialAction || !textForPartialAction || rangeForPartialAction.toString().trim() !== textForPartialAction.trim()) {
                     console.warn("PARTIAL FLOW: Mismatch or missing Range object for new partial highlight. Text from dataset:", textForPartialAction, "Current selection text:", rangeForPartialAction?.toString().trim());
-                    alert("Selection mismatch or no valid selection range found for new partial highlight. Please re-select the text.");
+                    showToast("Selection mismatch or no valid selection range found for new partial highlight. Please re-select the text.");
                     verseActionPopup.classList.add('hidden');
                     verseActionPopup.dataset.currentSelectedText = '';
                     latestSelection = null; latestSelectedText = ''; // Clear globals
@@ -8773,7 +8781,7 @@ if (verseActionPopupHighlightIcon) {
 
                         // Use the captured rangeForPartialAction and textForPartialAction
                         if (!color || !rangeForPartialAction || !textForPartialAction) {
-                            alert("Internal error: Highlight color or selection data missing.");
+                            showToast("Internal error: Highlight color or selection data missing.");
                             highlightColorPicker.classList.add('hidden');
                             window.getSelection()?.removeAllRanges();
                             latestSelection = null; latestSelectedText = '';
@@ -8791,7 +8799,7 @@ if (verseActionPopupHighlightIcon) {
                             rangeForPartialAction.insertNode(span);
                         } catch (e) {
                             console.error('PARTIAL FLOW: DOM insert error:', e);
-                            alert('Error applying highlight to text.');
+                            showToast('Error applying highlight to text.');
                             highlightColorPicker.classList.add('hidden');
                             window.getSelection()?.removeAllRanges();
                             latestSelection = null; latestSelectedText = '';
@@ -8986,10 +8994,10 @@ if (nextChapterBtn) {
 				await navigator.clipboard.write([
 					new ClipboardItem({ 'image/png': blob })
 				]);
-				alert('Image copied to clipboard!');
+				showToast('Image copied to clipboard!');
 			} catch (e) {
 				console.error('Clipboard error:', e);
-				alert('Failed to copy image. Try downloading instead.');
+				showToast('Failed to copy image. Try downloading instead.');
 			}
 		});
 
@@ -9040,3 +9048,150 @@ document.addEventListener('touchend', e => {
     };
     if (document.readyState === 'complete') hide(); else window.addEventListener('load', hide);
 })();
+
+
+// --- Custom dialogs and toasts (replace native alert/confirm) ---
+function showToast(message, type = 'info') {
+    let host = document.getElementById('app-toast-host');
+    if (!host) {
+        host = document.createElement('div');
+        host.id = 'app-toast-host';
+        host.setAttribute('aria-live', 'polite');
+        document.body.appendChild(host);
+    }
+    const toast = document.createElement('div');
+    toast.className = `app-toast app-toast-${type}`;
+    toast.textContent = message;
+    host.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3200);
+}
+
+function showConfirm(message, { title = 'Please confirm', confirmText = 'OK', cancelText = 'Cancel', danger = false } = {}) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'app-dialog-overlay';
+        overlay.innerHTML = `
+            <div class="app-dialog" role="alertdialog" aria-modal="true">
+                <div class="app-dialog-icon ${danger ? 'danger' : ''}"><i class="fas ${danger ? 'fa-triangle-exclamation' : 'fa-circle-question'}"></i></div>
+                <h3 class="app-dialog-title"></h3>
+                <p class="app-dialog-message"></p>
+                <div class="app-dialog-actions">
+                    <button type="button" class="app-dialog-btn cancel"></button>
+                    <button type="button" class="app-dialog-btn confirm ${danger ? 'danger' : ''}"></button>
+                </div>
+            </div>`;
+        overlay.querySelector('.app-dialog-title').textContent = title;
+        overlay.querySelector('.app-dialog-message').textContent = message;
+        const cancelBtn = overlay.querySelector('.cancel');
+        const okBtn = overlay.querySelector('.confirm');
+        cancelBtn.textContent = cancelText;
+        okBtn.textContent = confirmText;
+        const done = result => {
+            document.removeEventListener('keydown', onKey, true);
+            overlay.classList.remove('show');
+            setTimeout(() => overlay.remove(), 180);
+            resolve(result);
+        };
+        const onKey = e => {
+            if (e.key === 'Escape') { e.stopPropagation(); done(false); }
+        };
+        cancelBtn.addEventListener('click', () => done(false));
+        okBtn.addEventListener('click', () => done(true));
+        overlay.addEventListener('click', e => { if (e.target === overlay) done(false); });
+        document.addEventListener('keydown', onKey, true);
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => overlay.classList.add('show'));
+        okBtn.focus();
+    });
+}
+
+// --- Pull to refresh: checks for app updates and reloads ---
+async function refreshApp() {
+    try {
+        const reg = await navigator.serviceWorker?.getRegistration();
+        if (reg) await reg.update();
+        if (window.caches) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        showToast('Updating…');
+    } catch (err) {
+        console.warn('Update check failed:', err);
+    }
+    setTimeout(() => location.reload(), 400);
+}
+
+(function setupPullToRefresh() {
+    const THRESHOLD = 80, MAX_PULL = 130;
+    let indicator, startY = 0, pulling = false, pullDist = 0, scroller = null, busy = false;
+
+    function ensureIndicator() {
+        if (indicator) return indicator;
+        indicator = document.createElement('div');
+        indicator.id = 'ptr-indicator';
+        indicator.innerHTML = '<i class="fas fa-arrow-down"></i><span>Pull to refresh</span>';
+        document.body.appendChild(indicator);
+        return indicator;
+    }
+    function findScroller(el) {
+        while (el && el !== document.body) {
+            if (el.scrollHeight > el.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(el).overflowY)) return el;
+            el = el.parentElement;
+        }
+        return null;
+    }
+    function render(dist, ready) {
+        const el = ensureIndicator();
+        el.style.transform = `translate(-50%, ${dist - 60}px)`;
+        el.style.opacity = Math.min(1, dist / THRESHOLD);
+        el.classList.toggle('ready', ready);
+        el.querySelector('span').textContent = ready ? 'Release to refresh' : 'Pull to refresh';
+    }
+    function reset() {
+        if (!indicator) return;
+        indicator.classList.remove('loading', 'ready');
+        indicator.style.transform = 'translate(-50%, -60px)';
+        indicator.style.opacity = 0;
+    }
+
+    document.addEventListener('touchstart', e => {
+        if (busy || e.touches.length !== 1) return;
+        if (e.target.closest('.modal, .app-dialog-overlay, #verseActionPopup, .highlight-picker, .highlight-color-picker, .custom-select-menu, textarea, input')) return;
+        scroller = findScroller(e.target);
+        if (scroller && scroller.scrollTop > 0) return;
+        startY = e.touches[0].clientY;
+        pulling = true;
+        pullDist = 0;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', e => {
+        if (!pulling) return;
+        if (scroller && scroller.scrollTop > 0) { pulling = false; reset(); return; }
+        const dy = e.touches[0].clientY - startY;
+        if (dy <= 0) { pullDist = 0; reset(); return; }
+        pullDist = Math.min(MAX_PULL, dy * 0.5);
+        render(pullDist, pullDist >= THRESHOLD * 0.75);
+    }, { passive: true });
+
+    document.addEventListener('touchend', async () => {
+        if (!pulling) return;
+        pulling = false;
+        if (pullDist >= THRESHOLD * 0.75) {
+            busy = true;
+            indicator.classList.add('loading');
+            indicator.classList.remove('ready');
+            indicator.style.transform = 'translate(-50%, 20px)';
+            indicator.style.opacity = 1;
+            indicator.querySelector('span').textContent = 'Checking for updates…';
+            await refreshApp();
+        } else {
+            reset();
+        }
+    });
+})();
+
+window.addEventListener('load', () => setupCustomSelects());
