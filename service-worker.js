@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lai-baibal-v11';
+const CACHE_NAME = 'lai-baibal-v12';
 const APP_SHELL = [
   './',
   './index.html',

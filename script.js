@@ -3717,6 +3717,7 @@ function showFavoritesPage() {
 function displayFavoritesList() {
     currentReaderContext.isFavorites = true;
     currentReaderContext.activeId = null;
+    updateFloatingFontControlState();
     currentReaderContext.title = 'Favorites';
     readerListTitle.textContent = 'Favorites';
     if (readerSearchBox.classList.contains('hidden')) readerListTitle.classList.remove('hidden');
@@ -3780,6 +3781,7 @@ function displayContentList(filteredData = null) {
     if (toggleReaderSearchBtn) toggleReaderSearchBtn.classList.remove('hidden');
     
     currentReaderContext.activeId = null;
+    updateFloatingFontControlState();
     readerContentArea.innerHTML = '';
 
     const listContainer = document.createElement('div');
@@ -3834,6 +3836,8 @@ function displayItemContent(itemId) {
     nextItemBtn.disabled = currentReaderContext.activeId >= currentReaderContext.data.length;
     
     updateFavoriteButton();
+    updateFloatingFontControlState();
+    showFontControlsTemporarily();
     readerContentArea.scrollTop = 0;
     if (previousId) playSlideIn(readerContentArea, currentReaderContext.activeId > previousId ? 1 : -1);
 }
@@ -3858,7 +3862,11 @@ function updateFloatingFontControlState() {
     if (!floatingFontControls) return;
     const inReader = isReaderViewActive();
     const inBible = bibleContentView && !bibleContentView.classList.contains('hidden');
-    floatingFontControls.classList.toggle('hidden', !inReader && !inBible);
+    const inReaderDetail = inReader && currentReaderContext.activeId;
+    const visible = inBible || inReaderDetail;
+    const wasHidden = floatingFontControls.classList.contains('hidden');
+    floatingFontControls.classList.toggle('hidden', !visible);
+    if (visible && wasHidden) showFontControlsTemporarily();
 
     if (decreaseFontSizeBtn) {
         decreaseFontSizeBtn.disabled = inReader
@@ -3872,15 +3880,27 @@ function updateFloatingFontControlState() {
     }
 }
 
+let fontControlsTimer = null;
+function showFontControlsTemporarily() {
+    if (!floatingFontControls) return;
+    floatingFontControls.classList.remove('is-hidden-on-scroll');
+    clearTimeout(fontControlsTimer);
+    fontControlsTimer = setTimeout(() => floatingFontControls.classList.add('is-hidden-on-scroll'), 3000);
+}
+
 function setupFloatingFontControls() {
     let lastScrollTop = 0;
+    document.addEventListener('click', e => {
+        if (e.target.closest('#content-reader-panel .hymn-content, #bibleContentView .bible-content')) showFontControlsTemporarily();
+    }, true);
     const handleScroll = event => {
         const target = event.currentTarget;
         const scrollTop = target === window ? window.scrollY : target.scrollTop;
         if (scrollTop > lastScrollTop + 4) {
+            clearTimeout(fontControlsTimer);
             floatingFontControls.classList.add('is-hidden-on-scroll');
         } else if (scrollTop < lastScrollTop - 4) {
-            floatingFontControls.classList.remove('is-hidden-on-scroll');
+            showFontControlsTemporarily();
         }
         lastScrollTop = Math.max(0, scrollTop);
     };
@@ -6667,7 +6687,6 @@ function renderSecondaryVersionPicker(contentDiv, titleEl) {
     box.innerHTML = '<i class="fas fa-book-open secondary-picker-icon"></i><h4>Choose a second version</h4><p>Pick a Bible version to read side by side.</p>';
     if (!options.length) {
         const note = document.createElement('p');
-        note.className = 'secondary-picker-empty';
         note.textContent = 'No other versions are installed yet.';
         box.appendChild(note);
         const add = document.createElement('button');
@@ -6676,18 +6695,18 @@ function renderSecondaryVersionPicker(contentDiv, titleEl) {
         add.innerHTML = '<i class="fas fa-plus"></i> Add a version';
         add.addEventListener('click', () => document.getElementById('slideMenuManageBiblesBtn')?.click());
         box.appendChild(add);
-    }
-    options.forEach(name => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'secondary-picker-btn';
-        btn.textContent = name;
-        btn.addEventListener('click', async () => {
-            await setActiveVersion('secondary', name);
+    } else {
+        const select = document.createElement('select');
+        select.className = 'secondary-picker-select';
+        select.innerHTML = '<option value="">Select a version…</option>' + options.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n.replace(/</g, '&lt;')}</option>`).join('');
+        box.appendChild(select);
+        select.addEventListener('change', async () => {
+            if (!select.value) return;
+            await setActiveVersion('secondary', select.value);
             populateBibleVersionModal();
         });
-        box.appendChild(btn);
-    });
+        enhanceSelect(select);
+    }
     contentDiv.appendChild(box);
 }
 
@@ -8535,6 +8554,7 @@ async function initializeApp() {
     }
 	    if (decreaseFontSizeBtn) {
         decreaseFontSizeBtn.addEventListener('click', () => {
+            showFontControlsTemporarily();
             if (isReaderViewActive()) applyReaderFontSize(currentReaderFontSizeRem - 0.1);
             else applyFontSize(currentAppFontSizeRem - FONT_SIZE_STEP_REM);
         });
@@ -8544,6 +8564,7 @@ async function initializeApp() {
 
     if (increaseFontSizeBtn) {
         increaseFontSizeBtn.addEventListener('click', () => {
+            showFontControlsTemporarily();
             if (isReaderViewActive()) applyReaderFontSize(currentReaderFontSizeRem + 0.1);
             else applyFontSize(currentAppFontSizeRem + FONT_SIZE_STEP_REM);
         });
