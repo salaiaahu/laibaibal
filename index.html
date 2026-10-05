@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <script>
+        (() => {
+            const startupBackGuard = () => {
+                history.pushState({ laiBaibalStartupBackGuard: true }, '', location.href);
+            };
+            history.pushState({ laiBaibalStartupBackGuard: true }, '', location.href);
+            window.__laiBaibalStartupBackGuard = startupBackGuard;
+            window.addEventListener('popstate', startupBackGuard);
+        })();
+    </script>
     <meta name="theme-color" content="#2c3e50">
     <meta name="description" content="Read the Bible, commentaries, hymns, and daily readings offline.">
     <link rel="manifest" href="manifest.webmanifest">

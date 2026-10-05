@@ -3043,6 +3043,17 @@ footer {
     font-size: 0.88rem;
     line-height: 34px;
 }
+.reader-main-controls.reader-reading-active #reader-item-nav-group {
+    gap: 3px;
+}
+.reader-main-controls.reader-reading-active #reader-item-nav-group .nav-btn {
+    width: 30px;
+    min-width: 30px;
+}
+.reader-main-controls.reader-reading-active #item-title-display {
+    padding: 0 2px;
+    font-size: clamp(0.7rem, 3.2vw, 0.85rem);
+}
 
 /* Unified, touch-friendly top bar alignment. */
 #top-bar .top-bar-icon-btn {
@@ -3549,7 +3560,7 @@ button, a, select, label { touch-action: manipulation; }
     background: var(--panel-bg-color);
     color: var(--panel-text-color);
     font: inherit;
-    font-size: clamp(0.58rem, 3vw, 0.78rem);
+    font-size: clamp(0.64rem, 3.5vw, 0.9rem);
     line-height: 1.15;
     cursor: pointer;
     text-align: center;

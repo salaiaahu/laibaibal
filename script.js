@@ -3739,7 +3739,7 @@ function displayFavoritesList() {
     readerListTitle.textContent = 'Favorites';
     if (readerSearchBox.classList.contains('hidden')) readerListTitle.classList.remove('hidden');
     readerItemNavGroup.classList.add('hidden');
-    readerMainControls.classList.remove('reader-detail-active');
+    readerMainControls.classList.remove('reader-detail-active', 'reader-reading-active');
     toggleReaderSearchBtn.classList.add('hidden');
     readerContentArea.innerHTML = '';
 
@@ -3793,7 +3793,9 @@ function displayContentList(filteredData = null) {
         if (readerSearchBox.classList.contains('hidden')) readerListTitle.classList.remove('hidden');
     }
     if (readerItemNavGroup) readerItemNavGroup.classList.add('hidden');
-    if (readerMainControls) readerMainControls.classList.remove('reader-detail-active');
+    if (readerMainControls) {
+        readerMainControls.classList.remove('reader-detail-active', 'reader-reading-active');
+    }
     if (toggleReaderSearchBtn) toggleReaderSearchBtn.classList.remove('hidden');
     
     currentReaderContext.activeId = null;
@@ -3853,7 +3855,13 @@ function displayItemContent(itemId) {
     // Hide the main list title and show the item navigation
     if (readerListTitle) readerListTitle.classList.add('hidden');
     if (readerItemNavGroup) readerItemNavGroup.classList.remove('hidden');
-    if (readerMainControls) readerMainControls.classList.add('reader-detail-active');
+    if (readerMainControls) {
+        readerMainControls.classList.add('reader-detail-active');
+        readerMainControls.classList.toggle(
+            'reader-reading-active',
+            currentReaderContext.title === 'Chawnghlang Relnak'
+        );
+    }
     
     const previousId = currentReaderContext.activeId;
     currentReaderContext.activeId = parseInt(itemId);
@@ -3885,7 +3893,10 @@ function displayItemContent(itemId) {
     credit.appendChild(creditBrand);
     content.appendChild(credit);
     readerContentArea.replaceChildren(content);
-    itemTitleDisplay.textContent = `${currentReaderContext.title} No. ${item.id}`;
+    const readerTitle = currentReaderContext.title === 'Chawnghlang Relnak'
+        ? 'Chawnghlang'
+        : currentReaderContext.title;
+    itemTitleDisplay.textContent = `${readerTitle} No. ${item.id}`;
     
     prevItemBtn.disabled = currentReaderContext.activeId <= 1;
     nextItemBtn.disabled = currentReaderContext.activeId >= currentReaderContext.data.length;
@@ -4385,7 +4396,13 @@ function processUserTextSelection(eventContext) { // eventContext can be the eve
 function setupMobileBackButtonHandler() {
     let allowBrowserBack = false;
     const backGuard = { laiBaibalBackGuard: true };
-    pushAppHistoryState(backGuard, '', location.href);
+    if (window.__laiBaibalStartupBackGuard) {
+        window.removeEventListener('popstate', window.__laiBaibalStartupBackGuard);
+        delete window.__laiBaibalStartupBackGuard;
+        appHistoryEntries = 1;
+    } else {
+        pushAppHistoryState(backGuard, '', location.href);
+    }
 
     window.addEventListener('popstate', () => {
         if (allowBrowserBack) return;
