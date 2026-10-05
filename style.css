@@ -3209,7 +3209,8 @@ footer {
 }
 #app-container.page-active #upload-panel,
 #app-container.page-active #commentary-upload-panel,
-#app-container.page-active #user-data-panel {
+#app-container.page-active #user-data-panel,
+#app-container.page-active #instructions-panel {
     width: min(100%, 880px);
     min-height: calc(100vh - 84px);
     margin: 0 auto;
@@ -3220,9 +3221,11 @@ footer {
 #app-container.page-active #upload-panel > h2,
 #app-container.page-active #commentary-upload-panel > h2,
 #app-container.page-active #user-data-panel > h2,
+#app-container.page-active #instructions-panel > h2,
 #app-container.page-active #closeUploadPanelBtn,
 #app-container.page-active #closeCommentaryUploadBtn,
-#app-container.page-active #closeUserDataPanelBtn {
+#app-container.page-active #closeUserDataPanelBtn,
+#app-container.page-active #closeInstructionsBtn {
     display: none;
 }
 
@@ -3505,15 +3508,12 @@ button, a, select, label { touch-action: manipulation; }
 
 /* Distinguish hymn keys, verse numbers and chorus labels. */
 .hymn-content .hymn-key-line {
-    padding: 5px 8px;
-    border-left: 3px solid #d97706;
-    border-radius: 3px;
-    background: rgba(217, 119, 6, 0.1);
     color: #a34f00;
     font-weight: 700;
 }
 .hymn-content .hymn-verse-number { color: #6d28d9; }
 .hymn-content .hymn-chorus-label { color: #087f8c; }
+.hymn-content .hymn-chorus-line { margin-top: 1.2em; }
 .reader-credit {
     margin: 10px 0 2px;
     padding: 0 8px 6px;
@@ -3521,6 +3521,76 @@ button, a, select, label { touch-action: manipulation; }
     font-size: 0.75rem;
     font-style: italic;
     text-align: center;
+}
+.reader-credit-brand,
+.instruction-credit strong {
+    color: var(--accent-color, #1e88e5);
+    font-weight: 700;
+}
+
+.instruction-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 14px;
+    overflow: visible;
+    padding-bottom: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.instruction-tab {
+    flex: 0 0 auto;
+    max-width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--panel-border-color);
+    border-radius: 18px;
+    background: var(--panel-bg-color);
+    color: var(--panel-text-color);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: normal;
+}
+.instruction-tab.active {
+    border-color: var(--accent-color, #1e88e5);
+    background: var(--accent-color, #1e88e5);
+    color: #fff;
+}
+.instruction-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 4px;
+    width: 100%;
+    box-sizing: border-box;
+    overscroll-behavior: contain;
+}
+.instruction-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+}
+.instruction-section h3 { flex: none; margin: 8px 0 10px; }
+.instruction-section ul { flex: none; margin: 0; padding-left: 22px; }
+.instruction-section li { margin: 0 0 10px; line-height: 1.45; }
+.instruction-credit {
+    margin: auto 0 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--panel-border-color);
+    color: var(--secondary-text-color, #727b84);
+    font-size: 0.78rem;
+    font-style: italic;
+    text-align: center;
+}
+#app-container.page-active #instructions-panel {
+    box-sizing: border-box;
+    width: min(100%, 880px);
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
 }
 
 /* Landing page */

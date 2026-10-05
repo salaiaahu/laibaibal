@@ -22,7 +22,7 @@
             <div class="home-cards">
                 <button type="button" class="home-card home-card-bible" data-target="bible">
                     <span class="home-card-icon"><i class="fas fa-book-bible"></i></span>
-                    <span class="home-card-text"><strong>Bible</strong><small>Read the Holy Bible</small></span>
+                    <span class="home-card-text"><strong>Bible</strong><small>Baibal Thiang Relnak</small></span>
                     <i class="fas fa-chevron-right home-card-arrow"></i>
                 </button>
                 <button type="button" class="home-card home-card-hymns" data-target="hymns">
@@ -141,6 +141,12 @@
 						</button>
 					</li>
 					<li>
+						<button id="slideMenuInstructionsBtn">
+							<i class="fas fa-circle-question menu-item-icon"></i>
+							<span>App Hmandaan</span>
+						</button>
+					</li>
+					<li>
 						<button id="slideMenuThemeBtn">
 							<i class="fas fa-palette menu-item-icon"></i>
 							<span>Change Theme</span>
@@ -218,13 +224,13 @@
             <section id="reader-view">
                 <div id="upload-panel" class="panel hidden">
                     <h2>Manage Bible Versions</h2>
-                    <label for="bibleFile">Upload a Bible (.db, .sqlite3):</label>
+                    <label for="bibleFile">Baibal na duhmi paoh (.db, .sqlite3) format in upload khawh a si:</label>
                     <input type="file" id="bibleFile" accept=".db, .sqlite, .sqlite3" multiple>
                     <input type="text" id="versionNameInput" placeholder="Enter Version Name (e.g., KJV, ESV)">
                     <button id="addVersionBtn" disabled>Add Version</button>
                     <p id="statusMessage" class="message"></p>
                     <hr>
-                    <h3>Loaded Versions:</h3>
+                    <h3>Chiah ciami Baibal Version:</h3>
                     <div id="loadedVersionsList" class="items-grid-container">
 					</div>
                     <button id="closeUploadPanelBtn">Close</button>
@@ -232,13 +238,13 @@
 
                 <div id="commentary-upload-panel" class="panel hidden">
                     <h2>Manage Commentaries</h2>
-                    <label for="commentaryFile">Upload a Commentary (.db, .sqlite3):</label>
+                    <label for="commentaryFile">Commentary na duhmi paoh(.db, .sqlite3) format in upload khawh a si:</label>
                     <input type="file" id="commentaryFile" accept=".db, .sqlite, .sqlite3">
                     <input type="text" id="commentaryNameInput" placeholder="Enter Commentary Short Name (e.g., MHCC)">
                     <button id="addCommentaryBtn">Add Commentary</button>
                     <p id="commentaryStatusMessage" class="message"></p>
                     <hr>
-                    <h3>Loaded Commentaries:</h3>
+                    <h3>Chiah ciami Commentary pawl:</h3>
                     <div id="loadedCommentariesList" class="items-grid-container">
 					</div>
                     <button id="closeCommentaryUploadBtn">Close</button>
@@ -294,6 +300,48 @@
                         <ul id="bookmarksList" class="user-data-list"></ul>
                     </div>
                     <button id="closeUserDataPanelBtn">Close</button>
+                </div>
+                <div id="instructions-panel" class="panel hidden">
+                    <h2>App Hmandaan</h2>
+                    <div class="instruction-tabs" role="tablist" aria-label="App sections">
+                        <button type="button" id="instructions-bible-tab" class="instruction-tab active" role="tab" aria-selected="true" aria-controls="instructions-bible" data-section="bible">Bible</button>
+                        <button type="button" id="instructions-hymns-tab" class="instruction-tab" role="tab" aria-selected="false" aria-controls="instructions-hymns" data-section="hymns">Khrihfa Hlabu</button>
+                        <button type="button" id="instructions-readings-tab" class="instruction-tab" role="tab" aria-selected="false" aria-controls="instructions-readings" data-section="readings">Chawnghlang Relnak</button>
+                    </div>
+                    <div class="instruction-content">
+                        <section id="instructions-bible" class="instruction-section" role="tabpanel" aria-labelledby="instructions-bible-tab">
+                            <h3>Baibal Hmandaan</h3>
+                            <ul>
+                                <li>Mah Baibal App ah hin a um ciami leng ah na duhmi Baibal le commentary paoh .db si lo le .sqlite3 format in nangmah tein ii chiah khawh a si.</li>
+                                <li>Na duhmi version thim piak, cun relnak (chapter) le cang (verse) thim piak.</li>
+                                <li>Relnak (chapter) 1, 2, 3 ti in thlen na duh a si ahcun a cunglei is "<" le ">" kha hmet hna. A si lo le orhlei le kehlei ah thai law a mah tein aa thleng ko lai.</li>
+                                <li>Baibla cang (verse) kha hmet law note tialnak, bookmark tuahnak, highlight tuahnak, share tuahnak le hmanthlak sernak pawl an chuak lai.</li>
+                                <li>Baibal version pahnih voikhat ah relti na duh ahcun a cunglei i <i class="fas fa-columns"></i> te kha hmet.</li>
+                                <li>Commentary (Baibal Hrilhfiah) relchih na duh ahcun a cunglei i  <i class="fas fa-book-reader"></i>  te kha hmet.</li>
+                                <li>Na note, bookmark le highlight pawl na save ciami zoh na duh ahcun side menu i My Data timi kha hmet law mah ka ah an um dih ko lai.</li>
+                                <li>Na duhmi biafang (word) le biatlang (sentence) paoh kawl khawh a si. Na kawl duh mi paoh aa cunglei i <i class="fas fa-search"></i> kha hmet law box chung khan tial, cun "Kawl" timi kha hmet. Na duh ahcun na relio mi cauk chung telawng zongah kawl khawh a si, cun Biakam Hlun, Biakam Thar, si lo le Baibal dihlak chung tiang zong na duh ning paoh in kawl khawh dih a si.</li>
+                            </ul>
+                            <p class="instruction-credit">Brought to you by <strong>LaiTech Innovations LLC</strong></p>
+                        </section>
+                        <section id="instructions-hymns" class="instruction-section hidden" role="tabpanel" aria-labelledby="instructions-hymns-tab" hidden>
+                            <h3>Khrihfa Hlabu Hmandaan</h3>
+                            <ul>
+                                <li>Khrihfa Hlabu hman daan cu a fawi te a si ko. Na duhmi hla paoh a Tlangpi si lo le a Nambar in kawl khawh a si. Na hmuh in hmet law a hla a lang colh ko lai</li>
+                                <li>Hla number pakhat hnu pakhat kal na duh ahcun a cung lei i "<" le ">" kha hmet hna. Silole orhlei le kehlei ah thai law aa thleng ko lai.</li>
+                                <li>Na duh mi hla poah kha save na duh ahcun a cunglei i <i class="fas fa-star"></i> kha hmet law a save lai. Na save ciami zoh na duh ahcun menu zawn i <i class="fas fa-star"></i> kha hmet law na save ciami vialte an lang dih ko lai.</li>
+                            </ul>
+                            <p class="instruction-credit">Brought to you by <strong>LaiTech Innovations LLC</strong></p>
+                        </section>
+                        <section id="instructions-readings" class="instruction-section hidden" role="tabpanel" aria-labelledby="instructions-readings-tab" hidden>
+                            <h3>Chawnghlang Relnak Hmandaan</h3>
+                            <ul>
+                                <li>Chawnghlang Relnak hman daan zong a fawi te a si ko. Na duh mi relnak paoh a Tlangpi si lo le a Nambar in kawl khawh a si. Na hmuh in hmet law na relnak a lang colh ko lai</li>
+                                <li>Relnak pakhat hnu pakhat kal na duh ahcun a cung lei i "<" le ">" kha hmet hna. Silole orhlei le kehlei ah thai law aa thleng ko lai.</li>
+                                <li>Na duh mi relnak poah kha save na duh ahcun a cunglei i <i class="fas fa-star"></i> kha hmet law a save lai. Na save ciami zoh na duh ahcun menu zawn i <i class="fas fa-star"></i> kha hmet law na save ciami vialte an lang dih ko lai.</li>
+                            </ul>
+                            <p class="instruction-credit">Brought to you by <strong>LaiTech Innovations LLC</strong></p>
+                        </section>
+                    </div>
                 </div>
 				<div id="bookChapterVerseSelector" class="panel hidden"> <div id="bookGridView" class="navigation-view">
 						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">

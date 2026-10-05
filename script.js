@@ -3529,6 +3529,7 @@ const slideMenuManageBiblesBtn = document.getElementById('slideMenuManageBiblesB
 const slideMenuBibleBtn = document.getElementById('slideMenuBibleBtn');
 const slideMenuManageCommentariesBtn = document.getElementById('slideMenuManageCommentariesBtn');
 const slideMenuMyDataBtn = document.getElementById('slideMenuMyDataBtn');
+const slideMenuInstructionsBtn = document.getElementById('slideMenuInstructionsBtn');
 const slideMenuThemeBtn = document.getElementById('slideMenuThemeBtn'); 
 // Top Bar
 const primaryVersionIndicator = document.getElementById('primaryVersionIndicator');
@@ -3580,6 +3581,9 @@ const searchResultsList = document.getElementById('searchResultsList');
 const closeSearchPanelBtn = document.getElementById('closeSearchPanelBtn');
 
 const userDataPanel = document.getElementById('user-data-panel');
+const instructionsPanel = document.getElementById('instructions-panel');
+const instructionTabs = document.querySelectorAll('.instruction-tab');
+const instructionSections = document.querySelectorAll('.instruction-section');
 const userDataTabButtons = userDataPanel.querySelectorAll('.tab-button');
 const highlightsTab = document.getElementById('highlights-tab');
 const notesTab = document.getElementById('notes-tab');
@@ -3590,6 +3594,7 @@ const bookmarksList = document.getElementById('bookmarksList');
 const bookmarkCategorySelect = document.getElementById('bookmarkCategorySelect');
 const bookmarkCategoriesDatalist = document.getElementById('bookmarkCategoriesDatalist');
 const closeUserDataPanelBtn = document.getElementById('closeUserDataPanelBtn');
+let instructionsReturnPanel = null;
 
 const bookChapterVerseSelector = document.getElementById('bookChapterVerseSelector');
 const chapterGrid = document.getElementById('chapterGrid');
@@ -3859,6 +3864,7 @@ function displayItemContent(itemId) {
             if (!label) return;
             if (/^\s*CHO\s*:/i.test(label.textContent)) {
                 label.classList.add('hymn-chorus-label');
+                paragraph.classList.add('hymn-chorus-line');
             } else if (/^\s*\d+[.)]?\s*$/.test(label.textContent)) {
                 label.classList.add('hymn-verse-number');
             }
@@ -3866,7 +3872,11 @@ function displayItemContent(itemId) {
     }
     const credit = document.createElement('p');
     credit.className = 'reader-credit';
-    credit.textContent = 'Brought to you by LaiTech Group LLC';
+    credit.append('Brought to you by ');
+    const creditBrand = document.createElement('strong');
+    creditBrand.className = 'reader-credit-brand';
+    creditBrand.textContent = 'LaiTech Innovations LLC';
+    credit.appendChild(creditBrand);
     content.appendChild(credit);
     readerContentArea.replaceChildren(content);
     itemTitleDisplay.textContent = `${currentReaderContext.title} No. ${item.id}`;
@@ -4192,6 +4202,24 @@ function handleSelectionChange() {
     }, 100); // Debounce for 100ms
 }
 
+function setInstructionSection(sectionName) {
+    instructionTabs.forEach(tab => {
+        const selected = tab.dataset.section === sectionName;
+        tab.classList.toggle('active', selected);
+        tab.setAttribute('aria-selected', String(selected));
+    });
+    instructionSections.forEach(section => {
+        const selected = section.id === `instructions-${sectionName}`;
+        section.classList.toggle('hidden', !selected);
+        section.hidden = !selected;
+    });
+}
+
+function closeInstructions() {
+    showPanel(instructionsReturnPanel || bibleContentView);
+    instructionsReturnPanel = null;
+}
+
 ///////--------- sliding menu
 function setupSlideMenuListeners() {
     if (hamburgerMenuBtn && slideMenu && slideMenuOverlay) {
@@ -4249,6 +4277,18 @@ function setupSlideMenuListeners() {
                 closeMenu();
             });
         }
+        if (slideMenuInstructionsBtn && instructionsPanel) {
+            slideMenuInstructionsBtn.addEventListener('click', () => {
+                instructionsReturnPanel = Array.from(document.querySelectorAll('#reader-view > .panel'))
+                    .find(panel => panel !== instructionsPanel && !panel.classList.contains('hidden')) || bibleContentView;
+                setInstructionSection('bible');
+                showPanel(instructionsPanel);
+                closeMenu();
+            });
+        }
+        instructionTabs.forEach(tab => {
+            tab.addEventListener('click', () => setInstructionSection(tab.dataset.section));
+        });
     if (slideMenuThemeBtn && themeSelectModal) {
         slideMenuThemeBtn.addEventListener('click', () => {
             console.log("EVENT: Change Theme from slide menu CLICKED.");
@@ -4371,6 +4411,7 @@ function setupMobileBackButtonHandler() {
         } else if (isOpen(searchPanel)) closeSearchPanelBtn?.click();
         else if (isOpen(uploadPanel)) closeUploadPanelBtn?.click();
         else if (isOpen(commentaryUploadPanel)) closeCommentaryUploadBtn?.click();
+        else if (isOpen(instructionsPanel)) closeInstructions();
         else if (isOpen(userDataPanel)) closeUserDataPanelBtn?.click();
         else if (isOpen(contentReaderPanel)) {
             if (currentReaderContext.activeId) displayContentList();
@@ -5293,7 +5334,8 @@ function showPanel(panelToShow) {
     const pageTitles = new Map([
         [uploadPanel, 'Manage Bibles'],
         [commentaryUploadPanel, 'Manage Commentaries'],
-        [userDataPanel, 'My Data']
+        [userDataPanel, 'My Data'],
+        [instructionsPanel, 'App Hmandaan']
     ]);
     const isDedicatedPage = pageTitles.has(panelToShow);
 
