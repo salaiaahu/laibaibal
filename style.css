@@ -2638,6 +2638,8 @@ footer {
 }
 
 .hymn-content {
+    display: flex;
+    flex-direction: column;
 	border: 1px solid var(--bible-column-border-color);
     width: 100%; /* Makes the box fill the available space */
     max-width: 800px; /* Prevents it from being too wide on desktops */
@@ -3538,9 +3540,9 @@ button, a, select, label { touch-action: manipulation; }
 .hymn-content .hymn-verse-number { color: #6d28d9; }
 .hymn-content .hymn-chorus-label { color: #087f8c; }
 .hymn-content .hymn-chorus-line { margin-top: 1.2em; }
-.reader-credit {
-    margin: 10px 0 2px;
-    padding: 0 8px 6px;
+.hymn-content > .reader-credit {
+    margin: auto 0 1px;
+    padding: 28px 8px 1px;
     color: var(--secondary-text-color, #727b84);
     font-size: 0.75rem;
     font-style: italic;
