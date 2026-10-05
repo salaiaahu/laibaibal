@@ -3530,8 +3530,9 @@ button, a, select, label { touch-action: manipulation; }
 
 .instruction-tabs {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: clamp(3px, 1vw, 6px);
     margin: 4px 0 14px;
     overflow: visible;
     padding-bottom: 4px;
@@ -3539,17 +3540,20 @@ button, a, select, label { touch-action: manipulation; }
     box-sizing: border-box;
 }
 .instruction-tab {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
     max-width: 100%;
-    padding: 9px 12px;
+    padding: 8px clamp(4px, 1.5vw, 7px);
     border: 1px solid var(--panel-border-color);
     border-radius: 18px;
     background: var(--panel-bg-color);
     color: var(--panel-text-color);
     font: inherit;
-    font-size: 0.85rem;
+    font-size: clamp(0.58rem, 3vw, 0.78rem);
+    line-height: 1.15;
     cursor: pointer;
-    white-space: normal;
+    text-align: center;
+    white-space: nowrap;
 }
 .instruction-tab.active {
     border-color: var(--accent-color, #1e88e5);

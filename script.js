@@ -3355,6 +3355,12 @@ let isExitConfirming = false;
 let exitConfirmTimeout = null;
 let appHistoryEntries = 0;
 
+function clearExitConfirmation() {
+    if (exitConfirmTimeout !== null) clearTimeout(exitConfirmTimeout);
+    exitConfirmTimeout = null;
+    isExitConfirming = false;
+}
+
 function pushAppHistoryState(state, title, url) {
     history.pushState(state, title, url);
     appHistoryEntries++;
@@ -4387,6 +4393,12 @@ function setupMobileBackButtonHandler() {
 
         const isOpen = element => element && !element.classList.contains('hidden');
         const rearmBack = () => pushAppHistoryState(backGuard, '', location.href);
+        const splashScreen = document.getElementById('splash-screen');
+
+        if (splashScreen) {
+            rearmBack();
+            return;
+        }
 
         if (isOpen(noteModal)) noteModal.classList.add('hidden');
         else if (isOpen(bookmarkModal)) bookmarkModal.classList.add('hidden');
@@ -4395,15 +4407,17 @@ function setupMobileBackButtonHandler() {
         else if (isOpen(themeSelectModal)) themeSelectModal.classList.add('hidden');
         else if (!document.getElementById('home-screen')?.classList.contains('hidden')) {
             if (isExitConfirming) {
-                clearTimeout(exitConfirmTimeout);
-                isExitConfirming = false;
+                clearExitConfirmation();
                 allowBrowserBack = true;
                 history.go(-(appHistoryEntries + 1));
                 return;
             }
             isExitConfirming = true;
             showToast('Press back again to exit');
-            exitConfirmTimeout = setTimeout(() => { isExitConfirming = false; }, 2000);
+            exitConfirmTimeout = setTimeout(() => {
+                exitConfirmTimeout = null;
+                isExitConfirming = false;
+            }, 2000);
         }
         else if (isOpen(slideMenu)) {
             slideMenu.classList.add('hidden');
@@ -8712,10 +8726,6 @@ async function initializeApp() {
 		setupContentReaderListeners();
 		setupFloatingFontControls();
 		updateFloatingFontControlState();
-		setupMobileBackButtonHandler(); 
-
-
-
         // ----- Other Global Event Listeners that were in your initializeApp -----
 	if (addVersionBtn) {
     addVersionBtn.addEventListener('click', () => {
@@ -9255,6 +9265,7 @@ if (nextChapterBtn) {
 }
 
 console.log('DEBUG: Script file loaded. Calling initializeApp().');
+setupMobileBackButtonHandler();
 initializeApp();
 
 
@@ -9345,19 +9356,75 @@ function showConfirm(message, { title = 'Please confirm', confirmText = 'OK', ca
 }
 
 // --- Pull to refresh: checks for app updates and reloads ---
+function waitForServiceWorkerActivation(worker) {
+    if (!worker) return Promise.resolve(false);
+    if (worker.state === 'activated') return Promise.resolve(true);
+
+    return new Promise(resolve => {
+        let timer;
+        const finish = activated => {
+            clearTimeout(timer);
+            worker.removeEventListener('statechange', checkState);
+            resolve(activated);
+        };
+        const checkState = () => {
+            if (worker.state === 'activated') finish(true);
+            else if (worker.state === 'redundant') finish(false);
+        };
+        worker.addEventListener('statechange', checkState);
+        timer = setTimeout(() => finish(worker.state === 'activated'), 10000);
+        checkState();
+    });
+}
+
 async function refreshApp() {
     try {
-        const reg = await navigator.serviceWorker?.getRegistration();
-        if (reg) await reg.update();
-        if (window.caches) {
-            const keys = await caches.keys();
-            await Promise.all(keys.map(k => caches.delete(k)));
+        const registration = await navigator.serviceWorker?.getRegistration();
+        if (!registration) {
+            showToast('Update checking is unavailable in this browser.', 'error');
+            return false;
         }
-        showToast('Updating…');
+
+        let updateFound = false;
+        let installingWorker = null;
+        const showUpdateFound = worker => {
+            if (updateFound) return;
+            updateFound = true;
+            installingWorker = worker;
+            const status = document.querySelector('#ptr-indicator span');
+            if (status) status.textContent = 'New version found — updating…';
+            showToast('New version found. Updating now…');
+        };
+        const handleUpdateFound = () => showUpdateFound(registration.installing);
+        registration.addEventListener('updatefound', handleUpdateFound, { once: true });
+        if (registration.installing && registration.installing !== registration.active) {
+            showUpdateFound(registration.installing);
+        } else if (registration.waiting && registration.waiting !== registration.active) {
+            showUpdateFound(registration.waiting);
+        }
+
+        await registration.update();
+        registration.removeEventListener('updatefound', handleUpdateFound);
+        if (!updateFound && registration.installing && registration.installing !== registration.active) {
+            showUpdateFound(registration.installing);
+        }
+        if (!updateFound) {
+            showToast('You are already using the latest version.');
+            return false;
+        }
+
+        const worker = installingWorker || registration.waiting || registration.installing || registration.active;
+        if (!await waitForServiceWorkerActivation(worker)) {
+            throw new Error('The updated service worker did not activate.');
+        }
+        await new Promise(resolve => setTimeout(resolve, 1400));
+        location.reload();
+        return true;
     } catch (err) {
         console.warn('Update check failed:', err);
+        showToast('Could not check for updates. Please try again.', 'error');
+        return false;
     }
-    setTimeout(() => location.reload(), 400);
 }
 
 (function setupPullToRefresh() {
@@ -9422,7 +9489,10 @@ async function refreshApp() {
             indicator.style.transform = 'translate(-50%, 20px)';
             indicator.style.opacity = 1;
             indicator.querySelector('span').textContent = 'Checking for updates…';
-            await refreshApp();
+            if (!await refreshApp()) {
+                busy = false;
+                reset();
+            }
         } else {
             reset();
         }
@@ -9434,9 +9504,11 @@ window.addEventListener('load', () => setupCustomSelects());
 
 // --- Landing page ---
 function showHome() {
+    clearExitConfirmation();
     document.getElementById('home-screen')?.classList.remove('hidden');
 }
 function hideHome() {
+    clearExitConfirmation();
     document.getElementById('home-screen')?.classList.add('hidden');
 }
 document.querySelectorAll('#home-screen .home-card').forEach(card => {
