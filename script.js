@@ -3354,6 +3354,7 @@ let SQL;
 let isExitConfirming = false;
 let exitConfirmTimeout = null;
 let appHistoryEntries = 0;
+let restoringAppHistory = false;
 
 function clearExitConfirmation() {
     if (exitConfirmTimeout !== null) clearTimeout(exitConfirmTimeout);
@@ -3361,8 +3362,18 @@ function clearExitConfirmation() {
     isExitConfirming = false;
 }
 
+function getAppHistoryRoute() {
+    const homeScreen = document.getElementById('home-screen');
+    if (homeScreen && !homeScreen.classList.contains('hidden')) return { type: 'home' };
+
+    const activePanel = Array.from(document.querySelectorAll('#reader-view > .panel'))
+        .find(panel => !panel.classList.contains('hidden'));
+    return activePanel ? { type: 'panel', panelId: activePanel.id } : { type: 'home' };
+}
+
 function pushAppHistoryState(state, title, url) {
-    history.pushState(state, title, url);
+    const historyState = state && typeof state === 'object' ? { ...state } : {};
+    history.pushState({ ...historyState, laiBaibalRoute: getAppHistoryRoute() }, title, url);
     appHistoryEntries++;
 }
 
@@ -3696,8 +3707,8 @@ let latestSelectedText = '';
 // Function to display the list of all hymns
 function showReaderPage(context) { // context is { data: [...], title: "..." }
     currentReaderContext = { ...context, activeId: null };
-    showPanel(contentReaderPanel);
-	pushAppHistoryState({ view: 'readerList' }, context.title, `#${context.title.replace(/\s+/g, '')}`);
+    showPanel(contentReaderPanel, false);
+    pushAppHistoryState({ view: 'readerList', title: context.title }, context.title, `#${context.title.replace(/\s+/g, '')}`);
     displayContentList();
 }
 
@@ -3729,8 +3740,8 @@ function updateFavoriteButton() {
 
 function showFavoritesPage() {
     currentReaderContext = { data: [], title: 'Favorites', activeId: null, isFavorites: true };
-    showPanel(contentReaderPanel);
-    pushAppHistoryState({ view: 'readerList' }, 'Favorites', '#Favorites');
+    showPanel(contentReaderPanel, false);
+    pushAppHistoryState({ view: 'readerList', title: 'Favorites' }, 'Favorites', '#Favorites');
     displayFavoritesList();
 }
 
@@ -3851,10 +3862,16 @@ function createReaderItemLabel(id, name) {
     return label;
 }
 
-function displayItemContent(itemId) {
+function displayItemContent(itemId, trackHistory = true) {
     const item = currentReaderContext.data.find(i => String(i.id) === String(itemId));
     if (!item) return;
-	pushAppHistoryState({ view: 'readerItem', id: itemId }, item.name, `#${currentReaderContext.title.replace(/\s+/g, '')}/${itemId}`);
+    if (trackHistory) {
+        pushAppHistoryState(
+            { view: 'readerItem', id: itemId, title: currentReaderContext.title },
+            item.name,
+            `#${currentReaderContext.title.replace(/\s+/g, '')}/${itemId}`
+        );
+    }
     // Hide the main list title and show the item navigation
     if (readerListTitle) readerListTitle.classList.add('hidden');
     if (readerItemNavGroup) readerItemNavGroup.classList.remove('hidden');
@@ -4391,6 +4408,53 @@ function processUserTextSelection(eventContext) { // eventContext can be the eve
 }
 
 //-----------Back key control 
+function restoreReaderHistoryState(state) {
+    if (state?.view !== 'readerList' && state?.view !== 'readerItem') return false;
+
+    const title = state.title || currentReaderContext.title;
+    const isFavorites = title === 'Favorites';
+    const data = title === 'Khrihfa Hlabu'
+        ? allHymns
+        : title === 'Chawnghlang Relnak'
+            ? allReadings
+            : [];
+    if (!isFavorites && !data.length) return false;
+
+    currentReaderContext = { data, title, activeId: null, isFavorites };
+    hideHome();
+    showPanel(contentReaderPanel, false);
+    if (state.view === 'readerItem') displayItemContent(String(state.id), false);
+    else if (isFavorites) displayFavoritesList();
+    else displayContentList();
+    return true;
+}
+
+function restoreAppHistoryState(state) {
+    if (!state) return false;
+
+    restoringAppHistory = true;
+    try {
+        if (restoreReaderHistoryState(state)) return true;
+
+        const route = state.laiBaibalRoute;
+        if (route?.type === 'home') {
+            showHome();
+            return true;
+        }
+        if (route?.type === 'panel') {
+            const panel = document.getElementById(route.panelId);
+            if (panel) {
+                hideHome();
+                showPanel(panel, false);
+                return true;
+            }
+        }
+    } finally {
+        restoringAppHistory = false;
+    }
+    return false;
+}
+
 function setupMobileBackButtonHandler() {
     let allowBrowserBack = false;
     const backGuard = { laiBaibalBackGuard: true };
@@ -4399,32 +4463,33 @@ function setupMobileBackButtonHandler() {
         delete window.__laiBaibalStartupBackGuard;
         appHistoryEntries = 1;
     } else {
+        appHistoryEntries = 0;
         pushAppHistoryState(backGuard, '', location.href);
     }
 
-    window.addEventListener('popstate', () => {
-        if (allowBrowserBack) return;
+    window.addEventListener('popstate', event => {
+        if (allowBrowserBack) {
+            allowBrowserBack = false;
+            return;
+        }
         appHistoryEntries = Math.max(0, appHistoryEntries - 1);
 
         const isOpen = element => element && !element.classList.contains('hidden');
-        const rearmBack = () => pushAppHistoryState(backGuard, '', location.href);
+        const rearmCurrentRoute = () => pushAppHistoryState({ appNavigation: true }, '', location.href);
+        const homeScreen = document.getElementById('home-screen');
         const splashScreen = document.getElementById('splash-screen');
 
-        if (splashScreen) {
-            rearmBack();
+        if (isOpen(splashScreen)) {
+            rearmCurrentRoute();
             return;
         }
 
-        if (isOpen(noteModal)) noteModal.classList.add('hidden');
-        else if (isOpen(bookmarkModal)) bookmarkModal.classList.add('hidden');
-        else if (isOpen(bibleVersionSelectModal)) bibleVersionSelectModal.classList.add('hidden');
-        else if (isOpen(commentarySelectModal)) commentarySelectModal.classList.add('hidden');
-        else if (isOpen(themeSelectModal)) themeSelectModal.classList.add('hidden');
-        else if (!document.getElementById('home-screen')?.classList.contains('hidden')) {
+        if (!homeScreen?.classList.contains('hidden')) {
             if (isExitConfirming) {
                 clearExitConfirmation();
                 allowBrowserBack = true;
                 history.go(-(appHistoryEntries + 1));
+                setTimeout(() => { allowBrowserBack = false; }, 1000);
                 return;
             }
             isExitConfirming = true;
@@ -4433,27 +4498,39 @@ function setupMobileBackButtonHandler() {
                 exitConfirmTimeout = null;
                 isExitConfirming = false;
             }, 2000);
-        }
-        else if (isOpen(slideMenu)) {
-            slideMenu.classList.add('hidden');
-            slideMenuOverlay?.classList.add('hidden');
-        } else if (isOpen(searchPanel)) closeSearchPanelBtn?.click();
-        else if (isOpen(uploadPanel)) closeUploadPanelBtn?.click();
-        else if (isOpen(commentaryUploadPanel)) closeCommentaryUploadBtn?.click();
-        else if (isOpen(instructionsPanel)) closeInstructions();
-        else if (isOpen(userDataPanel)) closeUserDataPanelBtn?.click();
-        else if (isOpen(contentReaderPanel)) {
-            if (currentReaderContext.activeId) displayContentList();
-            else readerBackToBibleBtn.click();
-        } else if (isOpen(bookChapterVerseSelector)) {
-            if (isOpen(verseGridView)) backToChapterGridBtn?.click();
-            else if (isOpen(chapterGridView)) backToBookGridBtn?.click();
-            else closeNavigatorBtn?.click();
-        } else {
-            showHome();
+            rearmCurrentRoute();
+            return;
         }
 
-        rearmBack();
+        const openModal = [noteModal, bookmarkModal, bibleVersionSelectModal, commentarySelectModal, themeSelectModal]
+            .find(isOpen);
+        if (openModal) {
+            openModal.classList.add('hidden');
+            const previousRoute = event.state?.laiBaibalRoute;
+            const currentRoute = getAppHistoryRoute();
+            if (
+                !previousRoute ||
+                previousRoute.type !== currentRoute.type ||
+                previousRoute.panelId !== currentRoute.panelId
+            ) {
+                rearmCurrentRoute();
+            }
+            return;
+        }
+
+        if (isOpen(slideMenu)) {
+            slideMenu.classList.add('hidden');
+            slideMenuOverlay?.classList.add('hidden');
+            rearmCurrentRoute();
+        } else if (isOpen(bookChapterVerseSelector) && isOpen(verseGridView)) {
+            backToChapterGridBtn?.click();
+            rearmCurrentRoute();
+        } else if (isOpen(bookChapterVerseSelector) && isOpen(chapterGridView)) {
+            backToBookGridBtn?.click();
+            rearmCurrentRoute();
+        } else if (!restoreAppHistoryState(event.state)) {
+            rearmCurrentRoute();
+        }
     });
 }
 
@@ -5357,9 +5434,13 @@ function syncScroll(scrollingElement, targetElement) {
     }, 50);
 }
 
-function showPanel(panelToShow) {
+function showPanel(panelToShow, trackHistory = true) {
     const appContainer = document.getElementById('app-container');
     const allPanels = document.querySelectorAll('.panel'); // Get all panels
+    const currentPanel = Array.from(document.querySelectorAll('#reader-view > .panel'))
+        .find(panel => !panel.classList.contains('hidden'));
+    const homeScreen = document.getElementById('home-screen');
+    const homeIsVisible = homeScreen && !homeScreen.classList.contains('hidden');
     const pageTitles = new Map([
         [bibleHomePanel, 'Bible'],
         [uploadPanel, 'Manage Bibles'],
@@ -5389,6 +5470,10 @@ function showPanel(panelToShow) {
         }
     });
     updateFloatingFontControlState();
+
+    if (trackHistory && !restoringAppHistory && !homeIsVisible && currentPanel !== panelToShow) {
+        pushAppHistoryState({ appNavigation: true }, pageTitles.get(panelToShow) || '', location.href);
+    }
 }
 
 function openBibleToolPanel(panel, returnPanel = null) {
@@ -9510,8 +9595,13 @@ window.addEventListener('load', () => setupCustomSelects());
 
 // --- Landing page ---
 function showHome() {
+    const homeScreen = document.getElementById('home-screen');
+    const wasHidden = homeScreen?.classList.contains('hidden');
     clearExitConfirmation();
-    document.getElementById('home-screen')?.classList.remove('hidden');
+    homeScreen?.classList.remove('hidden');
+    if (wasHidden && !restoringAppHistory) {
+        pushAppHistoryState({ appNavigation: true }, '', location.href);
+    }
 }
 function hideHome() {
     clearExitConfirmation();

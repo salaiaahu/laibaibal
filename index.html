@@ -6,9 +6,9 @@
     <script>
         (() => {
             const startupBackGuard = () => {
-                history.pushState({ laiBaibalStartupBackGuard: true }, '', location.href);
+                history.pushState({ laiBaibalStartupBackGuard: true, laiBaibalRoute: { type: 'home' } }, '', location.href);
             };
-            history.pushState({ laiBaibalStartupBackGuard: true }, '', location.href);
+            history.pushState({ laiBaibalStartupBackGuard: true, laiBaibalRoute: { type: 'home' } }, '', location.href);
             window.__laiBaibalStartupBackGuard = startupBackGuard;
             window.addEventListener('popstate', startupBackGuard);
         })();

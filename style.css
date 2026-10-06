@@ -3654,7 +3654,7 @@ button, a, select, label { touch-action: manipulation; }
 .bible-home-intro-icon {
     width: 48px;
     height: 48px;
-    background: linear-gradient(135deg, #c9892f, #8a5a1c);
+    background: #c9892f;
     font-size: 1.4rem;
 }
 .bible-home-grid {
@@ -3692,7 +3692,7 @@ button, a, select, label { touch-action: manipulation; }
     height: 46px;
     font-size: 1.25rem;
 }
-.bible-home-reader-icon { background: linear-gradient(135deg, #c9892f, #8a5a1c); }
+.bible-home-reader-icon { background: #c9892f; }
 .bible-home-bibles-icon { background: linear-gradient(135deg, #3f8bd6, #245c9a); }
 .bible-home-commentaries-icon { background: linear-gradient(135deg, #38a69a, #22766d); }
 .bible-home-data-icon { background: linear-gradient(135deg, #8a69c8, #604396); }
@@ -3731,7 +3731,7 @@ button, a, select, label { touch-action: manipulation; }
 .home-card { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px; border: 1px solid rgba(255,255,255,.14); border-radius: 20px; background: rgba(255,255,255,.1); color: #fff; font: inherit; text-align: left; cursor: pointer; backdrop-filter: blur(6px); transition: transform .12s ease, background .12s ease; }
 .home-card:active { transform: scale(.98); background: rgba(255,255,255,.18); }
 .home-card-icon { display: grid; flex: none; width: 56px; height: 56px; place-items: center; border-radius: 16px; font-size: 1.6rem; color: #fff; }
-.home-card-bible .home-card-icon { background: linear-gradient(135deg, #c9892f, #8a5a1c); }
+.home-card-bible .home-card-icon { background: #c9892f; }
 .home-card-hymns .home-card-icon { background: linear-gradient(135deg, #3fa7d6, #2468a2); }
 .home-card-readings .home-card-icon { background: linear-gradient(135deg, #4cae7d, #2a7a53); }
 .home-card-text { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
