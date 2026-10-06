@@ -40,6 +40,8 @@ The first screen links to Bible, Khrihfa Hlabu (hymns), and Chawnghlang Relnak (
 
 ### Bible
 
+Selecting Bible opens its own dashboard with icon actions for Bible Reader, Manage Bibles, Manage Commentaries, and My Data; these tools are no longer separate items in the global side menu.
+
 - Uses SQL.js to read predefined or user-uploaded SQLite Bible versions. The built-in resource list is `PREDEFINED_RESOURCES` in `script.js`; it currently downloads WEB, CHIN, and NASB Bibles, plus Sermon-c, MHC, and EASY'18 commentaries, from the `salaiaahu/baibalca` GitHub repository.
 - Supports version management, single/parallel versions, commentary selection, book/chapter/verse navigation, text search with automatically refreshed results, and chapter/book swipe navigation.
 - Verse taps support multi-verse selection and actions for highlights, notes, bookmarks, sharing, and shareable verse images. The My Data view lists saved highlights, notes, and bookmarks.
@@ -53,7 +55,7 @@ The first screen links to Bible, Khrihfa Hlabu (hymns), and Chawnghlang Relnak (
 
 ### Other app behavior
 
-- The side menu provides navigation, data management, favorites, themes, and concise App Hmandaan instructions.
+- The side menu provides global navigation, favorites, themes, and concise App Hmandaan instructions.
 - Hardware/browser back traverses app history toward the landing page. The app only offers exit after the landing page is visible and the user presses back twice in quick succession.
 - Custom dialogs/toasts are implemented in the app; reuse them rather than adding native `alert`, `confirm`, or `prompt` dialogs.
 - Font-size and theme choices are remembered. The mobile UI includes swipe transitions, a centered splash animation, and auto-hiding reader font controls.

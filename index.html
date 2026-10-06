@@ -115,18 +115,6 @@
 						</button>
 					</li>
 					<li>
-						<button id="slideMenuManageBiblesBtn">
-							<i class="fas fa-database menu-item-icon"></i>
-							<span>Manage Bibles</span>
-						</button>
-					</li>
-					<li>
-						<button id="slideMenuManageCommentariesBtn">
-							<i class="fas fa-book-reader menu-item-icon"></i> 
-							<span>Manage Commentaries</span>
-						</button>
-					</li>
-					<li>
 						<button id="slideMenuHymnsBtn">
 							<i class="fas fa-music menu-item-icon"></i>
 							<span>Khrihfa Hlabu</span>
@@ -142,12 +130,6 @@
 						<button id="slideMenuFavoritesBtn">
 							<i class="fas fa-star menu-item-icon"></i>
 							<span>Favorites</span>
-						</button>
-					</li>
-					<li>
-						<button id="slideMenuMyDataBtn">
-							<i class="fas fa-user-circle menu-item-icon"></i>
-							<span>My Data</span>
 						</button>
 					</li>
 					<li>
@@ -232,6 +214,34 @@
             </aside>
 
             <section id="reader-view">
+                <div id="bible-home-panel" class="panel hidden">
+                    <div class="bible-home-intro">
+                        <span class="bible-home-intro-icon"><i class="fas fa-book-bible" aria-hidden="true"></i></span>
+                        <p>Read the Bible, manage study resources, and revisit your saved notes.</p>
+                    </div>
+                    <div class="bible-home-grid" aria-label="Bible tools">
+                        <button type="button" id="bibleHomeReaderBtn" class="bible-home-card">
+                            <span class="bible-home-card-icon bible-home-reader-icon"><i class="fas fa-book-open" aria-hidden="true"></i></span>
+                            <span class="bible-home-card-text"><strong>Bible Reader</strong><small>Open your current reading or choose a book.</small></span>
+                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" id="bibleHomeManageBiblesBtn" class="bible-home-card">
+                            <span class="bible-home-card-icon bible-home-bibles-icon"><i class="fas fa-database" aria-hidden="true"></i></span>
+                            <span class="bible-home-card-text"><strong>Manage Bibles</strong><small>Add, select, or remove Bible versions.</small></span>
+                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" id="bibleHomeManageCommentariesBtn" class="bible-home-card">
+                            <span class="bible-home-card-icon bible-home-commentaries-icon"><i class="fas fa-book-reader" aria-hidden="true"></i></span>
+                            <span class="bible-home-card-text"><strong>Manage Commentaries</strong><small>Add or remove study commentaries.</small></span>
+                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" id="bibleHomeMyDataBtn" class="bible-home-card">
+                            <span class="bible-home-card-icon bible-home-data-icon"><i class="fas fa-folder-open" aria-hidden="true"></i></span>
+                            <span class="bible-home-card-text"><strong>My Data</strong><small>View your highlights, notes, and bookmarks.</small></span>
+                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
                 <div id="upload-panel" class="panel hidden">
                     <h2>Manage Bible Versions</h2>
                     <label for="bibleFile">Baibal na duhmi paoh (.db, .sqlite3) format in upload khawh a si:</label>
@@ -329,7 +339,7 @@
                                 <li>Baibla cang (verse) kha hmet law note tialnak, bookmark tuahnak, highlight tuahnak, share tuahnak le hmanthlak sernak pawl an chuak lai.</li>
                                 <li>Baibal version pahnih voikhat ah relti na duh ahcun a cunglei i <i class="fas fa-columns"></i> te kha hmet.</li>
                                 <li>Commentary (Baibal Hrilhfiah) relchih na duh ahcun a cunglei i  <i class="fas fa-book-reader"></i>  te kha hmet.</li>
-                                <li>Na note, bookmark le highlight pawl na save ciami zoh na duh ahcun side menu i My Data timi kha hmet law mah ka ah an um dih ko lai.</li>
+                                <li>Na note, bookmark le highlight pawl na save ciami zoh na duh ahcun Bible landing page i My Data timi kha hmet law mah ka ah an um dih ko lai.</li>
                                 <li>Na duhmi biafang (word) le biatlang (sentence) paoh kawl khawh a si. Na kawl duh mi paoh aa cunglei i <i class="fas fa-search"></i> kha hmet law box chung khan tial, cun "Kawl" timi kha hmet. Na duh ahcun na relio mi cauk chung telawng zongah kawl khawh a si, cun Biakam Hlun, Biakam Thar, si lo le Baibal dihlak chung tiang zong na duh ning paoh in kawl khawh dih a si.</li>
                             </ul>
                             <p class="instruction-credit">Brought to you by <strong>LaiTech Innovations LLC</strong></p>

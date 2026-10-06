@@ -3531,10 +3531,7 @@ const slideMenu = document.getElementById('slideMenu');
 const slideMenuOverlay = document.getElementById('slideMenuOverlay');
 const closeSlideMenuBtn = document.getElementById('closeSlideMenuBtn');
 
-const slideMenuManageBiblesBtn = document.getElementById('slideMenuManageBiblesBtn');
 const slideMenuBibleBtn = document.getElementById('slideMenuBibleBtn');
-const slideMenuManageCommentariesBtn = document.getElementById('slideMenuManageCommentariesBtn');
-const slideMenuMyDataBtn = document.getElementById('slideMenuMyDataBtn');
 const slideMenuInstructionsBtn = document.getElementById('slideMenuInstructionsBtn');
 const slideMenuThemeBtn = document.getElementById('slideMenuThemeBtn'); 
 // Top Bar
@@ -3561,6 +3558,11 @@ const sidebar = document.getElementById('sidebar');
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
 const bookList = document.getElementById('bookList');
 
+const bibleHomePanel = document.getElementById('bible-home-panel');
+const bibleHomeReaderBtn = document.getElementById('bibleHomeReaderBtn');
+const bibleHomeManageBiblesBtn = document.getElementById('bibleHomeManageBiblesBtn');
+const bibleHomeManageCommentariesBtn = document.getElementById('bibleHomeManageCommentariesBtn');
+const bibleHomeMyDataBtn = document.getElementById('bibleHomeMyDataBtn');
 const uploadPanel = document.getElementById('upload-panel');
 const bibleFileInput = document.getElementById('bibleFile');
 const versionNameInput = document.getElementById('versionNameInput');
@@ -3601,6 +3603,7 @@ const bookmarkCategorySelect = document.getElementById('bookmarkCategorySelect')
 const bookmarkCategoriesDatalist = document.getElementById('bookmarkCategoriesDatalist');
 const closeUserDataPanelBtn = document.getElementById('closeUserDataPanelBtn');
 let instructionsReturnPanel = null;
+let bibleToolReturnPanel = null;
 
 const bookChapterVerseSelector = document.getElementById('bookChapterVerseSelector');
 const chapterGrid = document.getElementById('chapterGrid');
@@ -4266,32 +4269,27 @@ function setupSlideMenuListeners() {
         // Listeners for items within the slide menu
         if (slideMenuBibleBtn) {
             slideMenuBibleBtn.addEventListener('click', () => {
+                showPanel(bibleHomePanel);
+                closeMenu();
+            });
+        }
+        if (bibleHomeReaderBtn) {
+            bibleHomeReaderBtn.addEventListener('click', () => {
                 if (currentBook && currentChapter) showPanel(bibleContentView);
                 else if (Object.keys(loadedVersions).length > 0) openBookNavigator();
-                else showPanel(uploadPanel);
-                closeMenu();
+                else openBibleToolPanel(uploadPanel, bibleHomePanel);
             });
         }
-        if (slideMenuManageBiblesBtn && uploadPanel) {
-            slideMenuManageBiblesBtn.addEventListener('click', () => {
-                console.log("Manage Bibles from slide menu clicked");
-                showPanel(uploadPanel);
-                closeMenu();
-            });
+        if (bibleHomeManageBiblesBtn) {
+            bibleHomeManageBiblesBtn.addEventListener('click', () => openBibleToolPanel(uploadPanel));
         }
-        if (slideMenuManageCommentariesBtn && commentaryUploadPanel) {
-            slideMenuManageCommentariesBtn.addEventListener('click', () => {
-                console.log("Manage Commentaries from slide menu clicked");
-                showPanel(commentaryUploadPanel);
-                closeMenu();
-            });
+        if (bibleHomeManageCommentariesBtn) {
+            bibleHomeManageCommentariesBtn.addEventListener('click', () => openBibleToolPanel(commentaryUploadPanel));
         }
-        if (slideMenuMyDataBtn && userDataPanel) {
-            slideMenuMyDataBtn.addEventListener('click', () => {
-                console.log("My Data from slide menu clicked");
-                showPanel(userDataPanel);
-                updateUserDataPanel('highlights'); // Default to highlights tab
-                closeMenu();
+        if (bibleHomeMyDataBtn) {
+            bibleHomeMyDataBtn.addEventListener('click', () => {
+                openBibleToolPanel(userDataPanel);
+                updateUserDataPanel('highlights');
             });
         }
         if (slideMenuInstructionsBtn && instructionsPanel) {
@@ -5363,6 +5361,7 @@ function showPanel(panelToShow) {
     const appContainer = document.getElementById('app-container');
     const allPanels = document.querySelectorAll('.panel'); // Get all panels
     const pageTitles = new Map([
+        [bibleHomePanel, 'Bible'],
         [uploadPanel, 'Manage Bibles'],
         [commentaryUploadPanel, 'Manage Commentaries'],
         [userDataPanel, 'My Data'],
@@ -5390,6 +5389,19 @@ function showPanel(panelToShow) {
         }
     });
     updateFloatingFontControlState();
+}
+
+function openBibleToolPanel(panel, returnPanel = null) {
+    const activePanel = Array.from(document.querySelectorAll('#reader-view > .panel'))
+        .find(candidate => !candidate.classList.contains('hidden'));
+    bibleToolReturnPanel = returnPanel || activePanel || bibleHomePanel;
+    showPanel(panel);
+}
+
+function closeBibleToolPanel() {
+    const returnPanel = bibleToolReturnPanel || bibleHomePanel;
+    bibleToolReturnPanel = null;
+    showPanel(returnPanel);
 }
 
 function updateViewModeDisplay() {
@@ -6065,22 +6077,6 @@ async function setActiveVersion(type, versionName) {
         activeDbs[type] = null;
     }
 determineOtNtRanges(activeDbs.primary); 
-    if (type === 'primary' && activeVersions.secondary === versionName) {
-        secondaryVersionSelect.value = '';
-        activeVersions.secondary = null;
-        activeDbs.secondary = null;
-        secondaryBibleContent.innerHTML = '';
-        secondaryChapterTitle.textContent = '';
-        statusMessage.textContent = 'Secondary version cannot be the same as primary. Cleared secondary.';
-    } else if (type === 'secondary' && activeVersions.primary === versionName) {
-        secondaryVersionSelect.value = '';
-        activeVersions.secondary = null;
-        activeDbs.secondary = null;
-        secondaryBibleContent.innerHTML = '';
-        secondaryChapterTitle.textContent = '';
-        statusMessage.textContent = 'Secondary version cannot be the same as primary. Cleared secondary.';
-    }
-
 
     if (type === 'primary' && activeVersions.primary) {
         determineOtNtRanges(activeDbs.primary);
@@ -6740,20 +6736,20 @@ async function navigateChapterInner(direction) {
 // --- Content Loading Functions ---
 function renderSecondaryVersionPicker(contentDiv, titleEl) {
     if (titleEl) titleEl.textContent = 'Secondary version';
-    const options = Object.keys(loadedVersions).filter(v => v !== activeVersions.primary);
+    const options = Object.keys(loadedVersions);
     contentDiv.innerHTML = '';
     const box = document.createElement('div');
     box.className = 'secondary-picker';
     box.innerHTML = '<i class="fas fa-book-open secondary-picker-icon"></i><h4>Choose a second version</h4><p>Pick a Bible version to read side by side.</p>';
     if (!options.length) {
         const note = document.createElement('p');
-        note.textContent = 'No other versions are installed yet.';
+        note.textContent = 'No Bible versions are installed yet.';
         box.appendChild(note);
         const add = document.createElement('button');
         add.type = 'button';
         add.className = 'secondary-picker-btn';
         add.innerHTML = '<i class="fas fa-plus"></i> Add a version';
-        add.addEventListener('click', () => document.getElementById('slideMenuManageBiblesBtn')?.click());
+        add.addEventListener('click', () => openBibleToolPanel(uploadPanel, bibleContentView));
         box.appendChild(add);
     } else {
         const select = document.createElement('select');
@@ -8666,7 +8662,7 @@ async function initializeApp() {
 
             if (lastRead.activeVersions && lastRead.activeVersions.primary && loadedVersions[lastRead.activeVersions.primary]) {
                 await setActiveVersion('primary', lastRead.activeVersions.primary);
-                if (lastRead.activeVersions.secondary && loadedVersions[lastRead.activeVersions.secondary] && lastRead.activeVersions.primary !== lastRead.activeVersions.secondary) {
+                if (lastRead.activeVersions.secondary && loadedVersions[lastRead.activeVersions.secondary]) {
                     await setActiveVersion('secondary', lastRead.activeVersions.secondary);
                 } else {
                     activeVersions.secondary = null; activeDbs.secondary = null;
@@ -8736,8 +8732,7 @@ async function initializeApp() {
         // These functions should be defined globally
         setupNavigationListeners();     // For book/chapter/verse navigator panel (triggered by currentChapterDisplay click & its internal back/close buttons)
         setupPopupTriggersAndModals();  // For Bible version, commentary, theme popups (opening them and handling selections)
-		setupSlideMenuListeners();
-		setupGlobalSelectionListener();
+        setupGlobalSelectionListener();
 		updateActiveVersionNameDisplays();
 		updateViewModeDisplay();
 		setupContentReaderListeners();
@@ -8799,10 +8794,7 @@ if (commentaryModal) { // Check if modal element exists
     }
     if (closeUploadPanelBtn) {
         closeUploadPanelBtn.addEventListener('click', () => {
-            // Decide what to show: if content is loaded, show bibleContentView, else show navigator or upload
-            if (currentBook && currentChapter) showPanel(bibleContentView); 
-            else if (Object.keys(loadedVersions).length > 0) openBookNavigator(); // If versions loaded, open book nav
-            else showPanel(uploadPanel); // Fallback
+            closeBibleToolPanel();
         });
     }
 
@@ -8818,9 +8810,7 @@ if (commentaryModal) { // Check if modal element exists
 
     if (closeCommentaryUploadBtn) {
         closeCommentaryUploadBtn.addEventListener('click', () => {
-            if (currentBook && currentChapter) showPanel(bibleContentView);
-            else if (Object.keys(loadedVersions).length > 0) openBookNavigator();
-            else showPanel(uploadPanel);
+            closeBibleToolPanel();
         });
     }
         const verseActionPopup = document.getElementById('verseActionPopup'); // Defined again for clarity in this scope
@@ -8854,9 +8844,7 @@ if (commentaryModal) { // Check if modal element exists
             showPanel(userDataPanel);
             updateUserDataPanel('highlights'); 
         });
-        if (closeUserDataPanelBtn) closeUserDataPanelBtn.addEventListener('click', () => {
-             if (currentBook && currentChapter) showPanel(bibleContentView); else openBookNavigator();
-        });
+        if (closeUserDataPanelBtn) closeUserDataPanelBtn.addEventListener('click', closeBibleToolPanel);
         if (userDataTabButtons) {
             userDataTabButtons.forEach(button => {
                 button.addEventListener('click', (event) => {
@@ -9283,6 +9271,7 @@ if (nextChapterBtn) {
 
 console.log('DEBUG: Script file loaded. Calling initializeApp().');
 setupMobileBackButtonHandler();
+setupSlideMenuListeners();
 initializeApp();
 
 

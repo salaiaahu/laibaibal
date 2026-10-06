@@ -3236,7 +3236,8 @@ footer {
 #app-container.page-active #upload-panel,
 #app-container.page-active #commentary-upload-panel,
 #app-container.page-active #user-data-panel,
-#app-container.page-active #instructions-panel {
+#app-container.page-active #instructions-panel,
+#app-container.page-active #bible-home-panel {
     width: min(100%, 880px);
     min-height: calc(100vh - 84px);
     margin: 0 auto;
@@ -3621,6 +3622,101 @@ button, a, select, label { touch-action: manipulation; }
     min-width: 0;
     min-height: 0;
     height: 100%;
+}
+
+#app-container.page-active #bible-home-panel {
+    box-sizing: border-box;
+    height: 100%;
+    gap: 18px;
+    overflow-y: auto;
+    padding: 16px;
+}
+.bible-home-intro {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: min(100%, 880px);
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 4px 2px 14px;
+    color: var(--secondary-text-color, #727b84);
+    line-height: 1.45;
+}
+.bible-home-intro p { margin: 0; }
+.bible-home-intro-icon,
+.bible-home-card-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    border-radius: 14px;
+    color: #fff;
+}
+.bible-home-intro-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #c9892f, #8a5a1c);
+    font-size: 1.4rem;
+}
+.bible-home-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: min(100%, 880px);
+    margin: 0 auto;
+}
+.bible-home-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 92px;
+    padding: 14px;
+    border: 1px solid var(--panel-border-color);
+    border-radius: 16px;
+    background: var(--panel-bg-color);
+    color: var(--panel-text-color);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: var(--panel-shadow);
+    transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+.bible-home-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-color);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.12);
+}
+.bible-home-card:active { transform: scale(0.99); }
+.bible-home-card-icon {
+    width: 46px;
+    height: 46px;
+    font-size: 1.25rem;
+}
+.bible-home-reader-icon { background: linear-gradient(135deg, #c9892f, #8a5a1c); }
+.bible-home-bibles-icon { background: linear-gradient(135deg, #3f8bd6, #245c9a); }
+.bible-home-commentaries-icon { background: linear-gradient(135deg, #38a69a, #22766d); }
+.bible-home-data-icon { background: linear-gradient(135deg, #8a69c8, #604396); }
+.bible-home-card-text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+.bible-home-card-text strong { font-size: 1rem; }
+.bible-home-card-text small {
+    color: var(--secondary-text-color, #727b84);
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+.bible-home-card-arrow {
+    flex: none;
+    color: var(--secondary-text-color, #727b84);
+    opacity: 0.7;
+}
+@media (max-width: 560px) {
+    .bible-home-grid { grid-template-columns: minmax(0, 1fr); }
+    .bible-home-card { min-height: 78px; }
 }
 
 /* Landing page */
