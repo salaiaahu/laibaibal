@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lai-baibal-v24';
+const CACHE_NAME = 'lai-baibal-v27';
 const APP_SHELL = [
   './',
   './index.html',
@@ -8,7 +8,10 @@ const APP_SHELL = [
   './sql-wasm.wasm',
   './worker.sql-wasm.js',
   './manifest.webmanifest',
-  './icons/icon.svg'
+  './icons/icon.svg',
+  './icons/apple-touch-icon.png',
+  './icons/icon-192.webp',
+  './icons/icon-512.webp'
 ];
 
 self.addEventListener('install', event => {

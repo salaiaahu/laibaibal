@@ -1,10 +1,10 @@
 # Lai Baibal
 
-Lai Baibal is a mobile-first, installable Progressive Web App for reading the Bible, hymns, and group readings. It is a static client-side application: there is no application server or build step. Bible and commentary databases are read in the browser with SQL.js, and user data is stored locally in IndexedDB and localStorage.
+Lai Baibal is a mobile-first, installable Progressive Web App for reading the Bible, hymns, and group readings. It is a static client-side application with no application server. Bible and commentary databases are read in the browser with SQL.js, and user data is stored locally in IndexedDB and localStorage.
 
 ## Run locally
 
-Serve the project over HTTP; do not open `index.html` as a `file://` URL. The app uses IndexedDB and a service worker, and SQL.js currently loads its WebAssembly file from the absolute path `/laibaibal/sql-wasm.wasm`.
+Serve the project over HTTP; do not open `index.html` as a `file://` URL. The app uses IndexedDB and a service worker. SQL.js loads its WebAssembly file relative to `sql-wasm.js`.
 
 When the checkout directory is named `laibaibal`, run a static server from its parent directory:
 
@@ -13,9 +13,11 @@ cd ..
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000/laibaibal/`. If the project is served from a different path, update the SQL.js `locateFile` path in `script.js` and check the service-worker scope and GitHub Pages base path. No npm install or compilation is required.
+Then open `http://localhost:8000/laibaibal/`. This serves the source app directly and does not require npm. Use Node.js 22 or later to generate the minified production package with `npm ci` followed by `npm run build`; output is written to `dist/`.
 
-The app shell works offline after it has been cached, but first-time downloads of predefined Bible/commentary files and CDN-hosted Font Awesome and html2canvas require network access.
+The production build minifies JavaScript, CSS, the service worker, and the Capacitor native bridge, and bundles Font Awesome and html2canvas locally. First-time downloads of predefined Bible/commentary databases still require network access.
+
+Minification only makes casual inspection and copying less convenient; it is not encryption or strong obfuscation. Client-side code can still be inspected or extracted, and a public source repository exposes the original files. Do not store secrets in the app.
 
 ## Project structure
 
@@ -26,9 +28,15 @@ The app shell works offline after it has been cached, but first-time downloads o
 | `style.css` | App layout, responsive/mobile styling, themes, reader controls, animations, and scrollbar behavior. |
 | `service-worker.js` | PWA app-shell cache, offline fallback, and update lifecycle. The current cache identifier is declared as `CACHE_NAME` at the top of this file. |
 | `manifest.webmanifest` | Installable-app name, display mode, theme colors, start URL, and icon. |
-| `icons/icon.svg` | Local app icon. |
+| `icons/` | Local SVG, WebP, and Apple touch icons used by the PWA and browser installs. |
+| `scripts/build.mjs` | Produces the minified static release in `dist/`. |
+| `native-bridge.mjs` | Uses the native share sheet on iOS/Android and registers Android back/confirmed-exit handling. |
+| `capacitor.config.json` | Capacitor app identity and the production web bundle directory. |
+| `resources/icon.svg` | Square source artwork for generated native app icons and splash assets. |
+| `package.json` | Pins build/platform dependencies and provides build, check, sync, and native-open commands. |
 | `sql-wasm.js`, `sql-wasm.wasm`, `worker.sql-wasm.js` | Vendored SQL.js runtime and Web Worker used to open uploaded or downloaded SQLite databases. Keep these files together. |
-| `.github/workflows/static.yml` | GitHub Pages deployment. Deploys the repository contents on pushes to `main` or a manual workflow run. |
+| `.github/workflows/static.yml` | Builds the production package and deploys `dist/` to GitHub Pages on pushes to `main` or a manual workflow run. |
+| `android/`, `ios/` | Capacitor native projects generated from `capacitor.config.json`; keep both in version control. |
 
 The early inline history guard in the `<head>` of `index.html` is intentional: it must run before the larger app script so a mobile back press during startup cannot leave the app. The main back handler takes over once `script.js` loads. Keep this handoff intact when changing script loading or page structure.
 
@@ -59,6 +67,22 @@ Selecting Bible opens its own dashboard with icon actions for Bible Reader, Mana
 - Hardware/browser back traverses app history toward the landing page. The app only offers exit after the landing page is visible and the user presses back twice in quick succession.
 - Custom dialogs/toasts are implemented in the app; reuse them rather than adding native `alert`, `confirm`, or `prompt` dialogs.
 - Font-size and theme choices are remembered. The mobile UI includes swipe transitions, a centered splash animation, and auto-hiding reader font controls.
+- The Android Capacitor back-button bridge calls the existing app history handler and exits only after the landing-page double-back confirmation. iOS does not have a hardware back button.
+
+## Native app development
+
+The app ID is `com.laitech.laibaibal`; confirm it is available in the developer accounts before store submission. After `npm ci`, run `npm run build` once, then generate the projects with `npx cap add android` and `npx cap add ios`. Branded icons and splash assets generated from `resources/icon.svg` are included in both projects. Build/sync the web bundle into both native projects with `npm run cap:sync`, then open them using `npm run cap:open:android` or `npm run cap:open:ios`.
+
+Android Studio with the required Android SDK and full Xcode are needed to compile and sign store builds. Capacitor packaging is not a guarantee of App Store approval; retain app-specific value such as offline reading, local study data, and reliable native navigation, and verify current store policies before submission.
+
+## Store release checklist
+
+- Verify `com.laitech.laibaibal` is available and register it in both developer accounts.
+- Compile, sign, and test Android and iOS releases on real devices, including offline startup, app updates, local notes/bookmarks, native back behavior, and database downloads. Native projects are scaffolded but have not been compiled in this environment.
+- Publish a privacy policy and link it in-app and in both store listings. Complete Google Play Data safety and Apple App Privacy disclosures to match actual local storage, analytics (if later added), and network behavior.
+- Confirm redistribution rights for every bundled or downloadable Bible translation, commentary, hymn, and group-reading text.
+- Prepare store descriptions, age/content ratings, screenshots, support contact, and required account details.
+- Keep signing credentials and upload keys out of the repository. Minified client code can still be inspected or extracted; it does not protect a public source repository or content.
 
 ## Useful code entry points
 
@@ -97,12 +121,12 @@ Small preferences and lookup metadata are stored separately, including theme, Bi
 
 - The service worker uses a network-first strategy for same-origin GET requests and falls back to cached responses when offline. It calls `skipWaiting()`, claims clients on activation, and removes older app-shell caches.
 - When changing the service-worker lifecycle or app-shell caching policy, update `CACHE_NAME` in `service-worker.js`. Add new essential offline files to `APP_SHELL`; do not cache unnecessary user-generated data.
-- GitHub Actions deploys the static repository to GitHub Pages when `main` is updated. The app currently assumes it is hosted under `/laibaibal/` for the SQL.js WASM URL.
+- GitHub Actions builds and deploys `dist/` to GitHub Pages when `main` is updated. Capacitor can use the same directory as its local web bundle.
 - The built-in resource list has its own `PRELOADED_RESOURCES_MANAGER.batchVersion`. Update that version when the predefined resources list changes so existing installs re-check it.
 
 ## Working on the app
 
-- There is no package manifest, bundler, or automated test suite in this repository. Keep changes compatible with plain browser JavaScript and the existing static deployment.
+- There is no automated test suite in this repository. Keep source changes compatible with plain browser JavaScript; use `npm run build` to verify and generate the production bundle.
 - `script.js` contains most behavior and is intentionally global. Follow its existing helpers and DOM IDs; check both the UI markup in `index.html` and the event wiring in `initializeApp()` when adding controls.
 - Script tags in `index.html` appear before a small amount of the remaining modal markup. Top-level DOM lookups in `script.js` can therefore see `null` for elements that occur after the script tag; check parse order and initialization timing when wiring controls.
 - Preserve touch scrolling and keyboard/back navigation while hiding visual scrollbars. Test narrow mobile widths (at least 320px and 390px) as well as desktop layouts for UI changes.
@@ -115,7 +139,3 @@ Small preferences and lookup metadata are stored separately, including theme, Bi
   ```
 
 - Test in a real browser over HTTP, including initial launch, offline reload, service-worker update, and relevant mobile interactions. There is no repository test runner to substitute for these checks.
-
-### Current preview note
-
-Recent browser previews logged an initialization error for `toggleCommentaryUploadBtn` and a warning that `handleHighlightIconClick` was not found. Check the current markup and listener setup before assuming these are caused by a new change or have already been resolved.

@@ -3559,7 +3559,6 @@ const toggleViewBtn = document.getElementById('toggleViewBtn');
 const popupShowSecondaryToggle = document.getElementById('popupShowSecondaryToggle');
 const toggleSearchBtn = document.getElementById('toggleSearchBtn');
 const toggleFileUploadBtn = document.getElementById('toggleFileUploadBtn');
-const toggleCommentaryUploadBtn = document.getElementById('toggleCommentaryUploadBtn');
 const toggleUserDataBtn = document.getElementById('toggleUserDataBtn');
 const decreaseFontSizeBtn = document.getElementById('decreaseFontSizeBtn');
 const increaseFontSizeBtn = document.getElementById('increaseFontSizeBtn');
@@ -4487,6 +4486,10 @@ function setupMobileBackButtonHandler() {
         if (!homeScreen?.classList.contains('hidden')) {
             if (isExitConfirming) {
                 clearExitConfirmation();
+                if (typeof window.__laiBaibalExitApp === 'function') {
+                    window.__laiBaibalExitApp();
+                    return;
+                }
                 allowBrowserBack = true;
                 history.go(-(appHistoryEntries + 1));
                 setTimeout(() => { allowBrowserBack = false; }, 1000);
@@ -8222,7 +8225,14 @@ async function shareVerse(verseRefOrRefs) {
                 refs.map(r => `${r.verse}. ${getVerseTextFromDb(r)}`).join('\n');
         }
 
-        if (navigator.share) {
+        if (typeof window.__laiBaibalShare === 'function') {
+            await window.__laiBaibalShare({
+                title: 'Bible Verse',
+                text: fullText,
+                url: window.location.href
+            });
+            showToast('Verse shared using your device share sheet!');
+        } else if (navigator.share) {
             console.log('Using navigator.share...');
             await navigator.share({
                 title: 'Bible Verse',
@@ -8715,7 +8725,10 @@ async function initializeApp() {
     }
     try {
         statusMessage.textContent = 'Initializing SQL.js...';
-        SQL = await window.initSqlJs({ locateFile: file => `/laibaibal/sql-wasm.wasm` });
+        const sqlRuntimeScript = document.querySelector('script[src$="sql-wasm.js"]');
+        SQL = await window.initSqlJs({
+            locateFile: file => new URL(file, sqlRuntimeScript?.src || document.baseURI).href
+        });
         console.log('DEBUG: SQL.js initialized.');
         statusMessage.textContent = 'SQL.js initialized.';
         
@@ -8883,16 +8896,6 @@ if (commentaryModal) { // Check if modal element exists
         });
     }
 
-    // ADD THIS BACK FOR COMMENTARY PANEL
-    if (toggleCommentaryUploadBtn) {
-        toggleCommentaryUploadBtn.addEventListener('click', () => {
-            console.log("Toggle Commentary Upload Panel button CLICKED."); // Add log
-            showPanel(commentaryUploadPanel);
-        });
-    } else {
-        console.error("ERROR: toggleCommentaryUploadBtn element not found in initializeApp.");
-    }
-
     if (closeCommentaryUploadBtn) {
         closeCommentaryUploadBtn.addEventListener('click', () => {
             closeBibleToolPanel();
@@ -8955,23 +8958,6 @@ if (commentaryModal) { // Check if modal element exists
         
   
 if (verseActionPopup) {
-    console.log("DEBUG: Setting up listeners for verseActionPopup icons.");
-
-    // Highlighter Icon
-    const highlighterIcon = verseActionPopup.querySelector('.fa-highlighter');
-    if (highlighterIcon) {
-        // Mousedown to prevent focus stealing (already in your script)
-        highlighterIcon.addEventListener('mousedown', (e) => e.preventDefault());
-
-        if (typeof handleHighlightIconClick === "function") { // Check if you defined it separately
-             highlighterIcon.addEventListener('click', handleHighlightIconClick);
-        } else {
-             console.warn("handleHighlightIconClick function for highlighter not found, complex listener might be missing from here.");
-             // If your complex highlight logic is directly here as an anonymous function from previous steps, that's fine.
-        }
-
-    } else { console.error("Highlighter icon not found in verseActionPopup."); }
-
     // Note Icon
     const noteIcon = verseActionPopup.querySelector('.fa-sticky-note');
 if (noteIcon) {
