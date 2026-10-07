@@ -240,7 +240,22 @@
                             <span class="bible-home-card-text"><strong>My Data</strong><small>View your highlights, notes, and bookmarks.</small></span>
                             <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
                         </button>
+                        <button type="button" id="bibleHomeTopicsBtn" class="bible-home-card">
+                            <span class="bible-home-card-icon bible-home-topics-icon"><i class="fas fa-tags" aria-hidden="true"></i></span>
+                            <span class="bible-home-card-text"><strong>Topics</strong><small>Explore verses by theme, including prayer, salvation, and faith.</small></span>
+                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                        </button>
                     </div>
+                </div>
+                <div id="topics-panel" class="panel hidden">
+                    <h2>Bible Topics</h2>
+                    <p class="topics-panel-intro">Find Scripture by topic. These study references are separate from your personal bookmarks.</p>
+                    <label class="visually-hidden" for="topicsSearchInput">Search topics</label>
+                    <input id="topicsSearchInput" type="search" placeholder="Search prayer, salvation, sin..." autocomplete="off">
+                    <p id="topicsStatusMessage" class="message" aria-live="polite"></p>
+                    <div id="topicsList" class="topics-list"></div>
+                    <div id="topicDetail" class="topic-detail hidden"></div>
+                    <button id="closeTopicsPanelBtn" type="button">Back to Bible</button>
                 </div>
                 <div id="upload-panel" class="panel hidden">
                     <h2>Manage Bible Versions</h2>

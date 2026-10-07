@@ -3422,12 +3422,18 @@ let isScrollingProgrammatically = false;
 
 // IndexedDB Constants (Updated Version for new stores)
 const DB_NAME = 'BibleReaderDB';
-const DB_VERSION = 2; // INCREMENTED VERSION FOR NEW OBJECT STORES
+const DB_VERSION = 3; // Version 3 adds the separately cached topical-reference catalog.
 const OBJECT_STORE_NAME = 'bibleVersions';
 const COMMENTARY_STORE_NAME = 'commentaryVersions';
 const HIGHLIGHTS_STORE_NAME = 'highlights'; // NEW
 const NOTES_STORE_NAME = 'notes'; // NEW
 const BOOKMARKS_STORE_NAME = 'bookmarks'; // NEW
+const TOPICS_STORE_NAME = 'topicalCatalog';
+const TOPICS_CATALOG_KEY = 'getbible-catalog';
+const TOPICS_CATALOG_URLS = [
+    'https://raw.githubusercontent.com/salaiaahu/laibaibal/main/catalog.json',
+    'https://bookmarks.getbible.net/v1/catalog.json'
+];
 
 const FONT_SIZE_STORAGE_KEY = 'bibleReaderAppFontSize';
 const DEFAULT_FONT_SIZE_REM = 1.0; // This is your baseline (100%)
@@ -3573,6 +3579,14 @@ const bibleHomeReaderBtn = document.getElementById('bibleHomeReaderBtn');
 const bibleHomeManageBiblesBtn = document.getElementById('bibleHomeManageBiblesBtn');
 const bibleHomeManageCommentariesBtn = document.getElementById('bibleHomeManageCommentariesBtn');
 const bibleHomeMyDataBtn = document.getElementById('bibleHomeMyDataBtn');
+const bibleHomeTopicsBtn = document.getElementById('bibleHomeTopicsBtn');
+const topicsPanel = document.getElementById('topics-panel');
+const topicsSearchInput = document.getElementById('topicsSearchInput');
+const topicsStatusMessage = document.getElementById('topicsStatusMessage');
+const topicsList = document.getElementById('topicsList');
+const topicDetail = document.getElementById('topicDetail');
+const closeTopicsPanelBtn = document.getElementById('closeTopicsPanelBtn');
+let topicalCatalog = null;
 const uploadPanel = document.getElementById('upload-panel');
 const bibleFileInput = document.getElementById('bibleFile');
 const versionNameInput = document.getElementById('versionNameInput');
@@ -4308,6 +4322,15 @@ function setupSlideMenuListeners() {
                 updateUserDataPanel('highlights');
             });
         }
+        if (bibleHomeTopicsBtn) {
+            bibleHomeTopicsBtn.addEventListener('click', async () => {
+                showPanel(topicsPanel);
+                try { await loadTopicalCatalog(); renderTopics(); }
+                catch (error) { topicsStatusMessage.textContent = `Unable to load topics: ${error.message}`; }
+            });
+        }
+        if (topicsSearchInput) topicsSearchInput.addEventListener('input', () => renderTopics(topicsSearchInput.value));
+        if (closeTopicsPanelBtn) closeTopicsPanelBtn.addEventListener('click', () => showPanel(bibleHomePanel));
         if (slideMenuInstructionsBtn && instructionsPanel) {
             slideMenuInstructionsBtn.addEventListener('click', () => {
                 instructionsReturnPanel = Array.from(document.querySelectorAll('#reader-view > .panel'))
@@ -5449,6 +5472,7 @@ function showPanel(panelToShow, trackHistory = true) {
         [uploadPanel, 'Manage Bibles'],
         [commentaryUploadPanel, 'Manage Commentaries'],
         [userDataPanel, 'My Data'],
+        [topicsPanel, 'Bible Topics'],
         [instructionsPanel, 'App Hmandaan']
     ]);
     const isDedicatedPage = pageTitles.has(panelToShow);
@@ -5484,6 +5508,63 @@ function openBibleToolPanel(panel, returnPanel = null) {
         .find(candidate => !candidate.classList.contains('hidden'));
     bibleToolReturnPanel = returnPanel || activePanel || bibleHomePanel;
     showPanel(panel);
+}
+
+async function loadTopicalCatalog() {
+    if (topicalCatalog) return topicalCatalog;
+    const cached = await getIndexedDB(TOPICS_STORE_NAME, TOPICS_CATALOG_KEY).catch(() => null);
+    if (cached?.catalog?.topics?.length) {
+        topicalCatalog = cached.catalog;
+        return topicalCatalog;
+    }
+    topicsStatusMessage.textContent = 'Downloading topics for offline use…';
+    let catalog;
+    let lastError;
+    for (const url of TOPICS_CATALOG_URLS) {
+        try {
+            const response = await fetch(url, { cache: 'no-cache' });
+            if (!response.ok) throw new Error(`${response.status}`);
+            catalog = await response.json();
+            break;
+        } catch (error) { lastError = error; }
+    }
+    if (!catalog) throw new Error(`Topic catalog download failed (${lastError?.message || 'network error'}).`);
+    if (!Array.isArray(catalog.topics)) throw new Error('The topic catalog has an invalid format.');
+    await putIndexedDB(TOPICS_STORE_NAME, { id: TOPICS_CATALOG_KEY, catalog, savedAt: Date.now() });
+    topicalCatalog = catalog;
+    return catalog;
+}
+
+function renderTopics(query = '') {
+    const needle = query.trim().toLocaleLowerCase();
+    const topics = (topicalCatalog?.topics || []).filter(topic =>
+        [topic.name, ...(topic.aliases || [])].some(name => name.toLocaleLowerCase().includes(needle))
+    ).slice(0, 100);
+    topicsList.innerHTML = '';
+    topicDetail.classList.add('hidden');
+    if (!topics.length) { topicsList.innerHTML = '<p class="placeholder">No matching topics found.</p>'; return; }
+    topics.forEach(topic => {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'topic-item';
+        button.innerHTML = `<span class="topic-swatch" style="background:${topic.color}"></span><span><strong>${topic.name}</strong><small>${topic.verses.length} verse${topic.verses.length === 1 ? '' : 's'}</small></span>`;
+        button.addEventListener('click', () => showTopicDetail(topic));
+        topicsList.appendChild(button);
+    });
+    topicsStatusMessage.textContent = `${topics.length}${topics.length === 100 ? '+' : ''} topic${topics.length === 1 ? '' : 's'} available offline.`;
+}
+
+function showTopicDetail(topic) {
+    topicsList.innerHTML = '';
+    topicDetail.classList.remove('hidden');
+    topicDetail.innerHTML = `<h3>${topic.name}</h3><p>${topic.verses.length} linked verses. Select one to open it in your current Bible.</p>`;
+    topic.verses.forEach(([bookNumber, chapter, verse]) => {
+        const book = loadedVersions[activeVersions.primary]?.books?.find(item => Number(item.book_number) === Number(bookNumber));
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'topic-verse';
+        button.textContent = `${book?.short_name || `Book ${bookNumber}`} ${chapter}:${verse}`;
+        button.disabled = !book;
+        button.addEventListener('click', () => { currentBook = book; currentChapter = chapter; currentVerse = verse; loadChapterContent(book.book_number, chapter, verse); });
+        topicDetail.appendChild(button);
+    });
 }
 
 function closeBibleToolPanel() {
@@ -5771,6 +5852,10 @@ request.onupgradeneeded = (event) => {
                 bookmarksStore.createIndex('byCategory', 'category', { unique: false });
             }
         }
+    }
+    // Topic references are curated catalog data, deliberately separate from personal bookmarks.
+    if (oldVersion < 3 && !db.objectStoreNames.contains(TOPICS_STORE_NAME)) {
+        db.createObjectStore(TOPICS_STORE_NAME, { keyPath: 'id' });
     }
     console.log("DB onupgradeneeded: Schema setup process completed for version", db.version);
 };

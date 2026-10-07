@@ -104,6 +104,21 @@ body,
     --accent-text-color: #ffffff;
     --selected-verse-bg-color: #e6ffe6;
     --selected-verse-text-color: var(--main-text-color);
+
+    /* Landing screens */
+    --secondary-text-color: #62707d;
+    --home-bg-start: #3d5872;
+    --home-bg-end: #203447;
+    --home-text-color: #ffffff;
+    --home-muted-text-color: rgba(255, 255, 255, 0.75);
+    --home-subtle-text-color: rgba(255, 255, 255, 0.55);
+    --home-card-bg-color: rgba(255, 255, 255, 0.10);
+    --home-card-active-bg-color: rgba(255, 255, 255, 0.18);
+    --home-card-border-color: rgba(255, 255, 255, 0.18);
+    --home-card-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    --home-icon-bible-bg: #c9892f;
+    --home-icon-hymns-bg: linear-gradient(135deg, #3fa7d6, #2468a2);
+    --home-icon-readings-bg: linear-gradient(135deg, #4cae7d, #2a7a53);
 }
 body.theme-dark {
     --main-bg-color: #1e1e1e;
@@ -190,6 +205,19 @@ body.theme-dark {
     --delete-button-bg-color: #d32f2f; /* Slightly adjusted red for dark */
     --delete-button-text-color: #ffffff;
     --delete-button-hover-bg-color: #b71c1c;
+
+    --secondary-text-color: #aeb7c2;
+    --home-bg-start: #252b35;
+    --home-bg-end: #10151d;
+    --home-muted-text-color: rgba(224, 224, 224, 0.78);
+    --home-subtle-text-color: rgba(224, 224, 224, 0.58);
+    --home-card-bg-color: rgba(255, 255, 255, 0.07);
+    --home-card-active-bg-color: rgba(0, 123, 255, 0.24);
+    --home-card-border-color: rgba(160, 190, 220, 0.22);
+    --home-card-shadow: 0 10px 28px rgba(0, 0, 0, 0.48);
+    --home-icon-bible-bg: #a97125;
+    --home-icon-hymns-bg: linear-gradient(135deg, #2873a8, #174c7a);
+    --home-icon-readings-bg: linear-gradient(135deg, #28765b, #18503c);
 }
 
 body.theme-sepia {
@@ -271,6 +299,20 @@ body.theme-sepia {
     --delete-button-bg-color: #c66060; /* Muted red for sepia */
     --delete-button-text-color: #ffffff;
     --delete-button-hover-bg-color: #b04040;
+
+    --secondary-text-color: #745f4b;
+    --home-bg-start: #9a795a;
+    --home-bg-end: #5f4535;
+    --home-text-color: #fff8e8;
+    --home-muted-text-color: rgba(255, 248, 232, 0.80);
+    --home-subtle-text-color: rgba(255, 248, 232, 0.60);
+    --home-card-bg-color: rgba(255, 248, 232, 0.12);
+    --home-card-active-bg-color: rgba(255, 248, 232, 0.21);
+    --home-card-border-color: rgba(255, 248, 232, 0.24);
+    --home-card-shadow: 0 10px 28px rgba(67, 45, 28, 0.34);
+    --home-icon-bible-bg: #9b6b2e;
+    --home-icon-hymns-bg: linear-gradient(135deg, #627f8f, #3e5a6a);
+    --home-icon-readings-bg: linear-gradient(135deg, #6f8965, #4d6845);
 }
 #verseImageModal .modal-content {
     max-width: 95%; /* Mobile first */
@@ -3236,6 +3278,7 @@ footer {
 #app-container.page-active #upload-panel,
 #app-container.page-active #commentary-upload-panel,
 #app-container.page-active #user-data-panel,
+#app-container.page-active #topics-panel,
 #app-container.page-active #instructions-panel,
 #app-container.page-active #bible-home-panel {
     width: min(100%, 880px);
@@ -3248,10 +3291,12 @@ footer {
 #app-container.page-active #upload-panel > h2,
 #app-container.page-active #commentary-upload-panel > h2,
 #app-container.page-active #user-data-panel > h2,
+#app-container.page-active #topics-panel > h2,
 #app-container.page-active #instructions-panel > h2,
 #app-container.page-active #closeUploadPanelBtn,
 #app-container.page-active #closeCommentaryUploadBtn,
 #app-container.page-active #closeUserDataPanelBtn,
+#app-container.page-active #closeTopicsPanelBtn,
 #app-container.page-active #closeInstructionsBtn {
     display: none;
 }
@@ -3654,7 +3699,7 @@ button, a, select, label { touch-action: manipulation; }
 .bible-home-intro-icon {
     width: 48px;
     height: 48px;
-    background: #c9892f;
+    background: var(--home-icon-bible-bg);
     font-size: 1.4rem;
 }
 .bible-home-grid {
@@ -3692,10 +3737,11 @@ button, a, select, label { touch-action: manipulation; }
     height: 46px;
     font-size: 1.25rem;
 }
-.bible-home-reader-icon { background: #c9892f; }
-.bible-home-bibles-icon { background: linear-gradient(135deg, #3f8bd6, #245c9a); }
-.bible-home-commentaries-icon { background: linear-gradient(135deg, #38a69a, #22766d); }
-.bible-home-data-icon { background: linear-gradient(135deg, #8a69c8, #604396); }
+.bible-home-reader-icon { background: var(--home-icon-bible-bg); }
+.bible-home-bibles-icon { background: var(--home-icon-hymns-bg); }
+.bible-home-commentaries-icon { background: var(--home-icon-readings-bg); }
+.bible-home-data-icon { background: linear-gradient(135deg, var(--accent-color), var(--top-bar-bg-color)); }
+.bible-home-topics-icon { background: linear-gradient(135deg, #d97706, #9a3412); }
 .bible-home-card-text {
     display: flex;
     flex: 1 1 auto;
@@ -3720,25 +3766,25 @@ button, a, select, label { touch-action: manipulation; }
 }
 
 /* Landing page */
-#home-screen { position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; background: linear-gradient(170deg, #3d5872 0%, #203447 100%); color: #fff; transition: opacity .25s ease; }
+#home-screen { position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; background: linear-gradient(170deg, var(--home-bg-start) 0%, var(--home-bg-end) 100%); color: var(--home-text-color); transition: opacity .25s ease, background .2s ease, color .2s ease; }
 #home-screen.hidden { display: none; }
 .home-scroll { flex: 1; overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 40px) 22px 30px; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
 .home-hero { text-align: center; }
-.home-logo { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+.home-logo { width: 88px; height: 88px; border-radius: 22px; box-shadow: var(--home-card-shadow); }
 .home-hero h1 { margin: 14px 0 4px; font: 600 1.9rem/1.1 Georgia, serif; letter-spacing: .08em; }
-.home-hero p { margin: 0; opacity: .75; font-size: .95rem; }
+.home-hero p { margin: 0; color: var(--home-muted-text-color); font-size: .95rem; }
 .home-cards { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 420px; margin: 0 auto; }
-.home-card { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px; border: 1px solid rgba(255,255,255,.14); border-radius: 20px; background: rgba(255,255,255,.1); color: #fff; font: inherit; text-align: left; cursor: pointer; backdrop-filter: blur(6px); transition: transform .12s ease, background .12s ease; }
-.home-card:active { transform: scale(.98); background: rgba(255,255,255,.18); }
-.home-card-icon { display: grid; flex: none; width: 56px; height: 56px; place-items: center; border-radius: 16px; font-size: 1.6rem; color: #fff; }
-.home-card-bible .home-card-icon { background: #c9892f; }
-.home-card-hymns .home-card-icon { background: linear-gradient(135deg, #3fa7d6, #2468a2); }
-.home-card-readings .home-card-icon { background: linear-gradient(135deg, #4cae7d, #2a7a53); }
+.home-card { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px; border: 1px solid var(--home-card-border-color); border-radius: 20px; background: var(--home-card-bg-color); color: var(--home-text-color); font: inherit; text-align: left; cursor: pointer; backdrop-filter: blur(6px); box-shadow: var(--home-card-shadow); transition: transform .12s ease, background .12s ease, border-color .12s ease; }
+.home-card:active { transform: scale(.98); background: var(--home-card-active-bg-color); }
+.home-card-icon { display: grid; flex: none; width: 56px; height: 56px; place-items: center; border-radius: 16px; font-size: 1.6rem; color: var(--home-text-color); }
+.home-card-bible .home-card-icon { background: var(--home-icon-bible-bg); }
+.home-card-hymns .home-card-icon { background: var(--home-icon-hymns-bg); }
+.home-card-readings .home-card-icon { background: var(--home-icon-readings-bg); }
 .home-card-text { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
 .home-card-text strong { font-size: 1.1rem; }
-.home-card-text small { opacity: .7; font-size: .85rem; }
-.home-card-arrow { opacity: .5; }
-.home-hint { margin: 0; text-align: center; font-size: .78rem; opacity: .5; }
+.home-card-text small { color: var(--home-muted-text-color); font-size: .85rem; }
+.home-card-arrow { color: var(--home-subtle-text-color); }
+.home-hint { margin: 0; color: var(--home-subtle-text-color); text-align: center; font-size: .78rem; }
 #ptr-indicator { z-index: 100000; }
 
 /* Secondary version picker */
@@ -3781,3 +3827,12 @@ button, a, select, label { touch-action: manipulation; }
 #user-data-panel .user-data-list li .meta { font-size: .8rem; margin-top: 2px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #user-data-panel .user-data-list { max-height: none; border: 0; background: transparent; }
 #user-data-panel .tab-content > .placeholder { padding: 0; border: 0; background: transparent; font-size: .78rem; opacity: .65; margin: 0 0 8px; }
+
+/* Offline topical-reference library (not user bookmarks). */
+#topics-panel { box-sizing: border-box; max-width: 880px; margin: 16px auto; padding: clamp(18px, 4vw, 32px); color: var(--panel-text-color); background: var(--panel-bg-color); }
+#topics-panel h2 { margin: 0 0 8px; color: var(--main-text-color); }
+.topics-panel-intro { margin: 0 0 16px; color: var(--secondary-text-color, #727b84); }
+#topicsSearchInput { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input-border-color); border-radius: 9px; background: var(--input-bg-color); color: var(--input-text-color); font: inherit; }
+.topics-list { display: grid; gap: 8px; margin-top: 12px; }
+.topic-item, .topic-verse { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px; border: 1px solid var(--panel-border-color); border-radius: 9px; background: var(--main-bg-color); color: var(--main-text-color); font: inherit; text-align: left; cursor: pointer; }
+.topic-item small { display: block; margin-top: 2px; color: var(--secondary-text-color, #727b84); }.topic-swatch { width: 12px; height: 36px; border-radius: 8px; }.topic-detail { display: grid; gap: 8px; }.topic-detail h3 { margin: 14px 0 4px; }.topic-detail p { color: var(--secondary-text-color, #727b84); }.topic-verse { display: block; }
