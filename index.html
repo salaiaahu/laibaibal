@@ -60,6 +60,10 @@
                 <div class="sb-cover-front"></div>
                 <div class="sb-cover-inside"></div>
             </div>
+            <div class="sb-open-pages" aria-hidden="true">
+                <section class="sb-open-page sb-open-page-left"><p><b>PSALM 23</b> The Lord is my shepherd; I shall not want. He maketh me to lie down in green pastures: he leadeth me beside the still waters. He restoreth my soul: he leadeth me in the paths of righteousness for his name’s sake. Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me.</p></section>
+                <section class="sb-open-page sb-open-page-right"><p><b>JOHN 1</b> In the beginning was the Word, and the Word was with God, and the Word was God. In him was life; and the life was the light of men. And the light shineth in darkness; and the darkness comprehended it not. And the Word was made flesh, and dwelt among us, full of grace and truth.</p></section>
+            </div>
         </div>
         <div class="splash-title">Lai Baibal</div>
     </div>
@@ -215,10 +219,6 @@
 
             <section id="reader-view">
                 <div id="bible-home-panel" class="panel hidden">
-                    <div class="bible-home-intro">
-                        <span class="bible-home-intro-icon"><i class="fas fa-book-bible" aria-hidden="true"></i></span>
-                        <p><strong>Bible</strong><span>Choose where to begin</span></p>
-                    </div>
                     <div class="bible-home-grid" aria-label="Bible tools">
                         <button type="button" id="bibleHomeReaderBtn" class="bible-home-card">
                             <span class="bible-home-card-icon bible-home-reader-icon"><i class="fas fa-book-open" aria-hidden="true"></i></span>
@@ -247,13 +247,15 @@
                 <div id="topics-panel" class="panel hidden">
                     <h2>Bible Topics</h2>
                     <p class="topics-panel-intro">Find Scripture by topic. These study references are separate from your personal bookmarks.</p>
-                    <div class="topics-toolbar">
-                        <label class="visually-hidden" for="topicsSearchInput">Search topics</label>
-                        <input id="topicsSearchInput" type="search" placeholder="Search prayer, salvation, sin..." autocomplete="off">
-                        <select id="topicsBibleSelect" aria-label="Bible version for topic verses"></select>
-                        <button id="topicsFavoritesFilterBtn" type="button" aria-pressed="false" title="Show favorite topics"><i class="far fa-star" aria-hidden="true"></i><span class="visually-hidden">Show favorites</span></button>
+                    <div class="topics-sticky-controls">
+                        <div class="topics-toolbar">
+                            <label class="visually-hidden" for="topicsSearchInput">Search topics</label>
+                            <input id="topicsSearchInput" type="search" placeholder="Search prayer, salvation, sin..." autocomplete="off">
+                            <select id="topicsBibleSelect" aria-label="Bible version for topic verses"></select>
+                            <button id="topicsFavoritesFilterBtn" type="button" aria-pressed="false" title="Show favorite topics"><i class="far fa-star" aria-hidden="true"></i><span class="visually-hidden">Show favorites</span></button>
+                        </div>
+                        <p id="topicsStatusMessage" class="message" aria-live="polite"></p>
                     </div>
-                    <p id="topicsStatusMessage" class="message" aria-live="polite"></p>
                     <div id="topicsList" class="topics-list"></div>
                     <div id="topicDetail" class="topic-detail hidden"></div>
                     <button id="closeTopicsPanelBtn" type="button">Back to Bible</button>

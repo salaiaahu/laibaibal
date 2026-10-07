@@ -3368,6 +3368,9 @@ function getAppHistoryRoute() {
 
     const activePanel = Array.from(document.querySelectorAll('#reader-view > .panel'))
         .find(panel => !panel.classList.contains('hidden'));
+    if (activePanel?.id === 'topics-panel' && currentTopic && topicDetail && !topicDetail.classList.contains('hidden')) {
+        return { type: 'topicDetail', panelId: activePanel.id, topicId: currentTopic.id };
+    }
     return activePanel ? { type: 'panel', panelId: activePanel.id } : { type: 'home' };
 }
 
@@ -4490,6 +4493,16 @@ function restoreAppHistoryState(state) {
             if (panel) {
                 hideHome();
                 showPanel(panel, false);
+                if (panel === topicsPanel) renderTopics(topicsSearchInput?.value || '');
+                return true;
+            }
+        }
+        if (route?.type === 'topicDetail') {
+            const topic = (topicalCatalog?.topics || []).find(item => item.id === route.topicId);
+            if (topic) {
+                hideHome();
+                showPanel(topicsPanel, false);
+                showTopicDetail(topic);
                 return true;
             }
         }
@@ -5652,14 +5665,18 @@ function resolveTopicBook(availableBooks, catalogBook) {
     };
     return availableBooks.find(book => [book.short_name, book.long_name].some(matchesAlias))
         || availableBooks.find(book => normalizeBookName(book.short_name) === normalizeBookName(catalogBook) || normalizeBookName(book.long_name) === normalizeBookName(catalogBook))
-        || availableBooks.find(book => Number(book.book_number) === Number(catalogBook));
+        || availableBooks.find(book => Number(book.book_number) === Number(catalogBook))
+        // Last resort for localized Bible names: catalog positions use the 66-book canon.
+        || (canonicalIndex >= 0 ? availableBooks[canonicalIndex] : null);
 }
 
 async function showTopicDetail(topic) {
+    const shouldAddHistory = !restoringAppHistory && (currentTopic?.id !== topic.id || topicDetail.classList.contains('hidden'));
     currentTopic = topic;
     topicsList.innerHTML = '';
     topicsList.classList.add('hidden');
     topicDetail.classList.remove('hidden');
+    if (shouldAddHistory) pushAppHistoryState({ appNavigation: true }, topic.name, location.href);
     const favoriteOnly = showingFavoriteTopics;
     const verses = favoriteOnly ? topic.verses.filter(([bookNumber, chapter, verse]) => isTopicVerseFavorite(topic.id, bookNumber, chapter, verse)) : topic.verses;
     topicDetail.innerHTML = `<h3>${topic.name}</h3><p>${favoriteOnly ? `${verses.length} saved` : `${topic.verses.length} linked`} verses. Select one to open it in your current Bible.</p>`;

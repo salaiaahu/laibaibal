@@ -114,7 +114,7 @@ body,
     --home-subtle-text-color: rgba(255, 255, 255, 0.55);
     --home-card-bg-color: rgba(255, 255, 255, 0.10);
     --home-card-active-bg-color: rgba(255, 255, 255, 0.18);
-    --home-card-border-color: rgba(255, 255, 255, 0.18);
+    --home-card-border-color: rgba(235, 192, 91, 0.72);
     --home-card-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
     --home-icon-bible-bg: #b43a2f;
     --home-icon-hymns-bg: linear-gradient(135deg, #c86a2b, #8c2d26);
@@ -3448,24 +3448,26 @@ button, a, select, label { touch-action: manipulation; }
   transition: opacity .6s ease, visibility .6s ease;
 }
 #splash-screen.splash-hide { opacity: 0; visibility: hidden; }
-.splash-title { color: #fff; font: 600 1.6rem/1 Georgia, serif; letter-spacing: .12em; opacity: 0; animation: splashFade 1s ease 2.4s forwards; }
-.splash-book { position: relative; width: 138px; height: 178px; perspective: 900px; transform: translateX(0); animation: bookCenter 1.8s ease .5s forwards; }
-.splash-book > div { position: absolute; top: 0; left: 0; width: 138px; height: 178px; }
+.splash-title { color: #f3ce6a; font: 700 1.6rem/1 Georgia, serif; letter-spacing: .12em; opacity: 0; text-shadow: 0 2px 0 #742030, 0 0 12px rgba(255, 211, 103, .45); animation: splashFade 1s ease 2.4s forwards; }
+.splash-book { position: relative; width: 150px; height: 184px; perspective: 900px; transform: translateX(0); animation: bookCenter 1.8s ease .5s forwards; }
+.splash-book > div { position: absolute; top: 0; left: 0; width: 150px; height: 184px; }
 .sb-back { background: linear-gradient(90deg, #40131b, #8d2632 16%, #3a1017); border-radius: 5px 9px 9px 5px; box-shadow: 0 14px 34px rgba(0,0,0,.52); }
 .sb-page { display: flex; align-items: flex-start; background: #f8eed3; border-radius: 2px 7px 7px 2px; left: 5px !important; width: 128px !important; top: 7px !important; height: 164px !important; transform-origin: left center; border-right: 1px solid #d9cdb2; box-shadow: inset 14px 0 16px rgba(117,80,43,.12); }
-.sb-page span { display: block; width: 88%; height: 134px; margin: 15px 0 0 20px; overflow: hidden; column-count: 2; column-gap: 8px; color: #725d45; font: 400 4.1px/1.28 Georgia, serif; letter-spacing: .01em; text-align: justify; }
+.sb-page span { box-sizing: border-box; display: block; width: calc(100% - 26px); height: 140px; margin: 13px; overflow: hidden; color: #725d45; font: 400 4px/1.3 Georgia, serif; letter-spacing: .01em; text-align: justify; }
 .sb-page span b { display: block; margin-bottom: 3px; font-size: 4.6px; letter-spacing: .05em; text-align: center; }
-.sb-page span::after { content: " And it came to pass that the people heard the words of the book, and they gave heed unto them. Blessed are they that hear the word of God, and keep it. The grace of our Lord be with all them that love him. And the people answered, Amen. The Lord is faithful in all his ways, and holy in all his works. His mercy endureth for ever. Therefore let every heart give thanks, and let every tongue confess his name. And the peace of God, which passeth understanding, shall keep your hearts and minds. "; }
+.sb-page span::after { content: " And it came to pass that the people heard the words of the book, and they gave heed unto them. Blessed are they that hear the word of God, and keep it. The grace of our Lord be with all them that love him. And the people answered, Amen. The Lord is faithful in all his ways, and holy in all his works. His mercy endureth for ever. Therefore let every heart give thanks, and let every tongue confess his name. And the peace of God, which passeth understanding, shall keep your hearts and minds. The Lord is gracious and full of compassion, slow to anger, and of great mercy. His truth endureth to all generations. Let the words of my mouth and the meditation of my heart be acceptable in thy sight. Great is the Lord, and greatly to be praised. Blessed be the name of the Lord from this time forth and for evermore. Amen. "; }
 .sb-page-1 { animation: pageFlip 1.4s ease 1.8s forwards; }
 .sb-page-2 { animation: pageFlip 1.4s ease 2.2s forwards; }
 .sb-page-3 { animation: pageFlip 1.4s ease 2.6s forwards; }
 .sb-cover { transform-style: preserve-3d; transform-origin: left center; animation: coverOpen 1.8s cubic-bezier(.5,0,.2,1) .8s forwards; }
 .sb-cover-front, .sb-cover-inside { position: absolute; inset: 0; border-radius: 4px 8px 8px 4px; backface-visibility: hidden; }
 .sb-cover-front { background: linear-gradient(rgba(78, 10, 20, .14), rgba(78, 10, 20, .14)), url('icons/lai-baibal-icon-192.png') center / cover; border: 2px solid #e2b45a; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 3px rgba(104,19,30,.58); }
-.sb-cover-inside { background: #f1e6cd; transform: rotateY(180deg); }
+.sb-cover-inside { background: #f1e6cd; transform: rotateY(180deg); overflow: hidden; }
+.sb-cover-inside::after { content: "PSALM 23\A\A The Lord is my shepherd; I shall not want. He maketh me to lie down in green pastures: he leadeth me beside the still waters. He restoreth my soul: he leadeth me in the paths of righteousness for his name’s sake. Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me. Surely goodness and mercy shall follow me all the days of my life. And the word of the Lord endureth for ever. Blessed are they that hear the word of God, and keep it. The Lord is gracious and full of compassion, slow to anger, and of great mercy. His truth endureth to all generations. Great is the Lord, and greatly to be praised. Let every thing that hath breath praise the Lord. The peace of God shall keep your hearts and minds. Blessed be the name of the Lord from this time forth and for evermore. Amen."; box-sizing: border-box; white-space: pre-wrap; display: block; height: 100%; overflow: hidden; padding: 13px; color: #725d45; font: 400 4px/1.3 Georgia, serif; text-align: justify; }
+.sb-open-pages { display: none !important; }
 @keyframes coverOpen { to { transform: rotateY(-165deg); } }
 @keyframes pageFlip { to { transform: rotateY(-155deg); } }
-@keyframes bookCenter { to { transform: translateX(69px); } }
+@keyframes bookCenter { to { transform: translateX(75px); } }
 @keyframes splashFade { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { #splash-screen *, .splash-title { animation-duration: .01s !important; animation-delay: 0s !important; } }
 
@@ -3693,7 +3695,7 @@ button, a, select, label { touch-action: manipulation; }
 #app-container.page-active #bible-home-panel {
     box-sizing: border-box;
     height: 100%;
-    gap: 24px;
+    gap: 0;
     overflow-y: auto;
     padding: 22px 16px;
     background: var(--panel-bg-color);
@@ -3806,10 +3808,10 @@ button, a, select, label { touch-action: manipulation; }
 .home-scroll { flex: 1; overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 40px) 22px 30px; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
 .home-hero { text-align: center; }
 .home-logo { width: 88px; height: 88px; border-radius: 22px; box-shadow: var(--home-card-shadow); }
-.home-hero h1 { margin: 14px 0 4px; font: 600 1.9rem/1.1 Georgia, serif; letter-spacing: .08em; }
+.home-hero h1 { margin: 14px 0 4px; color: #f3ce6a; font: 700 1.9rem/1.1 Georgia, serif; letter-spacing: .08em; text-shadow: 0 2px 0 #742030, 0 0 14px rgba(255, 211, 103, .45); }
 .home-hero p { margin: 0; color: var(--home-muted-text-color); font-size: .95rem; }
 .home-cards { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 420px; margin: 0 auto; }
-.home-card { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px; border: 1px solid var(--home-card-border-color); border-radius: 20px; background: var(--home-card-bg-color); color: var(--home-text-color); font: inherit; text-align: left; cursor: pointer; backdrop-filter: blur(6px); box-shadow: var(--home-card-shadow); transition: transform .12s ease, background .12s ease, border-color .12s ease; }
+.home-card { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px; border: 1px solid #e7bd56; border-radius: 20px; background: var(--home-card-bg-color); color: var(--home-text-color); font: inherit; text-align: left; cursor: pointer; backdrop-filter: blur(6px); box-shadow: 0 0 0 1px rgba(255, 234, 159, .2) inset, 0 0 12px rgba(224, 168, 57, .12), var(--home-card-shadow); transition: transform .12s ease, background .12s ease, border-color .12s ease; }
 .home-card:active { transform: scale(.98); background: var(--home-card-active-bg-color); }
 .home-card-icon { display: grid; flex: none; width: 56px; height: 56px; place-items: center; border-radius: 16px; font-size: 1.6rem; color: var(--home-text-color); }
 .home-card-bible .home-card-icon { background: var(--home-icon-bible-bg); }
@@ -3889,11 +3891,11 @@ button, a, select, label { touch-action: manipulation; }
 
 /* Offline topical-reference library (not user bookmarks). */
 #topics-panel { box-sizing: border-box; max-width: 880px; margin: 16px auto; padding: clamp(18px, 4vw, 32px); color: var(--panel-text-color); background: var(--panel-bg-color); }
-#app-container.page-active #topics-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+#app-container.page-active #topics-panel { display: block; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 #topics-panel h2 { margin: 0 0 8px; color: var(--main-text-color); }
 .topics-panel-intro { margin: 0 0 16px; color: var(--secondary-text-color, #727b84); }
 #topicsSearchInput { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input-border-color); border-radius: 9px; background: var(--input-bg-color); color: var(--input-text-color); font: inherit; }
-.topics-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(68px, 92px) 40px; gap: 5px; }.topics-toolbar select { min-width: 0; min-height: 40px; padding: 6px; border: 1px solid var(--input-border-color); border-radius: 8px; background: var(--input-bg-color); color: var(--input-text-color); }.topics-toolbar > button { width: 40px; min-height: 40px; padding: 0; border: 1px solid var(--input-border-color); border-radius: 9px; background: var(--panel-bg-color); color: #d97706; font-size: 1.1rem; }
-.topics-list, .topic-detail { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }.topics-list { display: grid; flex: 1 1 auto; gap: 8px; margin-top: 12px; padding-bottom: 12px; }
+.topics-sticky-controls { position: sticky; top: -18px; z-index: 5; margin: 0 -18px; padding: 18px 18px 8px; background: var(--panel-bg-color); box-shadow: 0 8px 10px -12px rgba(69, 18, 30, .65); }.topics-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(68px, 92px) 40px; gap: 5px; }.topics-toolbar select { min-width: 0; min-height: 40px; padding: 6px; border: 1px solid var(--input-border-color); border-radius: 8px; background: var(--input-bg-color); color: var(--input-text-color); }.topics-toolbar > button { width: 40px; min-height: 40px; padding: 0; border: 1px solid var(--input-border-color); border-radius: 9px; background: var(--panel-bg-color); color: #d97706; font-size: 1.1rem; }
+#topicsStatusMessage { margin: 8px 0 0; }.topics-list, .topic-detail { min-height: 0; overflow: visible; }.topics-list { display: grid; gap: 8px; margin-top: 12px; padding-bottom: 12px; }
 .topic-item, .topic-verse { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px; border: 1px solid var(--panel-border-color); border-radius: 9px; background: var(--main-bg-color); color: var(--main-text-color); font: inherit; text-align: left; cursor: pointer; }
 .topic-item small { display: block; margin-top: 2px; color: var(--secondary-text-color, #727b84); }.topic-swatch { width: 12px; height: 36px; border-radius: 8px; }.topic-detail { display: grid; flex: 1 1 auto; grid-auto-rows: max-content; align-content: start; gap: 8px; padding-bottom: 12px; }.topic-detail h3 { margin: 14px 0 4px; }.topic-detail p { color: var(--secondary-text-color, #727b84); }.topic-verse { position: relative; display: block; min-height: 54px; padding: 0; overflow: hidden; cursor: pointer; }.topic-verse-copy { display: block; min-width: 0; padding: 11px; }.topic-verse strong, .topic-verse-copy > span { display: block; }.topic-verse strong { padding-right: 34px; }.topic-verse-copy > span { margin-top: 5px; line-height: 1.45; }.topic-verse-favorite { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #d97706; font-size: 1.05rem; }.topic-verse-missing { color: var(--secondary-text-color, #727b84); font-style: italic; }
