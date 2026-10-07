@@ -13,10 +13,10 @@
             window.addEventListener('popstate', startupBackGuard);
         })();
     </script>
-    <meta name="theme-color" content="#2c3e50">
+    <meta name="theme-color" content="#7f1d2d">
     <meta name="description" content="Read the Bible, commentaries, hymns, and daily readings offline.">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="icons/lai-baibal-apple-touch-icon.png">
     <title>Lai Baibal</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -25,7 +25,7 @@
     <div id="home-screen">
         <div class="home-scroll">
             <div class="home-hero">
-                <img src="icons/icon.svg" alt="" class="home-logo">
+                <img src="icons/lai-baibal-icon-192.png" alt="" class="home-logo">
                 <h1>Lai Baibal</h1>
                 <p>Read, study and worship</p>
             </div>
@@ -53,11 +53,11 @@
     <div id="splash-screen" aria-hidden="true">
         <div class="splash-book">
             <div class="sb-back"></div>
-            <div class="sb-page sb-page-3"></div>
-            <div class="sb-page sb-page-2"></div>
-            <div class="sb-page sb-page-1"></div>
+            <div class="sb-page sb-page-3"><span><b>GENESIS 1</b> In the beginning God created the heaven and the earth. And God said, Let there be light: and there was light. And God saw the light, that it was good. And the evening and the morning were the first day. Thus the heavens and the earth were finished, and all the host of them.</span></div>
+            <div class="sb-page sb-page-2"><span><b>PSALM 23</b> The Lord is my shepherd; I shall not want. He maketh me to lie down in green pastures: he leadeth me beside the still waters. He restoreth my soul: he leadeth me in the paths of righteousness for his name’s sake. Surely goodness and mercy shall follow me all the days of my life.</span></div>
+            <div class="sb-page sb-page-1"><span><b>JOHN 1</b> In the beginning was the Word, and the Word was with God, and the Word was God. In him was life; and the life was the light of men. And the light shineth in darkness; and the darkness comprehended it not. And the Word was made flesh, and dwelt among us.</span></div>
             <div class="sb-cover">
-                <div class="sb-cover-front"><span class="sb-cross"></span></div>
+                <div class="sb-cover-front"></div>
                 <div class="sb-cover-inside"></div>
             </div>
         </div>
@@ -217,38 +217,33 @@
                 <div id="bible-home-panel" class="panel hidden">
                     <div class="bible-home-intro">
                         <span class="bible-home-intro-icon"><i class="fas fa-book-bible" aria-hidden="true"></i></span>
-                        <p>Read the Bible, manage study resources, and revisit your saved notes.</p>
+                        <p><strong>Bible</strong><span>Choose where to begin</span></p>
                     </div>
                     <div class="bible-home-grid" aria-label="Bible tools">
                         <button type="button" id="bibleHomeReaderBtn" class="bible-home-card">
                             <span class="bible-home-card-icon bible-home-reader-icon"><i class="fas fa-book-open" aria-hidden="true"></i></span>
-                            <span class="bible-home-card-text"><strong>Bible Reader</strong><small>Open your current reading or choose a book.</small></span>
-                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                            <span class="bible-home-card-text"><strong>Bible Reader</strong></span>
                         </button>
                         <button type="button" id="bibleHomeManageBiblesBtn" class="bible-home-card">
                             <span class="bible-home-card-icon bible-home-bibles-icon"><i class="fas fa-database" aria-hidden="true"></i></span>
-                            <span class="bible-home-card-text"><strong>Manage Bibles</strong><small>Add, select, or remove Bible versions.</small></span>
-                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                            <span class="bible-home-card-text"><strong>Manage Bibles</strong></span>
                         </button>
                         <button type="button" id="bibleHomeManageCommentariesBtn" class="bible-home-card">
                             <span class="bible-home-card-icon bible-home-commentaries-icon"><i class="fas fa-book-reader" aria-hidden="true"></i></span>
-                            <span class="bible-home-card-text"><strong>Manage Commentaries</strong><small>Add or remove study commentaries.</small></span>
-                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                            <span class="bible-home-card-text"><strong>Commentaries</strong></span>
                         </button>
                         <button type="button" id="bibleHomeMyDataBtn" class="bible-home-card">
                             <span class="bible-home-card-icon bible-home-data-icon"><i class="fas fa-folder-open" aria-hidden="true"></i></span>
-                            <span class="bible-home-card-text"><strong>My Data</strong><small>View your highlights, notes, and bookmarks.</small></span>
-                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                            <span class="bible-home-card-text"><strong>My Data</strong></span>
                         </button>
                         <button type="button" id="bibleHomeTopicsBtn" class="bible-home-card">
                             <span class="bible-home-card-icon bible-home-topics-icon"><i class="fas fa-tags" aria-hidden="true"></i></span>
-                            <span class="bible-home-card-text"><strong>Topics</strong><small>Explore verses by theme, including prayer, salvation, and faith.</small></span>
-                            <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
+                            <span class="bible-home-card-text"><strong>Topics</strong></span>
                         </button>
-                        <button type="button" id="bibleHomePlansBtn" class="bible-home-card"><span class="bible-home-card-icon bible-home-topics-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span><span class="bible-home-card-text"><strong>Daily Plans</strong><small>Follow a short daily Scripture reading plan.</small></span><i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i></button>
+                        <button type="button" id="bibleHomePlansBtn" class="bible-home-card"><span class="bible-home-card-icon bible-home-topics-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span><span class="bible-home-card-text"><strong>Daily Plans</strong></span></button>
                     </div>
                 </div>
-                <div id="plans-panel" class="panel hidden"><h2>Daily Reading Plans</h2><div id="plansList" class="topics-list"></div><button id="closePlansPanelBtn" type="button">Back to Bible</button></div>
+                <div id="plans-panel" class="panel hidden"><div class="plans-heading"><span class="plans-heading-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span><div><h2>Daily Reading Plans</h2><p>Choose a plan, then open each day’s Scripture.</p></div></div><div id="plansList" class="topics-list"></div><div id="planDetail" class="plan-detail hidden"></div><button id="closePlansPanelBtn" type="button">Back to Bible</button></div>
                 <div id="topics-panel" class="panel hidden">
                     <h2>Bible Topics</h2>
                     <p class="topics-panel-intro">Find Scripture by topic. These study references are separate from your personal bookmarks.</p>
@@ -265,13 +260,10 @@
                 </div>
                 <div id="upload-panel" class="panel hidden">
                     <h2>Manage Bible Versions</h2>
-                    <label for="bibleFile">Baibal na duhmi paoh (.db, .sqlite3) format in upload khawh a si:</label>
-                    <input type="file" id="bibleFile" accept=".db, .sqlite, .sqlite3" multiple>
-                    <input type="text" id="versionNameInput" placeholder="Enter Version Name (e.g., KJV, ESV)">
-                    <button id="addVersionBtn" disabled>Add Version</button>
+                    <p class="resource-panel-intro">Add Bible databases, choose an active version, and keep your offline library organized.</p>
+                    <div class="resource-upload-card"><span class="resource-upload-icon"><i class="fas fa-book-bible" aria-hidden="true"></i></span><div><label for="bibleFile">Add Bible files</label><small>Supported formats: .db, .sqlite, and .sqlite3</small></div><input type="file" id="bibleFile" accept=".db, .sqlite, .sqlite3" multiple><input type="text" id="versionNameInput" placeholder="Version name, e.g. KJV or ESV"><button id="addVersionBtn" disabled><i class="fas fa-plus" aria-hidden="true"></i> Add version</button></div>
                     <p id="statusMessage" class="message"></p>
-                    <hr>
-                    <h3>Chiah ciami Baibal Version:</h3>
+                    <div class="resource-list-heading"><h3>Your Bible versions</h3><span>Available offline</span></div>
                     <div id="loadedVersionsList" class="items-grid-container">
 					</div>
                     <button id="closeUploadPanelBtn">Close</button>
@@ -279,13 +271,10 @@
 
                 <div id="commentary-upload-panel" class="panel hidden">
                     <h2>Manage Commentaries</h2>
-                    <label for="commentaryFile">Commentary na duhmi paoh(.db, .sqlite3) format in upload khawh a si:</label>
-                    <input type="file" id="commentaryFile" accept=".db, .sqlite, .sqlite3">
-                    <input type="text" id="commentaryNameInput" placeholder="Enter Commentary Short Name (e.g., MHCC)">
-                    <button id="addCommentaryBtn">Add Commentary</button>
+                    <p class="resource-panel-intro">Add offline commentary databases to make verse-by-verse study available anytime.</p>
+                    <div class="resource-upload-card"><span class="resource-upload-icon commentary"><i class="fas fa-book-reader" aria-hidden="true"></i></span><div><label for="commentaryFile">Add a commentary file</label><small>Supported formats: .db, .sqlite, and .sqlite3</small></div><input type="file" id="commentaryFile" accept=".db, .sqlite, .sqlite3"><input type="text" id="commentaryNameInput" placeholder="Short name, e.g. MHCC"><button id="addCommentaryBtn"><i class="fas fa-plus" aria-hidden="true"></i> Add commentary</button></div>
                     <p id="commentaryStatusMessage" class="message"></p>
-                    <hr>
-                    <h3>Chiah ciami Commentary pawl:</h3>
+                    <div class="resource-list-heading"><h3>Your commentaries</h3><span>Available offline</span></div>
                     <div id="loadedCommentariesList" class="items-grid-container">
 					</div>
                     <button id="closeCommentaryUploadBtn">Close</button>
@@ -633,10 +622,9 @@
   <i class="fas fa-highlighter action-icon" title="Highlight"></i>
   <i class="fas fa-sticky-note action-icon" title="Note"></i>
   <i class="fas fa-bookmark action-icon" title="Bookmark"></i>
-  <i id="crossReferenceIcon" class="fas fa-link action-icon" title="Cross references"></i>
   <i class="fas fa-image action-icon" title="Verse Card"></i>
 </div>
-<div id="crossReferenceModal" class="modal hidden"><div class="modal-content"><span class="close-button">&times;</span><h2>Cross References</h2><div id="crossReferenceList"></div></div></div>
+<div id="crossReferenceModal" class="modal hidden"><div class="modal-content cross-reference-modal-content"><button type="button" class="close-button" aria-label="Close cross references">&times;</button><h2>Cross References</h2><div id="crossReferenceList"></div></div></div>
 <div id="highlightColorPicker" class="highlight-color-picker hidden">
   <div class="color-option" data-color="green" title="Green" style="background-color: #b9fbc0;"></div>
   <div class="color-option" data-color="yellow" title="Yellow" style="background-color: #fff58c;"></div>

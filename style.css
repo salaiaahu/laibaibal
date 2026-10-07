@@ -13,47 +13,47 @@ body,
 
 :root {
     /* Backgrounds */
-    --main-bg-color: #f4f4f4;
-    --panel-bg-color: #ffffff;
-    --top-bar-bg-color: #2c3e50;
-    --sidebar-bg-color: #34495e;
-    --modal-content-bg-color: #fefefe;
-    --modal-border-color: #cccccc; /* Slightly more defined border for modal */
+    --main-bg-color: #fff4e8;
+    --panel-bg-color: #fffaf4;
+    --top-bar-bg-color: #7f1d2d;
+    --sidebar-bg-color: #651827;
+    --modal-content-bg-color: #fffaf4;
+    --modal-border-color: #d9a66c;
     --modal-title-text-color: var(--main-text-color);
     --modal-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    --button-bg-color: #4CAF50;
-    --button-hover-bg-color: #45a049;
+    --button-bg-color: #a52b3c;
+    --button-hover-bg-color: #851d2d;
     --button-disabled-bg-color: #9e9e9e;
     --close-button-bg-color: #6c757d;
     --delete-button-bg-color: #dc3545;
-    --grid-item-bg-color: #fff; /* Was #e0e0e0 for old chapter grid, now #fff for new professional look */
-    --grid-item-selected-bg-color: #4CAF50;
+    --grid-item-bg-color: #fffaf4;
+    --grid-item-selected-bg-color: #a52b3c;
 
-    --input-bg-color: #ffffff; /* Background for textarea */
+    --input-bg-color: #fffdf8;
     --input-text-color: var(--main-text-color);
-    --input-border-color: #cccccc;
+    --input-border-color: #d9b58b;
     --input-focus-border-color: var(--accent-color); /* Use accent color for focus */
 
-    --button-secondary-bg-color: #f0f0f0;
-    --button-secondary-text-color: #333333;
-    --button-secondary-border-color: #cccccc;
-    --button-secondary-hover-bg-color: #e0e0e0;
+    --button-secondary-bg-color: #f7e7d2;
+    --button-secondary-text-color: #56202a;
+    --button-secondary-border-color: #d9b58b;
+    --button-secondary-hover-bg-color: #efd4b5;
 
     --delete-button-bg-color: #dc3545;
     --delete-button-text-color: #ffffff;
     --delete-button-hover-bg-color: #c82333;
 
     /* Text Colors */
-    --main-text-color: #333;
-    --panel-text-color: #333;
+    --main-text-color: #4d2028;
+    --panel-text-color: #4d2028;
     --top-bar-text-color: #ffffff;
     --sidebar-text-color: #ffffff;
     --button-text-color: #ffffff;
-    --link-color: #007bff;
-    --link-hover-color: #0056b3;
-    --verse-number-color: #6a0dad;
-    --subheading-text-color: #34495e;
-    --grid-item-text-color: #333;
+    --link-color: #9b2234;
+    --link-hover-color: #6f1525;
+    --verse-number-color: #a52b3c;
+    --subheading-text-color: #702235;
+    --grid-item-text-color: #4d2028;
     --grid-item-selected-text-color: #ffffff;
 
     /* Text Size */
@@ -62,12 +62,12 @@ body,
     --bible-title-font-size: 1.1em;
 
     /* Borders & Shadows */
-    --panel-border-color: #d1d5db; /* Updated to consistent border */
-    --grid-item-border-color: #d1d5db;
-    --grid-item-hover-border-color: #4CAF50;
+    --panel-border-color: #e4c3a3;
+    --grid-item-border-color: #e4c3a3;
+    --grid-item-hover-border-color: #a52b3c;
     --top-bar-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     --panel-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* Subtle shadow */
-    --modal-border-color: #888;
+    --modal-border-color: #d9a66c;
 
     /* Highlight Colors (already good, just ensure they are variables if you want themes to alter them) */
     --highlight-yellow: #fff58c;
@@ -84,31 +84,31 @@ body,
     --font-size-normal: 1rem;
     --line-height-normal: 1.6;
 	
-	--panel-bg-color: #ffffff;
+    --panel-bg-color: #fffaf4;
     --panel-text-color: var(--main-text-color); /* Panels use main text color */
-    --panel-border-color: #d1d5db; /* Or #ddd if you prefer */
-    --panel-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --panel-border-color: #e4c3a3;
+    --panel-shadow: 0 2px 8px rgba(91, 26, 36, 0.12);
 
-    --bible-column-bg-color: #ffffff; /* Specific background for the bible column */
-    --bible-column-border-color: #dddddd;
+    --bible-column-bg-color: #fffdf8;
+    --bible-column-border-color: #e4c3a3;
     --bible-column-text-color: var(--main-text-color); /* Text within the bible column */
     
-    --column-title-text-color: #2c3e50;
-    --column-title-border-color: #eeeeee;
+    --column-title-text-color: #702235;
+    --column-title-border-color: #efd9c1;
     
-    --verse-number-text-color: #6a0dad; 
-    --subheading-text-color: #34495e;
-    --subheading-border-color: #eeeeee;
+    --verse-number-text-color: #a52b3c;
+    --subheading-text-color: #702235;
+    --subheading-border-color: #efd9c1;
 
-    --accent-color: #4CAF50; 
+    --accent-color: #a52b3c;
     --accent-text-color: #ffffff;
-    --selected-verse-bg-color: #e6ffe6;
+    --selected-verse-bg-color: #fde6c9;
     --selected-verse-text-color: var(--main-text-color);
 
     /* Landing screens */
-    --secondary-text-color: #62707d;
-    --home-bg-start: #3d5872;
-    --home-bg-end: #203447;
+    --secondary-text-color: #7b5960;
+    --home-bg-start: #8b2635;
+    --home-bg-end: #4d1421;
     --home-text-color: #ffffff;
     --home-muted-text-color: rgba(255, 255, 255, 0.75);
     --home-subtle-text-color: rgba(255, 255, 255, 0.55);
@@ -116,10 +116,30 @@ body,
     --home-card-active-bg-color: rgba(255, 255, 255, 0.18);
     --home-card-border-color: rgba(255, 255, 255, 0.18);
     --home-card-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
-    --home-icon-bible-bg: #c9892f;
-    --home-icon-hymns-bg: linear-gradient(135deg, #3fa7d6, #2468a2);
-    --home-icon-readings-bg: linear-gradient(135deg, #4cae7d, #2a7a53);
+    --home-icon-bible-bg: #b43a2f;
+    --home-icon-hymns-bg: linear-gradient(135deg, #c86a2b, #8c2d26);
+    --home-icon-readings-bg: linear-gradient(135deg, #a52b3c, #651827);
 }
+
+/* Warm textile light theme: cover legacy controls that still have fixed colors. */
+body:not(.theme-dark):not(.theme-sepia) .nav-btn,
+body:not(.theme-dark):not(.theme-sepia) #toggleViewBtn,
+body:not(.theme-dark):not(.theme-sepia) #toggleSearchBtn,
+body:not(.theme-dark):not(.theme-sepia) #toggleFileUploadBtn,
+body:not(.theme-dark):not(.theme-sepia) #toggleCommentaryUploadBtn,
+body:not(.theme-dark):not(.theme-sepia) #toggleUserDataBtn { background-color: var(--button-bg-color); }
+body:not(.theme-dark):not(.theme-sepia) .nav-btn:hover,
+body:not(.theme-dark):not(.theme-sepia) #toggleViewBtn:hover,
+body:not(.theme-dark):not(.theme-sepia) #toggleSearchBtn:hover,
+body:not(.theme-dark):not(.theme-sepia) #toggleFileUploadBtn:hover,
+body:not(.theme-dark):not(.theme-sepia) #toggleCommentaryUploadBtn:hover,
+body:not(.theme-dark):not(.theme-sepia) #toggleUserDataBtn:hover { background-color: var(--button-hover-bg-color); }
+body:not(.theme-dark):not(.theme-sepia) .chapter-grid .grid-item,
+body:not(.theme-dark):not(.theme-sepia) #verseGrid .grid-item { background-color: var(--grid-item-bg-color); color: var(--grid-item-text-color); border-color: var(--grid-item-border-color); }
+body:not(.theme-dark):not(.theme-sepia) .chapter-grid .grid-item:hover,
+body:not(.theme-dark):not(.theme-sepia) #verseGrid .grid-item:hover { border-color: var(--accent-color); color: var(--accent-color); }
+body:not(.theme-dark):not(.theme-sepia) #verseGrid .grid-item.selected,
+body:not(.theme-dark):not(.theme-sepia) .book-list li.selected { background-color: var(--accent-color); border-color: var(--accent-color); }
 body.theme-dark {
     --main-bg-color: #1e1e1e;
     --main-text-color: #e0e0e0;
@@ -3424,27 +3444,28 @@ button, a, select, label { touch-action: manipulation; }
 #splash-screen {
   position: fixed; inset: 0; z-index: 100000;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px;
-  background: linear-gradient(160deg, #3d5872, #203447);
+  background: radial-gradient(circle at 50% 30%, #7b2930, #31161d 68%, #160c10);
   transition: opacity .6s ease, visibility .6s ease;
 }
 #splash-screen.splash-hide { opacity: 0; visibility: hidden; }
 .splash-title { color: #fff; font: 600 1.6rem/1 Georgia, serif; letter-spacing: .12em; opacity: 0; animation: splashFade 1s ease 2.4s forwards; }
-.splash-book { position: relative; width: 120px; height: 160px; perspective: 900px; transform: translateX(0); animation: bookCenter 1.8s ease .5s forwards; }
-.splash-book > div { position: absolute; top: 0; left: 0; width: 120px; height: 160px; }
-.sb-back { background: #5b3a1e; border-radius: 4px 8px 8px 4px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
-.sb-page { background: #f6efe0; border-radius: 2px 6px 6px 2px; left: 4px !important; width: 112px !important; top: 6px !important; height: 148px !important; transform-origin: left center; border-right: 1px solid #d9cdb2; }
+.splash-book { position: relative; width: 138px; height: 178px; perspective: 900px; transform: translateX(0); animation: bookCenter 1.8s ease .5s forwards; }
+.splash-book > div { position: absolute; top: 0; left: 0; width: 138px; height: 178px; }
+.sb-back { background: linear-gradient(90deg, #40131b, #8d2632 16%, #3a1017); border-radius: 5px 9px 9px 5px; box-shadow: 0 14px 34px rgba(0,0,0,.52); }
+.sb-page { display: flex; align-items: flex-start; background: #f8eed3; border-radius: 2px 7px 7px 2px; left: 5px !important; width: 128px !important; top: 7px !important; height: 164px !important; transform-origin: left center; border-right: 1px solid #d9cdb2; box-shadow: inset 14px 0 16px rgba(117,80,43,.12); }
+.sb-page span { display: block; width: 88%; height: 134px; margin: 15px 0 0 20px; overflow: hidden; column-count: 2; column-gap: 8px; color: #725d45; font: 400 4.1px/1.28 Georgia, serif; letter-spacing: .01em; text-align: justify; }
+.sb-page span b { display: block; margin-bottom: 3px; font-size: 4.6px; letter-spacing: .05em; text-align: center; }
+.sb-page span::after { content: " And it came to pass that the people heard the words of the book, and they gave heed unto them. Blessed are they that hear the word of God, and keep it. The grace of our Lord be with all them that love him. And the people answered, Amen. The Lord is faithful in all his ways, and holy in all his works. His mercy endureth for ever. Therefore let every heart give thanks, and let every tongue confess his name. And the peace of God, which passeth understanding, shall keep your hearts and minds. "; }
 .sb-page-1 { animation: pageFlip 1.4s ease 1.8s forwards; }
 .sb-page-2 { animation: pageFlip 1.4s ease 2.2s forwards; }
 .sb-page-3 { animation: pageFlip 1.4s ease 2.6s forwards; }
 .sb-cover { transform-style: preserve-3d; transform-origin: left center; animation: coverOpen 1.8s cubic-bezier(.5,0,.2,1) .8s forwards; }
 .sb-cover-front, .sb-cover-inside { position: absolute; inset: 0; border-radius: 4px 8px 8px 4px; backface-visibility: hidden; }
-.sb-cover-front { background: linear-gradient(135deg, #7a4a24, #4a2c14); border: 2px solid #c9a24b; display: flex; align-items: center; justify-content: center; }
+.sb-cover-front { background: linear-gradient(rgba(78, 10, 20, .14), rgba(78, 10, 20, .14)), url('icons/lai-baibal-icon-192.png') center / cover; border: 2px solid #e2b45a; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 3px rgba(104,19,30,.58); }
 .sb-cover-inside { background: #f1e6cd; transform: rotateY(180deg); }
-.sb-cross { position: relative; width: 8px; height: 56px; background: #e3c577; border-radius: 2px; }
-.sb-cross::before { content: ""; position: absolute; left: -16px; top: 14px; width: 40px; height: 8px; background: #e3c577; border-radius: 2px; }
 @keyframes coverOpen { to { transform: rotateY(-165deg); } }
 @keyframes pageFlip { to { transform: rotateY(-155deg); } }
-@keyframes bookCenter { to { transform: translateX(60px); } }
+@keyframes bookCenter { to { transform: translateX(69px); } }
 @keyframes splashFade { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { #splash-screen *, .splash-title { animation-duration: .01s !important; animation-delay: 0s !important; } }
 
@@ -3672,9 +3693,10 @@ button, a, select, label { touch-action: manipulation; }
 #app-container.page-active #bible-home-panel {
     box-sizing: border-box;
     height: 100%;
-    gap: 18px;
+    gap: 24px;
     overflow-y: auto;
-    padding: 16px;
+    padding: 22px 16px;
+    background: var(--panel-bg-color);
 }
 .bible-home-intro {
     display: flex;
@@ -3683,11 +3705,16 @@ button, a, select, label { touch-action: manipulation; }
     width: min(100%, 880px);
     box-sizing: border-box;
     margin: 0 auto;
-    padding: 4px 2px 14px;
-    color: var(--secondary-text-color, #727b84);
+    padding: 4px 2px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--panel-text-color);
     line-height: 1.45;
 }
-.bible-home-intro p { margin: 0; }
+.bible-home-intro p { display: grid; gap: 5px; margin: 0; }
+.bible-home-intro p strong { font: 600 1.55rem/1.15 Georgia, serif; }
+.bible-home-intro p span { color: var(--secondary-text-color, #727b84); font-size: .9rem; }
 .bible-home-intro-icon,
 .bible-home-card-icon {
     display: grid;
@@ -3705,23 +3732,26 @@ button, a, select, label { touch-action: manipulation; }
 .bible-home-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
     width: min(100%, 880px);
     margin: 0 auto;
 }
 .bible-home-card {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
     min-width: 0;
-    min-height: 92px;
-    padding: 14px;
+    min-height: 142px;
+    padding: 16px 10px;
     border: 1px solid var(--panel-border-color);
     border-radius: 16px;
     background: var(--panel-bg-color);
     color: var(--panel-text-color);
     font: inherit;
-    text-align: left;
+    text-align: center;
     cursor: pointer;
     box-shadow: var(--panel-shadow);
     transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
@@ -3733,9 +3763,10 @@ button, a, select, label { touch-action: manipulation; }
 }
 .bible-home-card:active { transform: scale(0.99); }
 .bible-home-card-icon {
-    width: 46px;
-    height: 46px;
-    font-size: 1.25rem;
+    width: 62px;
+    height: 62px;
+    border-radius: 20px;
+    font-size: 1.65rem;
 }
 .bible-home-reader-icon { background: var(--home-icon-bible-bg); }
 .bible-home-bibles-icon { background: var(--home-icon-hymns-bg); }
@@ -3746,10 +3777,12 @@ button, a, select, label { touch-action: manipulation; }
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 4px;
+    flex: 0 1 auto;
+    gap: 0;
     min-width: 0;
+    margin-top: auto;
 }
-.bible-home-card-text strong { font-size: 1rem; }
+.bible-home-card-text strong { font-size: .9rem; }
 .bible-home-card-text small {
     color: var(--secondary-text-color, #727b84);
     font-size: 0.8rem;
@@ -3761,12 +3794,14 @@ button, a, select, label { touch-action: manipulation; }
     opacity: 0.7;
 }
 @media (max-width: 560px) {
-    .bible-home-grid { grid-template-columns: minmax(0, 1fr); }
-    .bible-home-card { min-height: 78px; }
+    .bible-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bible-home-card { min-height: 128px; }
 }
 
 /* Landing page */
-#home-screen { position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; background: linear-gradient(170deg, var(--home-bg-start) 0%, var(--home-bg-end) 100%); color: var(--home-text-color); transition: opacity .25s ease, background .2s ease, color .2s ease; }
+#home-screen { position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; background: radial-gradient(ellipse at 15% 0%, rgba(214, 100, 50, .5), transparent 46%), radial-gradient(ellipse at 90% 100%, rgba(130, 24, 43, .7), transparent 54%), linear-gradient(145deg, #4d1421 0%, #852532 50%, #28101b 100%); color: var(--home-text-color); transition: opacity .25s ease, background .2s ease, color .2s ease; }
+#home-screen::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .18; background: radial-gradient(circle at 20% 25%, rgba(255,204,114,.45) 0 1px, transparent 1.6px), radial-gradient(circle at 80% 65%, rgba(255,204,114,.32) 0 1px, transparent 1.6px); background-size: 19px 19px, 27px 27px; }
+.home-scroll { position: relative; z-index: 1; }
 #home-screen.hidden { display: none; }
 .home-scroll { flex: 1; overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 40px) 22px 30px; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
 .home-hero { text-align: center; }
@@ -3828,8 +3863,29 @@ button, a, select, label { touch-action: manipulation; }
 #user-data-panel .user-data-list { max-height: none; border: 0; background: transparent; }
 #user-data-panel .tab-content > .placeholder { padding: 0; border: 0; background: transparent; font-size: .78rem; opacity: .65; margin: 0 0 8px; }
 
-#crossReferenceList { display: grid; gap: 8px; max-height: 60vh; overflow-y: auto; }
-#crossReferenceList button { padding: 11px; border: 1px solid var(--panel-border-color); border-radius: 8px; background: var(--main-bg-color); color: var(--main-text-color); font: inherit; text-align: left; }
+.cross-reference-trigger { display: inline-grid; width: 28px; height: 28px; place-items: center; margin-left: 7px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--accent-color) 16%, transparent); color: var(--accent-color); font-size: .78em; vertical-align: middle; cursor: pointer; }
+.cross-reference-trigger:hover { background: var(--accent-color); color: #fff; }
+#crossReferenceList { display: grid; gap: 9px; max-height: 60vh; overflow-y: auto; }
+.cross-reference-modal-content { box-sizing: border-box; width: min(100%, 760px); max-width: none; height: calc(100vh - 30px); max-height: none; padding: 20px; }
+.cross-reference-modal-content h2 { margin: 0 38px 16px 0; flex: none; }
+.cross-reference-modal-content .close-button { border: 0; background: transparent; }
+#crossReferenceList { flex: 1 1 auto; min-height: 0; max-height: none; padding-right: 2px; }
+.cross-reference-item { padding: 12px; border: 1px solid var(--panel-border-color); border-radius: 10px; background: var(--main-bg-color); color: var(--main-text-color); font: inherit; text-align: left; cursor: pointer; }
+.cross-reference-item strong, .cross-reference-item span, .cross-reference-item small { display: block; }
+.cross-reference-item span { margin-top: 5px; line-height: 1.45; }.cross-reference-item small { margin-top: 7px; color: var(--secondary-text-color, #727b84); font-size: .75rem; }
+#plans-panel { box-sizing: border-box; max-width: 720px; margin: 16px auto; padding: clamp(18px, 4vw, 28px); }
+#plans-panel h2 { margin: 0; color: var(--main-text-color); }
+#plans-panel .topics-list { flex: initial; }
+.plan-item { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px; border: 1px solid var(--panel-border-color); border-radius: 12px; background: var(--main-bg-color); }
+.plan-item strong, .plan-item small, .plan-item span { display: block; }
+.plan-item small { margin-top: 3px; color: var(--secondary-text-color, #727b84); }
+.plan-item span { margin-top: 6px; font-weight: 600; }
+.plan-item button { flex: none; padding: 9px 12px; border: 0; border-radius: 8px; background: var(--button-bg-color, #1e6fd9); color: var(--button-text-color, #fff); font: inherit; cursor: pointer; white-space: nowrap; }
+@media (max-width: 480px) { .plan-item { align-items: stretch; flex-direction: column; } .plan-item button { width: 100%; } }
+
+.plans-heading { display: flex; gap: 13px; align-items: center; margin-bottom: 10px; }.plans-heading-icon, .resource-upload-icon { display: grid; width: 46px; height: 46px; flex: none; place-items: center; border-radius: 14px; background: var(--home-icon-bible-bg); color: #fff; font-size: 1.25rem; }.plans-heading p { margin: 4px 0 0; color: var(--secondary-text-color, #727b84); font-size: .9rem; }.plan-detail { min-height: 0; overflow-y: auto; }.plan-detail-head { margin-bottom: 14px; }.plan-detail-head h3 { margin: 12px 0 3px; }.plan-detail-head p { margin: 0; color: var(--secondary-text-color, #727b84); }.plan-back { padding: 0; border: 0; background: transparent; color: var(--accent-color); font: inherit; cursor: pointer; }.plan-days { display: grid; gap: 9px; }.plan-day { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--panel-border-color); border-radius: 10px; background: var(--main-bg-color); }.plan-day small, .plan-day strong { display: block; }.plan-day small { margin-bottom: 3px; color: var(--secondary-text-color, #727b84); }.plan-day > div:last-child { display: flex; gap: 7px; }.plan-day button { padding: 7px 9px; border: 1px solid var(--panel-border-color); border-radius: 7px; background: var(--panel-bg-color); color: var(--main-text-color); font: inherit; cursor: pointer; }.plan-day .mark-plan-read { background: var(--accent-color); border-color: var(--accent-color); color: var(--accent-text-color, #fff); }.plan-day.is-read { opacity: .72; }.plan-day.is-read strong { text-decoration: line-through; }
+
+.resource-panel-intro { margin: -10px 0 20px; color: var(--secondary-text-color, #727b84); line-height: 1.5; }.resource-upload-card { display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: center; padding: 16px; border: 1px solid var(--panel-border-color); border-radius: 14px; background: var(--main-bg-color); }.resource-upload-card > div { display: grid; gap: 3px; }.resource-upload-card label { font-weight: 650; }.resource-upload-card small, .resource-list-heading span { color: var(--secondary-text-color, #727b84); }.resource-upload-icon.commentary { background: var(--home-icon-readings-bg); }.resource-upload-card input, .resource-upload-card button { grid-column: 1 / -1; margin: 0 !important; }.resource-upload-card button { justify-self: start; }.resource-list-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--panel-border-color); }.resource-list-heading h3 { margin: 0 !important; padding: 0 !important; border: 0 !important; }.resource-list-heading span { font-size: .8rem; }
 
 /* Offline topical-reference library (not user bookmarks). */
 #topics-panel { box-sizing: border-box; max-width: 880px; margin: 16px auto; padding: clamp(18px, 4vw, 32px); color: var(--panel-text-color); background: var(--panel-bg-color); }

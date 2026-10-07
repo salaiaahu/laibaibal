@@ -3580,7 +3580,7 @@ const bibleHomeManageBiblesBtn = document.getElementById('bibleHomeManageBiblesB
 const bibleHomeManageCommentariesBtn = document.getElementById('bibleHomeManageCommentariesBtn');
 const bibleHomeMyDataBtn = document.getElementById('bibleHomeMyDataBtn');
 const bibleHomeTopicsBtn = document.getElementById('bibleHomeTopicsBtn');
-const bibleHomePlansBtn = document.getElementById('bibleHomePlansBtn'); const plansPanel = document.getElementById('plans-panel'); const plansList = document.getElementById('plansList'); const closePlansPanelBtn = document.getElementById('closePlansPanelBtn');
+const bibleHomePlansBtn = document.getElementById('bibleHomePlansBtn'); const plansPanel = document.getElementById('plans-panel'); const plansList = document.getElementById('plansList'); const planDetail = document.getElementById('planDetail'); const closePlansPanelBtn = document.getElementById('closePlansPanelBtn');
 const topicsPanel = document.getElementById('topics-panel');
 const topicsSearchInput = document.getElementById('topicsSearchInput');
 const topicsBibleSelect = document.getElementById('topicsBibleSelect');
@@ -4348,7 +4348,7 @@ function setupSlideMenuListeners() {
             });
         }
         if (bibleHomePlansBtn) bibleHomePlansBtn.addEventListener('click', () => { showPanel(plansPanel); renderPlans(); });
-        if (closePlansPanelBtn) closePlansPanelBtn.addEventListener('click', () => showPanel(bibleHomePanel));
+        if (closePlansPanelBtn) closePlansPanelBtn.addEventListener('click', () => planDetail && !planDetail.classList.contains('hidden') ? renderPlans() : showPanel(bibleHomePanel));
         if (topicsSearchInput) topicsSearchInput.addEventListener('input', () => renderTopics(topicsSearchInput.value));
         if (topicsBibleSelect) topicsBibleSelect.addEventListener('change', async () => { topicBibleVersion = topicsBibleSelect.value; if (currentTopic) showTopicDetail(currentTopic); });
         if (topicsFavoritesFilterBtn) topicsFavoritesFilterBtn.addEventListener('click', () => { showingFavoriteTopics = !showingFavoriteTopics; topicsFavoritesFilterBtn.setAttribute('aria-pressed', showingFavoriteTopics); topicsFavoritesFilterBtn.querySelector('i').className = `${showingFavoriteTopics ? 'fas' : 'far'} fa-star`; renderTopics(topicsSearchInput.value); });
@@ -5440,16 +5440,50 @@ function getPopupRef() {
 }
 
 const CROSSREF_OSIS_BOOKS = ['Gen','Exod','Lev','Num','Deut','Josh','Judg','Ruth','1Sam','2Sam','1Kgs','2Kgs','1Chr','2Chr','Ezra','Neh','Esth','Job','Ps','Prov','Eccl','Song','Isa','Jer','Lam','Ezek','Dan','Hos','Joel','Amos','Obad','Jonah','Mic','Nah','Hab','Zeph','Hag','Zech','Mal','Matt','Mark','Luke','John','Acts','Rom','1Cor','2Cor','Gal','Eph','Phil','Col','1Thess','2Thess','1Tim','2Tim','Titus','Phlm','Heb','Jas','1Pet','2Pet','1John','2John','3John','Jude','Rev'];
-async function showCrossReferences() {
-    const ref = getPopupRef(); const books = loadedVersions[ref.versionName]?.books || [];
-    const currentIndex = books.findIndex(book => Number(book.book_number) === ref.bookNumber);
-    const code = CROSSREF_OSIS_BOOKS[currentIndex]; const modal = document.getElementById('crossReferenceModal'); const list = document.getElementById('crossReferenceList');
-    if (!code) return showToast('Cross references are unavailable for this Bible book.');
-    modal.classList.remove('hidden'); list.innerHTML = '<p class="placeholder">Loading cross references…</p>';
-    try { const data = await (await fetch(`resources/crossrefs/${code}/${ref.chapter}.json`)).json(); const refs = data.verses?.[String(ref.verse)] || []; list.innerHTML = ''; if (!refs.length) { list.innerHTML = '<p class="placeholder">No cross references found.</p>'; return; } refs.slice(0, 24).forEach(([target, votes]) => { const [bookCode, chapter, verse] = target.split('.'); const index = CROSSREF_OSIS_BOOKS.indexOf(bookCode); const book = books[index]; const button = document.createElement('button'); button.textContent = `${book?.short_name || bookCode} ${chapter}:${verse}`; button.title = `${Math.max(0, votes)} relevance votes`; button.addEventListener('click', () => { modal.classList.add('hidden'); currentBook = book; currentChapter = Number(chapter); currentVerse = Number(verse); loadChapterContent(book.book_number, currentChapter, currentVerse); }); list.appendChild(button); }); } catch { list.innerHTML = '<p class="placeholder">Cross-reference data has not been installed yet.</p>'; }
+async function appendCrossReferences(versionType, bookNumber, chapter, versionName) {
+    const version = loadedVersions[versionName];
+    const books = version?.books || [];
+    const sourceBook = books.find(book => Number(book.book_number) === Number(bookNumber));
+    const bookIndex = sourceBook ? TOPIC_BOOK_ALIASES.findIndex((_, index) => resolveTopicBook([sourceBook], index + 1)) : -1;
+    const bookCode = CROSSREF_OSIS_BOOKS[bookIndex];
+    const content = versionType === 'primary' ? primaryBibleContent : secondaryBibleContent;
+    if (!bookCode || !content) return;
+    try {
+        const response = await fetch(`resources/crossrefs/${bookCode}/${chapter}.json`);
+        if (!response.ok) return;
+        const data = await response.json();
+        Object.entries(data.verses || {}).forEach(([verseNumber, refs]) => {
+            const verse = content.querySelector(`#${versionType}-verse-${verseNumber}`);
+            if (!verse || verse.dataset.versionName !== versionName || Number(verse.dataset.bookNumber) !== Number(bookNumber) || Number(verse.dataset.chapter) !== Number(chapter) || !Array.isArray(refs) || !refs.length) return;
+            const trigger = document.createElement('button');
+            trigger.type = 'button'; trigger.className = 'cross-reference-trigger'; trigger.title = `View ${refs.length} cross reference${refs.length === 1 ? '' : 's'}`; trigger.setAttribute('aria-label', trigger.title);
+            trigger.innerHTML = '<i class="fas fa-link" aria-hidden="true"></i>';
+            trigger.addEventListener('click', event => { event.stopPropagation(); showCrossReferenceModal(refs, versionName); });
+            verse.appendChild(trigger);
+        });
+    } catch { /* Cross-reference files are optional offline content. */ }
 }
-document.getElementById('crossReferenceIcon')?.addEventListener('click', showCrossReferences);
-document.querySelector('#crossReferenceModal .close-button')?.addEventListener('click', () => document.getElementById('crossReferenceModal').classList.add('hidden'));
+
+function showCrossReferenceModal(refs, versionName) {
+    const modal = document.getElementById('crossReferenceModal'); const list = document.getElementById('crossReferenceList');
+    const version = loadedVersions[versionName]; const books = version?.books || [];
+    if (!modal || !list || !version?.db) return;
+    list.innerHTML = '';
+    refs.slice(0, 24).forEach(([target, votes]) => {
+        const [bookCode, chapter, verse] = target.split('.'); const book = resolveTopicBook(books, CROSSREF_OSIS_BOOKS.indexOf(bookCode) + 1); if (!book) return;
+        let text = '';
+        try { const stmt = version.db.prepare('SELECT text FROM verses WHERE book_number = ? AND chapter = ? AND verse = ?;'); stmt.bind([book.book_number, Number(chapter), Number(verse)]); if (stmt.step()) text = stmt.getAsObject().text || ''; stmt.free(); } catch { /* Leave unavailable text empty. */ }
+        const item = document.createElement('button'); item.type = 'button'; item.className = 'cross-reference-item';
+        item.innerHTML = `<strong>${book.short_name || bookCode} ${chapter}:${verse}</strong><span>${text || 'Verse text is not available in this Bible version.'}</span><small>${Math.max(0, votes)} relevance votes</small>`;
+        item.addEventListener('click', () => { modal.classList.add('hidden'); currentBook = book; currentChapter = Number(chapter); currentVerse = Number(verse); loadChapterContent(book.book_number, currentChapter, currentVerse); });
+        list.appendChild(item);
+    });
+    if (!list.children.length) list.innerHTML = '<p class="placeholder">No cross references are available in this Bible version.</p>';
+    modal.classList.remove('hidden');
+}
+document.addEventListener('click', event => {
+    if (event.target.closest('#crossReferenceModal .close-button')) document.getElementById('crossReferenceModal')?.classList.add('hidden');
+});
 
 function openAppDatabase() {
   return new Promise((resolve, reject) => {
@@ -5601,6 +5635,26 @@ async function ensureTopicBibleVersion() {
     return version;
 }
 
+const TOPIC_BOOK_ALIASES = [
+    'gen genesis', 'exod exodus', 'lev leviticus', 'num numbers', 'deut deuteronomy', 'josh joshua', 'judg judges', 'ruth',
+    '1sam 1 samuel', '2sam 2 samuel', '1kgs 1 kings', '2kgs 2 kings', '1chr 1 chronicles', '2chr 2 chronicles', 'ezra', 'neh nehemiah', 'esth esther', 'job', 'ps psalm psalms', 'prov proverbs', 'eccl ecclesiastes', 'song songofsolomon', 'isa isaiah', 'jer jeremiah', 'lam lamentations', 'ezek ezekiel', 'dan daniel', 'hos hosea', 'joel', 'amos am', 'obad obadiah', 'jon jonah', 'mic micah', 'nah nahum', 'hab habakkuk', 'zeph zephaniah', 'hag haggai', 'zech zechariah', 'mal malachi',
+    'matt matthew', 'mark', 'luke', 'john', 'acts', 'rom romans', '1cor 1 corinthians', '2cor 2 corinthians', 'gal galatians', 'eph ephesians', 'phil philippians', 'col colossians', '1thess 1 thessalonians', '2thess 2 thessalonians', '1tim 1 timothy', '2tim 2 timothy', 'titus', 'phlm philemon', 'heb hebrews', 'jas james', '1pet 1 peter', '2pet 2 peter', '1john', '2john', '3john', 'jude', 'rev revelation'
+].map(names => names.split(' '));
+
+function normalizeBookName(name) { return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function resolveTopicBook(availableBooks, catalogBook) {
+    const canonicalIndex = Number.isFinite(Number(catalogBook)) ? Number(catalogBook) - 1 : -1;
+    const aliases = canonicalIndex >= 0 ? TOPIC_BOOK_ALIASES[canonicalIndex] : [String(catalogBook)];
+    const normalizedAliases = aliases.map(normalizeBookName);
+    const matchesAlias = name => {
+        const normalized = normalizeBookName(name);
+        return normalizedAliases.some(alias => alias === normalized || (alias.length >= 3 && normalized.length >= 3 && (alias.startsWith(normalized) || normalized.startsWith(alias))));
+    };
+    return availableBooks.find(book => [book.short_name, book.long_name].some(matchesAlias))
+        || availableBooks.find(book => normalizeBookName(book.short_name) === normalizeBookName(catalogBook) || normalizeBookName(book.long_name) === normalizeBookName(catalogBook))
+        || availableBooks.find(book => Number(book.book_number) === Number(catalogBook));
+}
+
 async function showTopicDetail(topic) {
     currentTopic = topic;
     topicsList.innerHTML = '';
@@ -5612,9 +5666,9 @@ async function showTopicDetail(topic) {
     const topicVersion = await ensureTopicBibleVersion();
     verses.forEach(([bookNumber, chapter, verse]) => {
         const availableBooks = topicVersion?.books || [];
-        // Catalog numbers follow the 1–66 Protestant canon. Some SQLite Bibles use
-        // different internal book IDs, so fall back to the canonical book position.
-        const book = availableBooks.find(item => Number(item.book_number) === Number(bookNumber)) || availableBooks[Number(bookNumber) - 1];
+        // Catalog references use the 66-book canon; resolve them by each Bible's
+        // short/long names so Bibles with different internal IDs still work.
+        const book = resolveTopicBook(availableBooks, bookNumber);
         const button = document.createElement('div'); button.className = 'topic-verse'; button.tabIndex = 0; button.setAttribute('role', 'button');
         const reference = `${book?.short_name || `Book ${bookNumber}`} ${chapter}:${verse}`;
         let text = '';
@@ -5639,7 +5693,18 @@ function closeBibleToolPanel() {
 }
 
 const DAILY_PLANS = [{ id: 'psalms-30', name: 'Psalms in 30 Days', readings: Array.from({ length: 30 }, (_, i) => `Psalms ${i * 5 + 1}-${i * 5 + 5}`) }, { id: 'nt-90', name: 'New Testament in 90 Days', readings: ['Matthew 1-3', 'Matthew 4-6', 'Matthew 7-9'] }];
-function renderPlans() { plansList.innerHTML = ''; DAILY_PLANS.forEach(plan => { const done = Number(localStorage.getItem(`plan:${plan.id}`) || 0); const row = document.createElement('button'); row.className = 'topic-item'; row.innerHTML = `<span><strong>${plan.name}</strong><small>Day ${Math.min(done + 1, plan.readings.length)}: ${plan.readings[Math.min(done, plan.readings.length - 1)]}</small></span>`; row.addEventListener('click', () => { localStorage.setItem(`plan:${plan.id}`, String(Math.min(done + 1, plan.readings.length))); renderPlans(); }); plansList.appendChild(row); }); }
+function getPlanReadDays(plan) { try { return new Set(JSON.parse(localStorage.getItem(`plan:${plan.id}:read`) || '[]')); } catch { return new Set(); } }
+function savePlanReadDays(plan, days) { localStorage.setItem(`plan:${plan.id}:read`, JSON.stringify([...days])); }
+function openPlanReading(reading) {
+    const match = reading.match(/^(.+?)\s+(\d+)(?:-(\d+))?$/); const version = loadedVersions[activeVersions.primary];
+    if (!match || !version?.books?.length) return showToast('Install and select a Bible before opening a reading plan.');
+    const [, bookName, chapter] = match; const normalized = bookName.toLowerCase();
+    const book = version.books.find(item => [item.short_name, item.long_name].some(name => name?.toLowerCase() === normalized));
+    if (!book) return showToast(`${bookName} is not available in the selected Bible.`);
+    currentBook = book; currentChapter = Number(chapter); currentVerse = 1; loadChapterContent(book.book_number, currentChapter, 1);
+}
+function renderPlans() { plansList.innerHTML = ''; plansList.classList.remove('hidden'); planDetail?.classList.add('hidden'); DAILY_PLANS.forEach(plan => { const readDays = getPlanReadDays(plan); const row = document.createElement('article'); row.className = 'plan-item'; row.innerHTML = `<div><strong>${plan.name}</strong><small>${readDays.size} of ${plan.readings.length} days completed</small><span>${readDays.size === plan.readings.length ? 'Completed' : `Next: Day ${[...Array(plan.readings.length).keys()].find(day => !readDays.has(day)) + 1}`}</span></div><button type="button">View plan <i class="fas fa-arrow-right" aria-hidden="true"></i></button>`; row.querySelector('button').addEventListener('click', () => renderPlanDetail(plan)); plansList.appendChild(row); }); }
+function renderPlanDetail(plan) { const readDays = getPlanReadDays(plan); plansList.classList.add('hidden'); planDetail.classList.remove('hidden'); planDetail.innerHTML = `<div class="plan-detail-head"><button type="button" class="plan-back"><i class="fas fa-arrow-left" aria-hidden="true"></i> All plans</button><h3>${plan.name}</h3><p>${readDays.size} of ${plan.readings.length} days completed</p></div><div class="plan-days"></div>`; planDetail.querySelector('.plan-back').addEventListener('click', renderPlans); const days = planDetail.querySelector('.plan-days'); plan.readings.forEach((reading, index) => { const read = readDays.has(index); const item = document.createElement('article'); item.className = `plan-day${read ? ' is-read' : ''}`; item.innerHTML = `<div><small>Day ${index + 1}</small><strong>${reading}</strong></div><div><button type="button" class="open-plan-reading">Read</button><button type="button" class="mark-plan-read">${read ? 'Read' : 'Mark read'}</button></div>`; item.querySelector('.open-plan-reading').addEventListener('click', () => openPlanReading(reading)); item.querySelector('.mark-plan-read').addEventListener('click', () => { const updated = getPlanReadDays(plan); if (updated.has(index)) updated.delete(index); else updated.add(index); savePlanReadDays(plan, updated); renderPlanDetail(plan); }); days.appendChild(item); }); }
 
 function updateViewModeDisplay() {
     if (!parallelContainer) {
@@ -7326,6 +7391,10 @@ async function loadChapterContent(bookNumber, chapterOrSpecial, selectedVerse = 
     }
 
     await Promise.all(loadPromises);
+    if (chapterOrSpecial !== 'introduction') {
+        appendCrossReferences('primary', bookNumber, chapterOrSpecial, activeVersions.primary);
+        if (currentViewMode === 'parallel') appendCrossReferences('secondary', bookNumber, chapterOrSpecial, activeVersions.secondary);
+    }
     if (pendingSlideDirection) {
         playSlideIn(document.querySelector('#bibleContentView .parallel-container'), pendingSlideDirection);
         pendingSlideDirection = 0;
