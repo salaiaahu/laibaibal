@@ -5625,6 +5625,7 @@ function renderTopics(query = '') {
     topicsList.classList.remove('hidden');
     topicsList.innerHTML = '';
     topicDetail.classList.add('hidden');
+    topicsStatusMessage.classList.remove('topic-title');
     if (!topics.length) { topicsList.innerHTML = '<p class="placeholder">No matching topics found.</p>'; return; }
     topics.forEach(topic => {
         const button = document.createElement('button');
@@ -5679,7 +5680,9 @@ async function showTopicDetail(topic) {
     if (shouldAddHistory) pushAppHistoryState({ appNavigation: true }, topic.name, location.href);
     const favoriteOnly = showingFavoriteTopics;
     const verses = favoriteOnly ? topic.verses.filter(([bookNumber, chapter, verse]) => isTopicVerseFavorite(topic.id, bookNumber, chapter, verse)) : topic.verses;
-    topicDetail.innerHTML = `<h3>${topic.name}</h3><p>${favoriteOnly ? `${verses.length} saved` : `${topic.verses.length} linked`} verses. Select one to open it in your current Bible.</p>`;
+    topicsStatusMessage.textContent = topic.name;
+    topicsStatusMessage.classList.add('topic-title');
+    topicDetail.innerHTML = `<p>${favoriteOnly ? `${verses.length} saved` : `${topic.verses.length} linked`} verses. Select one to open it in your current Bible.</p>`;
     const topicVersion = await ensureTopicBibleVersion();
     verses.forEach(([bookNumber, chapter, verse]) => {
         const availableBooks = topicVersion?.books || [];
