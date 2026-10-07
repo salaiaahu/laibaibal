@@ -1344,6 +1344,8 @@ h2, h3 {
 	font-size: var(--bible-subheading-font-size);
     font-size: 0.9em;
     font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.035em;
     color: var(--subheading-text-color);  
     margin-top: 0.1em;
     margin-bottom: 0.1em;
