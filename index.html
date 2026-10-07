@@ -250,8 +250,12 @@
                 <div id="topics-panel" class="panel hidden">
                     <h2>Bible Topics</h2>
                     <p class="topics-panel-intro">Find Scripture by topic. These study references are separate from your personal bookmarks.</p>
-                    <label class="visually-hidden" for="topicsSearchInput">Search topics</label>
-                    <input id="topicsSearchInput" type="search" placeholder="Search prayer, salvation, sin..." autocomplete="off">
+                    <div class="topics-toolbar">
+                        <label class="visually-hidden" for="topicsSearchInput">Search topics</label>
+                        <input id="topicsSearchInput" type="search" placeholder="Search prayer, salvation, sin..." autocomplete="off">
+                        <select id="topicsBibleSelect" aria-label="Bible version for topic verses"></select>
+                        <button id="topicsFavoritesFilterBtn" type="button" aria-pressed="false" title="Show favorite topics"><i class="far fa-star" aria-hidden="true"></i><span class="visually-hidden">Show favorites</span></button>
+                    </div>
                     <p id="topicsStatusMessage" class="message" aria-live="polite"></p>
                     <div id="topicsList" class="topics-list"></div>
                     <div id="topicDetail" class="topic-detail hidden"></div>

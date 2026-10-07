@@ -3582,11 +3582,19 @@ const bibleHomeMyDataBtn = document.getElementById('bibleHomeMyDataBtn');
 const bibleHomeTopicsBtn = document.getElementById('bibleHomeTopicsBtn');
 const topicsPanel = document.getElementById('topics-panel');
 const topicsSearchInput = document.getElementById('topicsSearchInput');
+const topicsBibleSelect = document.getElementById('topicsBibleSelect');
+const topicsFavoritesFilterBtn = document.getElementById('topicsFavoritesFilterBtn');
 const topicsStatusMessage = document.getElementById('topicsStatusMessage');
 const topicsList = document.getElementById('topicsList');
 const topicDetail = document.getElementById('topicDetail');
 const closeTopicsPanelBtn = document.getElementById('closeTopicsPanelBtn');
 let topicalCatalog = null;
+const TOPIC_FAVORITES_KEY = 'laibaibal_topic_verse_favorites';
+let showingFavoriteTopics = false;
+let currentTopic = null;
+function getTopicFavorites() { try { return JSON.parse(localStorage.getItem(TOPIC_FAVORITES_KEY)) || []; } catch { return []; } }
+function isTopicVerseFavorite(topicId, bookNumber, chapter, verse) { return getTopicFavorites().some(item => item.topicId === topicId && item.bookNumber === bookNumber && item.chapter === chapter && item.verse === verse); }
+function toggleTopicVerseFavorite(entry) { const favorites = getTopicFavorites(); const index = favorites.findIndex(item => item.topicId === entry.topicId && item.bookNumber === entry.bookNumber && item.chapter === entry.chapter && item.verse === entry.verse); if (index >= 0) favorites.splice(index, 1); else favorites.push(entry); localStorage.setItem(TOPIC_FAVORITES_KEY, JSON.stringify(favorites)); return index < 0; }
 const uploadPanel = document.getElementById('upload-panel');
 const bibleFileInput = document.getElementById('bibleFile');
 const versionNameInput = document.getElementById('versionNameInput');
@@ -4325,11 +4333,15 @@ function setupSlideMenuListeners() {
         if (bibleHomeTopicsBtn) {
             bibleHomeTopicsBtn.addEventListener('click', async () => {
                 showPanel(topicsPanel);
+                topicsBibleSelect.innerHTML = Object.keys(loadedVersions).map(name => `<option value="${name}">${name}</option>`).join('');
+                topicsBibleSelect.value = activeVersions.primary || '';
                 try { await loadTopicalCatalog(); renderTopics(); }
                 catch (error) { topicsStatusMessage.textContent = `Unable to load topics: ${error.message}`; }
             });
         }
         if (topicsSearchInput) topicsSearchInput.addEventListener('input', () => renderTopics(topicsSearchInput.value));
+        if (topicsBibleSelect) topicsBibleSelect.addEventListener('change', async () => { await setActiveVersion('primary', topicsBibleSelect.value); if (currentTopic) showTopicDetail(currentTopic); });
+        if (topicsFavoritesFilterBtn) topicsFavoritesFilterBtn.addEventListener('click', () => { showingFavoriteTopics = !showingFavoriteTopics; topicsFavoritesFilterBtn.setAttribute('aria-pressed', showingFavoriteTopics); topicsFavoritesFilterBtn.querySelector('i').className = `${showingFavoriteTopics ? 'fas' : 'far'} fa-star`; renderTopics(topicsSearchInput.value); });
         if (closeTopicsPanelBtn) closeTopicsPanelBtn.addEventListener('click', () => showPanel(bibleHomePanel));
         if (slideMenuInstructionsBtn && instructionsPanel) {
             slideMenuInstructionsBtn.addEventListener('click', () => {
@@ -5537,8 +5549,9 @@ async function loadTopicalCatalog() {
 
 function renderTopics(query = '') {
     const needle = query.trim().toLocaleLowerCase();
+    const favorites = getTopicFavorites();
     const topics = (topicalCatalog?.topics || []).filter(topic =>
-        [topic.name, ...(topic.aliases || [])].some(name => name.toLocaleLowerCase().includes(needle))
+        (!showingFavoriteTopics || favorites.some(item => item.topicId === topic.id)) && [topic.name, ...(topic.aliases || [])].some(name => name.toLocaleLowerCase().includes(needle))
     ).slice(0, 100);
     topicsList.classList.remove('hidden');
     topicsList.innerHTML = '';
@@ -5554,20 +5567,32 @@ function renderTopics(query = '') {
     topicsStatusMessage.textContent = `${topics.length}${topics.length === 100 ? '+' : ''} topic${topics.length === 1 ? '' : 's'} available offline.`;
 }
 
-function showTopicDetail(topic) {
+async function showTopicDetail(topic) {
+    currentTopic = topic;
     topicsList.innerHTML = '';
     topicsList.classList.add('hidden');
     topicDetail.classList.remove('hidden');
-    topicDetail.innerHTML = `<h3>${topic.name}</h3><p>${topic.verses.length} linked verses. Select one to open it in your current Bible.</p>`;
-    topic.verses.forEach(([bookNumber, chapter, verse]) => {
+    const favoriteOnly = showingFavoriteTopics;
+    const verses = favoriteOnly ? topic.verses.filter(([bookNumber, chapter, verse]) => isTopicVerseFavorite(topic.id, bookNumber, chapter, verse)) : topic.verses;
+    topicDetail.innerHTML = `<h3>${topic.name}</h3><p>${favoriteOnly ? `${verses.length} saved` : `${topic.verses.length} linked`} verses. Select one to open it in your current Bible.</p>`;
+    verses.forEach(([bookNumber, chapter, verse]) => {
         const availableBooks = loadedVersions[activeVersions.primary]?.books || [];
         // Catalog numbers follow the 1–66 Protestant canon. Some SQLite Bibles use
         // different internal book IDs, so fall back to the canonical book position.
         const book = availableBooks.find(item => Number(item.book_number) === Number(bookNumber)) || availableBooks[Number(bookNumber) - 1];
-        const button = document.createElement('button'); button.type = 'button'; button.className = 'topic-verse';
-        button.textContent = `${book?.short_name || `Book ${bookNumber}`} ${chapter}:${verse}`;
+        const button = document.createElement('div'); button.className = 'topic-verse'; button.tabIndex = 0; button.setAttribute('role', 'button');
+        const reference = `${book?.short_name || `Book ${bookNumber}`} ${chapter}:${verse}`;
+        let text = '';
+        if (book && activeDbs.primary) {
+            const stmt = activeDbs.primary.prepare('SELECT text FROM verses WHERE book_number = ? AND chapter = ? AND verse = ?;');
+            stmt.bind([book.book_number, chapter, verse]); if (stmt.step()) text = stmt.getAsObject().text || ''; stmt.free();
+        }
+        const saved = isTopicVerseFavorite(topic.id, bookNumber, chapter, verse);
+        button.innerHTML = `<span class="topic-verse-copy"><strong>${reference}</strong>${text ? `<span>${text}</span>` : '<span class="topic-verse-missing">Verse not available in this version.</span>'}</span><button class="topic-verse-favorite" type="button" aria-label="${saved ? 'Remove favorite' : 'Save favorite'}"><i class="${saved ? 'fas' : 'far'} fa-star"></i></button>`;
         button.disabled = !book;
         button.addEventListener('click', () => { currentBook = book; currentChapter = chapter; currentVerse = verse; loadChapterContent(book.book_number, chapter, verse); });
+        button.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); button.click(); } });
+        button.querySelector('.topic-verse-favorite').addEventListener('click', event => { event.stopPropagation(); toggleTopicVerseFavorite({ topicId: topic.id, bookNumber, chapter, verse }); showTopicDetail(topic); });
         topicDetail.appendChild(button);
     });
 }
