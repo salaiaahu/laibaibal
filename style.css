@@ -3828,6 +3828,9 @@ button, a, select, label { touch-action: manipulation; }
 #user-data-panel .user-data-list { max-height: none; border: 0; background: transparent; }
 #user-data-panel .tab-content > .placeholder { padding: 0; border: 0; background: transparent; font-size: .78rem; opacity: .65; margin: 0 0 8px; }
 
+#crossReferenceList { display: grid; gap: 8px; max-height: 60vh; overflow-y: auto; }
+#crossReferenceList button { padding: 11px; border: 1px solid var(--panel-border-color); border-radius: 8px; background: var(--main-bg-color); color: var(--main-text-color); font: inherit; text-align: left; }
+
 /* Offline topical-reference library (not user bookmarks). */
 #topics-panel { box-sizing: border-box; max-width: 880px; margin: 16px auto; padding: clamp(18px, 4vw, 32px); color: var(--panel-text-color); background: var(--panel-bg-color); }
 #app-container.page-active #topics-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }

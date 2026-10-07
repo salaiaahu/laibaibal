@@ -245,8 +245,10 @@
                             <span class="bible-home-card-text"><strong>Topics</strong><small>Explore verses by theme, including prayer, salvation, and faith.</small></span>
                             <i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i>
                         </button>
+                        <button type="button" id="bibleHomePlansBtn" class="bible-home-card"><span class="bible-home-card-icon bible-home-topics-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span><span class="bible-home-card-text"><strong>Daily Plans</strong><small>Follow a short daily Scripture reading plan.</small></span><i class="fas fa-chevron-right bible-home-card-arrow" aria-hidden="true"></i></button>
                     </div>
                 </div>
+                <div id="plans-panel" class="panel hidden"><h2>Daily Reading Plans</h2><div id="plansList" class="topics-list"></div><button id="closePlansPanelBtn" type="button">Back to Bible</button></div>
                 <div id="topics-panel" class="panel hidden">
                     <h2>Bible Topics</h2>
                     <p class="topics-panel-intro">Find Scripture by topic. These study references are separate from your personal bookmarks.</p>
@@ -318,6 +320,7 @@
                         <button class="tab-button active" data-tab="highlights">Highlights</button>
                         <button class="tab-button" data-tab="notes">Notes</button>
                         <button class="tab-button" data-tab="bookmarks">Bookmarks</button>
+                        <button class="tab-button" data-tab="backup">Backup</button>
                     </div>
 
                     <div id="highlights-tab" class="tab-content active">
@@ -327,6 +330,7 @@
                     </div>
                     <div id="notes-tab" class="tab-content hidden">
                         <h3>My Notes</h3>
+                        <input id="notesSearchInput" type="search" placeholder="Search notes or tags">
                         <p class="placeholder">Note na tial mi pawl ka hin an lang te lai</p>
                         <ul id="notesList" class="user-data-list"></ul>
                     </div>
@@ -337,6 +341,13 @@
                             </select>
                         <p class="placeholder">Bookmarks na tuah mi ka hin an lang te lai</p>
                         <ul id="bookmarksList" class="user-data-list"></ul>
+                    </div>
+                    <div id="backup-tab" class="tab-content hidden">
+                        <h3>Backup & Restore</h3>
+                        <p>Export your notes, highlights, bookmarks, and topic-verse favorites. Bible files are not included.</p>
+                        <button id="exportUserDataBtn" type="button">Export backup</button>
+                        <label for="importUserDataInput" class="backup-import-label">Import backup</label>
+                        <input id="importUserDataInput" type="file" accept="application/json,.json">
                     </div>
                     <button id="closeUserDataPanelBtn">Close</button>
                 </div>
@@ -501,6 +512,7 @@
             <span class="close-button">&times;</span>
             <h2 id="noteModalTitle"></h2>
             <textarea id="noteTextarea" placeholder="Enter your note here..."></textarea>
+            <input id="noteTagsInput" type="text" placeholder="Tags (comma separated)">
             <div class="modal-actions">
                 <button id="saveNoteBtn">Save Note</button>
                 <button id="deleteNoteBtn" class="delete-btn hidden">Delete Note</button>
@@ -621,8 +633,10 @@
   <i class="fas fa-highlighter action-icon" title="Highlight"></i>
   <i class="fas fa-sticky-note action-icon" title="Note"></i>
   <i class="fas fa-bookmark action-icon" title="Bookmark"></i>
+  <i id="crossReferenceIcon" class="fas fa-link action-icon" title="Cross references"></i>
   <i class="fas fa-image action-icon" title="Verse Card"></i>
 </div>
+<div id="crossReferenceModal" class="modal hidden"><div class="modal-content"><span class="close-button">&times;</span><h2>Cross References</h2><div id="crossReferenceList"></div></div></div>
 <div id="highlightColorPicker" class="highlight-color-picker hidden">
   <div class="color-option" data-color="green" title="Green" style="background-color: #b9fbc0;"></div>
   <div class="color-option" data-color="yellow" title="Yellow" style="background-color: #fff58c;"></div>

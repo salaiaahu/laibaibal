@@ -3580,6 +3580,7 @@ const bibleHomeManageBiblesBtn = document.getElementById('bibleHomeManageBiblesB
 const bibleHomeManageCommentariesBtn = document.getElementById('bibleHomeManageCommentariesBtn');
 const bibleHomeMyDataBtn = document.getElementById('bibleHomeMyDataBtn');
 const bibleHomeTopicsBtn = document.getElementById('bibleHomeTopicsBtn');
+const bibleHomePlansBtn = document.getElementById('bibleHomePlansBtn'); const plansPanel = document.getElementById('plans-panel'); const plansList = document.getElementById('plansList'); const closePlansPanelBtn = document.getElementById('closePlansPanelBtn');
 const topicsPanel = document.getElementById('topics-panel');
 const topicsSearchInput = document.getElementById('topicsSearchInput');
 const topicsBibleSelect = document.getElementById('topicsBibleSelect');
@@ -3631,10 +3632,14 @@ const notesTab = document.getElementById('notes-tab');
 const bookmarksTab = document.getElementById('bookmarks-tab');
 const highlightsList = document.getElementById('highlightsList');
 const notesList = document.getElementById('notesList');
+const notesSearchInput = document.getElementById('notesSearchInput');
 const bookmarksList = document.getElementById('bookmarksList');
 const bookmarkCategorySelect = document.getElementById('bookmarkCategorySelect');
 const bookmarkCategoriesDatalist = document.getElementById('bookmarkCategoriesDatalist');
 const closeUserDataPanelBtn = document.getElementById('closeUserDataPanelBtn');
+const backupTab = document.getElementById('backup-tab');
+const exportUserDataBtn = document.getElementById('exportUserDataBtn');
+const importUserDataInput = document.getElementById('importUserDataInput');
 let instructionsReturnPanel = null;
 let bibleToolReturnPanel = null;
 
@@ -3669,6 +3674,7 @@ const noteModalTitle = document.getElementById('noteModalTitle');
 let currentNoteMultiRefs = [];
 let currentNoteVerseRef = null; // { versionName, bookNumber, chapter, verse }
 const noteTextarea = document.getElementById('noteTextarea');
+const noteTagsInput = document.getElementById('noteTagsInput');
 const saveNoteBtn = document.getElementById('saveNoteBtn');
 const deleteNoteBtn = document.getElementById('deleteNoteBtn');
 const cancelNoteBtn = document.getElementById('cancelNoteBtn');
@@ -4341,6 +4347,8 @@ function setupSlideMenuListeners() {
                 catch (error) { topicsStatusMessage.textContent = `Unable to load topics: ${error.message}`; }
             });
         }
+        if (bibleHomePlansBtn) bibleHomePlansBtn.addEventListener('click', () => { showPanel(plansPanel); renderPlans(); });
+        if (closePlansPanelBtn) closePlansPanelBtn.addEventListener('click', () => showPanel(bibleHomePanel));
         if (topicsSearchInput) topicsSearchInput.addEventListener('input', () => renderTopics(topicsSearchInput.value));
         if (topicsBibleSelect) topicsBibleSelect.addEventListener('change', async () => { topicBibleVersion = topicsBibleSelect.value; if (currentTopic) showTopicDetail(currentTopic); });
         if (topicsFavoritesFilterBtn) topicsFavoritesFilterBtn.addEventListener('click', () => { showingFavoriteTopics = !showingFavoriteTopics; topicsFavoritesFilterBtn.setAttribute('aria-pressed', showingFavoriteTopics); topicsFavoritesFilterBtn.querySelector('i').className = `${showingFavoriteTopics ? 'fas' : 'far'} fa-star`; renderTopics(topicsSearchInput.value); });
@@ -5431,6 +5439,18 @@ function getPopupRef() {
   };
 }
 
+const CROSSREF_OSIS_BOOKS = ['Gen','Exod','Lev','Num','Deut','Josh','Judg','Ruth','1Sam','2Sam','1Kgs','2Kgs','1Chr','2Chr','Ezra','Neh','Esth','Job','Ps','Prov','Eccl','Song','Isa','Jer','Lam','Ezek','Dan','Hos','Joel','Amos','Obad','Jonah','Mic','Nah','Hab','Zeph','Hag','Zech','Mal','Matt','Mark','Luke','John','Acts','Rom','1Cor','2Cor','Gal','Eph','Phil','Col','1Thess','2Thess','1Tim','2Tim','Titus','Phlm','Heb','Jas','1Pet','2Pet','1John','2John','3John','Jude','Rev'];
+async function showCrossReferences() {
+    const ref = getPopupRef(); const books = loadedVersions[ref.versionName]?.books || [];
+    const currentIndex = books.findIndex(book => Number(book.book_number) === ref.bookNumber);
+    const code = CROSSREF_OSIS_BOOKS[currentIndex]; const modal = document.getElementById('crossReferenceModal'); const list = document.getElementById('crossReferenceList');
+    if (!code) return showToast('Cross references are unavailable for this Bible book.');
+    modal.classList.remove('hidden'); list.innerHTML = '<p class="placeholder">Loading cross references…</p>';
+    try { const data = await (await fetch(`resources/crossrefs/${code}/${ref.chapter}.json`)).json(); const refs = data.verses?.[String(ref.verse)] || []; list.innerHTML = ''; if (!refs.length) { list.innerHTML = '<p class="placeholder">No cross references found.</p>'; return; } refs.slice(0, 24).forEach(([target, votes]) => { const [bookCode, chapter, verse] = target.split('.'); const index = CROSSREF_OSIS_BOOKS.indexOf(bookCode); const book = books[index]; const button = document.createElement('button'); button.textContent = `${book?.short_name || bookCode} ${chapter}:${verse}`; button.title = `${Math.max(0, votes)} relevance votes`; button.addEventListener('click', () => { modal.classList.add('hidden'); currentBook = book; currentChapter = Number(chapter); currentVerse = Number(verse); loadChapterContent(book.book_number, currentChapter, currentVerse); }); list.appendChild(button); }); } catch { list.innerHTML = '<p class="placeholder">Cross-reference data has not been installed yet.</p>'; }
+}
+document.getElementById('crossReferenceIcon')?.addEventListener('click', showCrossReferences);
+document.querySelector('#crossReferenceModal .close-button')?.addEventListener('click', () => document.getElementById('crossReferenceModal').classList.add('hidden'));
+
 function openAppDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('BibleReaderDB', 2);
@@ -5617,6 +5637,9 @@ function closeBibleToolPanel() {
     bibleToolReturnPanel = null;
     showPanel(returnPanel);
 }
+
+const DAILY_PLANS = [{ id: 'psalms-30', name: 'Psalms in 30 Days', readings: Array.from({ length: 30 }, (_, i) => `Psalms ${i * 5 + 1}-${i * 5 + 5}`) }, { id: 'nt-90', name: 'New Testament in 90 Days', readings: ['Matthew 1-3', 'Matthew 4-6', 'Matthew 7-9'] }];
+function renderPlans() { plansList.innerHTML = ''; DAILY_PLANS.forEach(plan => { const done = Number(localStorage.getItem(`plan:${plan.id}`) || 0); const row = document.createElement('button'); row.className = 'topic-item'; row.innerHTML = `<span><strong>${plan.name}</strong><small>Day ${Math.min(done + 1, plan.readings.length)}: ${plan.readings[Math.min(done, plan.readings.length - 1)]}</small></span>`; row.addEventListener('click', () => { localStorage.setItem(`plan:${plan.id}`, String(Math.min(done + 1, plan.readings.length))); renderPlans(); }); plansList.appendChild(row); }); }
 
 function updateViewModeDisplay() {
     if (!parallelContainer) {
@@ -8005,6 +8028,7 @@ async function updateUserDataPanel(activeTab = 'highlights') {
     highlightsTab.classList.add('hidden');
     notesTab.classList.add('hidden');
     bookmarksTab.classList.add('hidden');
+    backupTab?.classList.add('hidden');
 
     // Remove 'active' class from all tab buttons
     userDataTabButtons.forEach(btn => btn.classList.remove('active'));
@@ -8023,7 +8047,23 @@ async function updateUserDataPanel(activeTab = 'highlights') {
         userDataTabButtons[2].classList.add('active');
         await populateBookmarkCategoriesSelect(); // Populate categories first
         await populateBookmarksList();
+    } else if (activeTab === 'backup') {
+        backupTab?.classList.remove('hidden');
+        userDataTabButtons[3]?.classList.add('active');
     }
+}
+
+async function exportUserData() {
+    const backup = { version: 1, exportedAt: new Date().toISOString(), highlights: await getAllIndexedDB(HIGHLIGHTS_STORE_NAME), notes: await getAllIndexedDB(NOTES_STORE_NAME), bookmarks: await getAllIndexedDB(BOOKMARKS_STORE_NAME), topicVerseFavorites: getTopicFavorites() };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url; link.download = `lai-baibal-backup-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(url);
+}
+async function importUserData(file) {
+    const backup = JSON.parse(await file.text());
+    if (!backup || backup.version !== 1) throw new Error('Invalid Lai Baibal backup file.');
+    for (const [store, records] of [[HIGHLIGHTS_STORE_NAME, backup.highlights], [NOTES_STORE_NAME, backup.notes], [BOOKMARKS_STORE_NAME, backup.bookmarks]]) for (const record of records || []) await putIndexedDB(store, record);
+    if (Array.isArray(backup.topicVerseFavorites)) localStorage.setItem(TOPIC_FAVORITES_KEY, JSON.stringify(backup.topicVerseFavorites));
+    showToast('Backup restored.'); updateUserDataPanel('backup');
 }
 
 function createVerseCardDOM({
@@ -9073,6 +9113,9 @@ if (commentaryModal) { // Check if modal element exists
             });
         }
         if (bookmarkCategorySelect) bookmarkCategorySelect.addEventListener('change', () => populateBookmarksList());
+        if (notesSearchInput) notesSearchInput.addEventListener('input', () => populateNotesList());
+        if (exportUserDataBtn) exportUserDataBtn.addEventListener('click', exportUserData);
+        if (importUserDataInput) importUserDataInput.addEventListener('change', async () => { if (importUserDataInput.files[0]) { try { await importUserData(importUserDataInput.files[0]); } catch (error) { showToast(`Import failed: ${error.message}`); } importUserDataInput.value = ''; } });
 
         // Highlight Picker (for WHOLE verse highlights) - Swatch Clicks
         if (highlightPicker) {
