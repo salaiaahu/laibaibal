@@ -5540,6 +5540,7 @@ function renderTopics(query = '') {
     const topics = (topicalCatalog?.topics || []).filter(topic =>
         [topic.name, ...(topic.aliases || [])].some(name => name.toLocaleLowerCase().includes(needle))
     ).slice(0, 100);
+    topicsList.classList.remove('hidden');
     topicsList.innerHTML = '';
     topicDetail.classList.add('hidden');
     if (!topics.length) { topicsList.innerHTML = '<p class="placeholder">No matching topics found.</p>'; return; }
@@ -5555,10 +5556,14 @@ function renderTopics(query = '') {
 
 function showTopicDetail(topic) {
     topicsList.innerHTML = '';
+    topicsList.classList.add('hidden');
     topicDetail.classList.remove('hidden');
     topicDetail.innerHTML = `<h3>${topic.name}</h3><p>${topic.verses.length} linked verses. Select one to open it in your current Bible.</p>`;
     topic.verses.forEach(([bookNumber, chapter, verse]) => {
-        const book = loadedVersions[activeVersions.primary]?.books?.find(item => Number(item.book_number) === Number(bookNumber));
+        const availableBooks = loadedVersions[activeVersions.primary]?.books || [];
+        // Catalog numbers follow the 1–66 Protestant canon. Some SQLite Bibles use
+        // different internal book IDs, so fall back to the canonical book position.
+        const book = availableBooks.find(item => Number(item.book_number) === Number(bookNumber)) || availableBooks[Number(bookNumber) - 1];
         const button = document.createElement('button'); button.type = 'button'; button.className = 'topic-verse';
         button.textContent = `${book?.short_name || `Book ${bookNumber}`} ${chapter}:${verse}`;
         button.disabled = !book;

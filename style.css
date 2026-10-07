@@ -3830,9 +3830,10 @@ button, a, select, label { touch-action: manipulation; }
 
 /* Offline topical-reference library (not user bookmarks). */
 #topics-panel { box-sizing: border-box; max-width: 880px; margin: 16px auto; padding: clamp(18px, 4vw, 32px); color: var(--panel-text-color); background: var(--panel-bg-color); }
+#app-container.page-active #topics-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 #topics-panel h2 { margin: 0 0 8px; color: var(--main-text-color); }
 .topics-panel-intro { margin: 0 0 16px; color: var(--secondary-text-color, #727b84); }
 #topicsSearchInput { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input-border-color); border-radius: 9px; background: var(--input-bg-color); color: var(--input-text-color); font: inherit; }
-.topics-list { display: grid; gap: 8px; margin-top: 12px; }
+.topics-list, .topic-detail { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }.topics-list { display: grid; flex: 1 1 auto; gap: 8px; margin-top: 12px; padding-bottom: 12px; }
 .topic-item, .topic-verse { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px; border: 1px solid var(--panel-border-color); border-radius: 9px; background: var(--main-bg-color); color: var(--main-text-color); font: inherit; text-align: left; cursor: pointer; }
-.topic-item small { display: block; margin-top: 2px; color: var(--secondary-text-color, #727b84); }.topic-swatch { width: 12px; height: 36px; border-radius: 8px; }.topic-detail { display: grid; gap: 8px; }.topic-detail h3 { margin: 14px 0 4px; }.topic-detail p { color: var(--secondary-text-color, #727b84); }.topic-verse { display: block; }
+.topic-item small { display: block; margin-top: 2px; color: var(--secondary-text-color, #727b84); }.topic-swatch { width: 12px; height: 36px; border-radius: 8px; }.topic-detail { display: grid; flex: 1 1 auto; gap: 8px; padding-bottom: 12px; }.topic-detail h3 { margin: 14px 0 4px; }.topic-detail p { color: var(--secondary-text-color, #727b84); }.topic-verse { display: block; }
