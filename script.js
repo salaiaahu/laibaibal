@@ -5457,7 +5457,19 @@ async function appendCrossReferences(versionType, bookNumber, chapter, versionNa
     const version = loadedVersions[versionName];
     const books = version?.books || [];
     const sourceBook = books.find(book => Number(book.book_number) === Number(bookNumber));
-    const bookIndex = sourceBook ? TOPIC_BOOK_ALIASES.findIndex((_, index) => resolveTopicBook([sourceBook], index + 1)) : -1;
+    // Prefer an explicit English/OSIS-compatible name. Localized Bibles usually
+    // cannot match those aliases, so their canonical book number is the reliable
+    // fallback. The old resolver's positional fallback made every localized book
+    // look like Genesis and prevented mobile cross-reference files from loading.
+    const sourceNames = [sourceBook?.short_name, sourceBook?.long_name]
+        .filter(Boolean)
+        .map(normalizeBookName);
+    let bookIndex = TOPIC_BOOK_ALIASES.findIndex(aliases => aliases
+        .map(normalizeBookName)
+        .some(alias => sourceNames.some(name => name === alias || (name.length >= 3 && alias.length >= 3 && (name.startsWith(alias) || alias.startsWith(name))))));
+    if (bookIndex < 0 && Number.isInteger(Number(bookNumber)) && Number(bookNumber) >= 1 && Number(bookNumber) <= CROSSREF_OSIS_BOOKS.length) {
+        bookIndex = Number(bookNumber) - 1;
+    }
     const bookCode = CROSSREF_OSIS_BOOKS[bookIndex];
     const content = versionType === 'primary' ? primaryBibleContent : secondaryBibleContent;
     if (!bookCode || !content) return;

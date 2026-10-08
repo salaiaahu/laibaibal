@@ -3889,8 +3889,18 @@ button, a, select, label { touch-action: manipulation; }
 #user-data-panel .user-data-list { max-height: none; border: 0; background: transparent; }
 #user-data-panel .tab-content > .placeholder { padding: 0; border: 0; background: transparent; font-size: .78rem; opacity: .65; margin: 0 0 8px; }
 
-.cross-reference-trigger { display: inline-grid; width: 28px; height: 28px; place-items: center; margin-left: 7px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--accent-color) 16%, transparent); color: var(--accent-color); font-size: .78em; vertical-align: middle; cursor: pointer; }
+.cross-reference-trigger { display: inline-flex; width: 19px; height: 19px; align-items: center; justify-content: center; margin-left: 5px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--accent-color) 16%, transparent); color: var(--accent-color); font-size: .58em; line-height: 1; vertical-align: middle; cursor: pointer; }
+.cross-reference-trigger i { pointer-events: none; }
 .cross-reference-trigger:hover { background: var(--accent-color); color: #fff; }
+@media (max-width: 768px) {
+    .bible-content .verse-paragraph .cross-reference-trigger {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative;
+        z-index: 2;
+    }
+}
 #crossReferenceList { display: grid; gap: 9px; max-height: 60vh; overflow-y: auto; }
 .cross-reference-modal-content { box-sizing: border-box; width: min(100%, 760px); max-width: none; height: calc(100vh - 30px); max-height: none; padding: 20px; }
 .cross-reference-modal-content h2 { margin: 0 38px 16px 0; flex: none; }
