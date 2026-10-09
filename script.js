@@ -5602,10 +5602,17 @@ function escapeSubheadingHtml(value) {
         .replace(/'/g, '&#039;');
 }
 
+function cleanPopupVerseText(value) {
+    // Some source Bibles include legacy page-break markers in the stored text.
+    return String(value ?? '').replace(/<\/?pb\s*\/?\s*>/gi, '').replace(/\s{2,}/g, ' ').trim();
+}
+
 function formatSubheadingReferences(title, versionName) {
     const versionBooks = loadedVersions[versionName]?.books || [];
     const safeTitle = escapeSubheadingHtml(title);
-    return safeTitle.replace(/\((\d+)\s+(\d+):(\d+)(?:\s*[-–]\s*(\d+))?\)/g, (match, bookNumber, chapter, startVerse, endVerse) => {
+    // Some source databases wrap references in legacy <X>…</X> tags. They have
+    // already been escaped above, so accept both that form and a plain reference.
+    return safeTitle.replace(/\((?:&lt;X&gt;)?(\d+)\s+(\d+):(\d+)(?:\s*[-–]\s*(\d+))?(?:&lt;\/X&gt;)?\)/gi, (match, bookNumber, chapter, startVerse, endVerse) => {
         const book = versionBooks.find(item => Number(item.book_number) === Number(bookNumber));
         if (!book) return match;
         const rangeEnd = endVerse ? `–${endVerse}` : '';
@@ -5641,7 +5648,7 @@ async function showSubheadingReference(bookNumber, chapter, startVerse, endVerse
             verse.className = 'subheading-reference-verse';
             const number = document.createElement('strong');
             number.textContent = `${row.verse}. `;
-            verse.append(number, row.text || '');
+            verse.append(number, cleanPopupVerseText(row.text));
             content.appendChild(verse);
         }
         statement.free();
