@@ -1353,6 +1353,31 @@ h2, h3 {
     padding-bottom: 5px;
     text-align: left;
 }
+.subheading-reference {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px dashed currentColor;
+    background: transparent;
+    color: var(--link-color);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.subheading-reference:hover,
+.subheading-reference:focus-visible {
+    color: var(--link-hover-color);
+    outline: none;
+}
+.subheading-reference-modal-content { max-width: 650px; }
+#subheadingReferenceText {
+    overflow-y: auto;
+    color: var(--main-text-color);
+    line-height: 1.65;
+}
+.subheading-reference-verse { margin: 0 0 0.85em; }
+.subheading-reference-verse strong { color: var(--verse-number-text-color); }
 
 .footnote-marker {
     vertical-align: super;
@@ -2215,6 +2240,19 @@ ul.slide-menu-items {
     color: var(--accent-color);
     background: rgba(255, 255, 255, 0.12) !important;
 }
+/* Keep the Bible header icons theme-aware even when generic button rules load later. */
+#top-bar #hamburgerMenuBtn,
+#top-bar #commentaryPopupBtn {
+    margin: 0 2px;
+    border: 1px solid color-mix(in srgb, var(--top-bar-text-color) 32%, transparent) !important;
+    background: color-mix(in srgb, var(--top-bar-text-color) 10%, transparent) !important;
+    color: var(--top-bar-text-color) !important;
+    box-shadow: none;
+}
+#top-bar #hamburgerMenuBtn:hover,
+#top-bar #commentaryPopupBtn:hover {
+    background: color-mix(in srgb, var(--top-bar-text-color) 20%, transparent) !important;
+}
 #top-bar .chapter-navigator .chapter-display {
     min-width: 62px;
     padding: 0 6px;
@@ -2304,6 +2342,21 @@ ul.slide-menu-items {
     gap: 8px; /* Space between the two rows */
     flex-shrink: 0;
 }
+/* Reader and slide-menu controls inherit every theme instead of browser button colors. */
+#reader-top-bar .top-bar-icon-btn,
+#reader-top-bar .nav-btn,
+#slideMenu .menu-close-btn {
+    border: 1px solid color-mix(in srgb, var(--sidebar-text-color) 34%, transparent) !important;
+    background: color-mix(in srgb, var(--sidebar-text-color) 10%, transparent) !important;
+    color: var(--sidebar-text-color) !important;
+    box-shadow: none;
+}
+#reader-top-bar .top-bar-icon-btn:hover,
+#reader-top-bar .nav-btn:hover:not(:disabled),
+#slideMenu .menu-close-btn:hover {
+    background: color-mix(in srgb, var(--sidebar-text-color) 20%, transparent) !important;
+}
+#reader-top-bar #reader-favorites-btn { color: #f5b301 !important; }
 
 /* Row 1: Main Controls */
 .reader-main-controls {
@@ -3482,6 +3535,9 @@ button, a, select, label { touch-action: manipulation; }
 @keyframes pageFlip { to { transform: rotateY(-155deg); } }
 @keyframes bookCenter { to { transform: translateX(75px); } }
 @keyframes splashFade { to { opacity: 1; } }
+@media (max-width: 520px) {
+  .splash-book { scale: .82; }
+}
 @media (prefers-reduced-motion: reduce) { #splash-screen *, .splash-title { animation-duration: .01s !important; animation-delay: 0s !important; } }
 
 /* Reader header: centered titles */
@@ -3630,9 +3686,13 @@ button, a, select, label { touch-action: manipulation; }
     font-style: italic;
     text-align: center;
 }
+@media (min-width: 769px) {
+    .hymn-content.is-hymn > .reader-credit { display: none; }
+    .instruction-credit { display: none; }
+}
 .hymn-view-switcher {
     position: sticky;
-    top: 0;
+    bottom: 8px;
     z-index: 2;
     display: inline-flex;
     width: fit-content;
@@ -3644,6 +3704,12 @@ button, a, select, label { touch-action: manipulation; }
     border-radius: 9px;
     background: var(--main-bg-color);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+.hymn-view-switcher.is-hidden-on-idle {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
 }
 .hymn-view-switcher-button {
     display: inline-flex;
@@ -3688,7 +3754,17 @@ button, a, select, label { touch-action: manipulation; }
     height: auto;
 }
 @media (max-width: 520px) {
-    .hymn-content { padding: 10px; }
+    .hymn-content {
+        display: flex;
+        flex-direction: column;
+        padding: 10px 10px 4px;
+    }
+    .hymn-text-content { flex: 1 0 auto; }
+    .hymn-content > .reader-credit {
+        margin-top: auto;
+        margin-bottom: 0;
+        padding: 10px 8px 2px;
+    }
     .hymn-notation { margin: 0 -4px; width: calc(100% + 8px); }
     .hymn-fullscreen-button { display: inline-grid; place-items: center; }
     #content-reader-panel.notation-fullscreen {
@@ -3707,7 +3783,7 @@ button, a, select, label { touch-action: manipulation; }
     }
     #content-reader-panel.notation-fullscreen .hymn-view-switcher {
         position: fixed;
-        top: max(8px, env(safe-area-inset-top));
+        bottom: max(8px, env(safe-area-inset-bottom));
         left: max(8px, env(safe-area-inset-left));
         margin: 0;
     }

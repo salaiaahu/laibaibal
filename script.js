@@ -3979,6 +3979,7 @@ function displayItemContent(itemId, trackHistory = true) {
     currentReaderContext.activeId = parseInt(itemId);
     const content = document.createElement('div');
     content.className = 'hymn-content';
+    content.classList.toggle('is-hymn', currentReaderContext.title === 'Khrihfa Hlabu');
     const notationAsset = currentReaderContext.title === 'Khrihfa Hlabu'
         ? hymnNotationAssets[item.id]
         : null;
@@ -3988,15 +3989,16 @@ function displayItemContent(itemId, trackHistory = true) {
 
     const renderHymnContent = () => {
         content.replaceChildren();
+        let switcher = null;
         if (notationAsset) {
-            content.appendChild(createHymnViewSwitcher(item, displayMode, selectedMode => {
+            switcher = createHymnViewSwitcher(item, displayMode, selectedMode => {
                 displayMode = selectedMode;
                 currentReaderContext.hymnDisplayMode = selectedMode;
                 if (selectedMode === 'text') contentReaderPanel.classList.remove('notation-fullscreen');
                 renderHymnContent();
                 content.scrollTop = 0;
                 updateFloatingFontControlState();
-            }, toggleNotationFullscreen, contentReaderPanel.classList.contains('notation-fullscreen')));
+            }, toggleNotationFullscreen, contentReaderPanel.classList.contains('notation-fullscreen'));
         }
 
         if (displayMode === 'notation') {
@@ -4009,6 +4011,7 @@ function displayItemContent(itemId, trackHistory = true) {
             image.style.width = `${currentNotationZoom * 100}%`;
             notation.appendChild(image);
             content.appendChild(notation);
+            if (switcher) content.appendChild(switcher);
             return;
         }
 
@@ -4039,7 +4042,8 @@ function displayItemContent(itemId, trackHistory = true) {
         creditBrand.className = 'reader-credit-brand';
         creditBrand.textContent = 'LaiTech Innovations LLC';
         credit.appendChild(creditBrand);
-        text.appendChild(credit);
+        content.appendChild(credit);
+        if (switcher) content.appendChild(switcher);
     };
 
     renderHymnContent();
@@ -4055,6 +4059,7 @@ function displayItemContent(itemId, trackHistory = true) {
     updateFavoriteButton();
     updateFloatingFontControlState();
     showFontControlsTemporarily();
+    showHymnViewSwitcherTemporarily();
     readerContentArea.scrollTop = 0;
     if (previousId) playSlideIn(readerContentArea, currentReaderContext.activeId > previousId ? 1 : -1);
 }
@@ -4107,6 +4112,7 @@ function updateFloatingFontControlState() {
 }
 
 let fontControlsTimer = null;
+let hymnViewSwitcherTimer = null;
 function showFontControlsTemporarily() {
     if (!floatingFontControls) return;
     floatingFontControls.classList.remove('is-hidden-on-scroll');
@@ -4114,10 +4120,21 @@ function showFontControlsTemporarily() {
     fontControlsTimer = setTimeout(() => floatingFontControls.classList.add('is-hidden-on-scroll'), 3000);
 }
 
+function showHymnViewSwitcherTemporarily() {
+    const switcher = readerContentArea?.querySelector('.hymn-view-switcher');
+    if (!switcher) return;
+    switcher.classList.remove('is-hidden-on-idle');
+    clearTimeout(hymnViewSwitcherTimer);
+    hymnViewSwitcherTimer = setTimeout(() => switcher.classList.add('is-hidden-on-idle'), 3000);
+}
+
 function setupFloatingFontControls() {
     let lastScrollTop = 0;
     document.addEventListener('click', e => {
-        if (e.target.closest('#content-reader-panel .hymn-content, #bibleContentView .bible-content')) showFontControlsTemporarily();
+        if (e.target.closest('#content-reader-panel .hymn-content, #bibleContentView .bible-content')) {
+            showFontControlsTemporarily();
+            showHymnViewSwitcherTemporarily();
+        }
     }, true);
     const handleScroll = event => {
         const target = event.currentTarget;
@@ -4125,8 +4142,11 @@ function setupFloatingFontControls() {
         if (scrollTop > lastScrollTop + 4) {
             clearTimeout(fontControlsTimer);
             floatingFontControls.classList.add('is-hidden-on-scroll');
+            const switcher = readerContentArea?.querySelector('.hymn-view-switcher');
+            if (switcher) switcher.classList.add('is-hidden-on-idle');
         } else if (scrollTop < lastScrollTop - 4) {
             showFontControlsTemporarily();
+            showHymnViewSwitcherTemporarily();
         }
         lastScrollTop = Math.max(0, scrollTop);
     };
@@ -4766,11 +4786,12 @@ async function processPredefinedResources() {
                 while(stmt.step()) { bookData.push(stmt.getAsObject()); }
                 stmt.free();
                 tempDbInstance.close();
+                const canonicalBookData = getCanonicalBibleBooks(bookData);
 
-                if (bookData.length === 0) throw new Error(`No book data found in predefined Bible: ${resource.name}`);
+                if (canonicalBookData.length !== 66) throw new Error(`Expected the 66-book Bible catalog in predefined Bible: ${resource.name}`);
 
-                await putIndexedDB(OBJECT_STORE_NAME, { versionName: resource.name, fileData: uint8Array, books: bookData });
-                loadedVersions[resource.name] = { fileData: uint8Array, db: null, books: bookData };
+                await putIndexedDB(OBJECT_STORE_NAME, { versionName: resource.name, fileData: uint8Array, books: canonicalBookData });
+                loadedVersions[resource.name] = { fileData: uint8Array, db: null, books: canonicalBookData };
                 console.log(`Predefined Bible "${resource.name}" added successfully.`);
             } else if (resource.type === "commentary") {
                 let commentaryBookMetadata = {};
@@ -5561,7 +5582,89 @@ function getPopupRef() {
   };
 }
 
+// The app follows the 66-book catalog used by the Lai Bible databases. These
+// sparse numbers are database identifiers, not the 1–66 canonical positions.
 const CROSSREF_OSIS_BOOKS = ['Gen','Exod','Lev','Num','Deut','Josh','Judg','Ruth','1Sam','2Sam','1Kgs','2Kgs','1Chr','2Chr','Ezra','Neh','Esth','Job','Ps','Prov','Eccl','Song','Isa','Jer','Lam','Ezek','Dan','Hos','Joel','Amos','Obad','Jonah','Mic','Nah','Hab','Zeph','Hag','Zech','Mal','Matt','Mark','Luke','John','Acts','Rom','1Cor','2Cor','Gal','Eph','Phil','Col','1Thess','2Thess','1Tim','2Tim','Titus','Phlm','Heb','Jas','1Pet','2Pet','1John','2John','3John','Jude','Rev'];
+const CANONICAL_BIBLE_BOOK_NUMBERS = [10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,190,220,230,240,250,260,290,300,310,330,340,350,360,370,380,390,400,410,420,430,440,450,460,470,480,490,500,510,520,530,540,550,560,570,580,590,600,610,620,630,640,650,660,670,680,690,700,710,720,730];
+const canonicalBookIndexByNumber = new Map(CANONICAL_BIBLE_BOOK_NUMBERS.map((number, index) => [number, index]));
+function getCanonicalBibleBooks(books = []) {
+    return books
+        .filter(book => canonicalBookIndexByNumber.has(Number(book.book_number)))
+        .sort((a, b) => canonicalBookIndexByNumber.get(Number(a.book_number)) - canonicalBookIndexByNumber.get(Number(b.book_number)));
+}
+
+function escapeSubheadingHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatSubheadingReferences(title, versionName) {
+    const versionBooks = loadedVersions[versionName]?.books || [];
+    const safeTitle = escapeSubheadingHtml(title);
+    return safeTitle.replace(/\((\d+)\s+(\d+):(\d+)(?:\s*[-–]\s*(\d+))?\)/g, (match, bookNumber, chapter, startVerse, endVerse) => {
+        const book = versionBooks.find(item => Number(item.book_number) === Number(bookNumber));
+        if (!book) return match;
+        const rangeEnd = endVerse ? `–${endVerse}` : '';
+        const label = `${book.short_name} ${chapter}:${startVerse}${rangeEnd}`;
+        return `<button type="button" class="subheading-reference" data-version-name="${escapeSubheadingHtml(versionName)}" data-book-number="${bookNumber}" data-chapter="${chapter}" data-start-verse="${startVerse}" data-end-verse="${endVerse || startVerse}" aria-label="Read ${label}">${label}</button>`;
+    });
+}
+
+async function showSubheadingReference(bookNumber, chapter, startVerse, endVerse, versionName) {
+    const modal = document.getElementById('subheadingReferenceModal');
+    const title = document.getElementById('subheadingReferenceTitle');
+    const content = document.getElementById('subheadingReferenceText');
+    const version = loadedVersions[versionName];
+    const book = version?.books?.find(item => Number(item.book_number) === Number(bookNumber));
+    if (!modal || !title || !content || !version || !book) return;
+
+    if (!version.db) {
+        const stored = await getIndexedDB(OBJECT_STORE_NAME, versionName);
+        if (!stored?.fileData) return;
+        version.fileData = stored.fileData;
+        version.db = new SQL.Database(stored.fileData);
+    }
+    const firstVerse = Number(startVerse);
+    const lastVerse = Math.max(firstVerse, Number(endVerse));
+    title.textContent = `${book.short_name} ${chapter}:${firstVerse}${lastVerse !== firstVerse ? `–${lastVerse}` : ''}`;
+    content.replaceChildren();
+    try {
+        const statement = version.db.prepare('SELECT verse, text FROM verses WHERE book_number = ? AND chapter = ? AND verse BETWEEN ? AND ? ORDER BY verse ASC;');
+        statement.bind([Number(bookNumber), Number(chapter), firstVerse, lastVerse]);
+        while (statement.step()) {
+            const row = statement.getAsObject();
+            const verse = document.createElement('p');
+            verse.className = 'subheading-reference-verse';
+            const number = document.createElement('strong');
+            number.textContent = `${row.verse}. `;
+            verse.append(number, row.text || '');
+            content.appendChild(verse);
+        }
+        statement.free();
+    } catch (error) {
+        console.error('Could not load subheading reference.', error);
+    }
+    if (!content.children.length) content.textContent = 'This passage is not available in the selected Bible version.';
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+document.addEventListener('click', event => {
+    const reference = event.target.closest('.subheading-reference');
+    if (reference) {
+        showSubheadingReference(reference.dataset.bookNumber, reference.dataset.chapter, reference.dataset.startVerse, reference.dataset.endVerse, reference.dataset.versionName);
+        return;
+    }
+    if (event.target.closest('#subheadingReferenceModal .close-button')) {
+        const modal = document.getElementById('subheadingReferenceModal');
+        modal?.classList.add('hidden');
+        modal?.setAttribute('aria-hidden', 'true');
+    }
+});
 async function appendCrossReferences(versionType, bookNumber, chapter, versionName) {
     const version = loadedVersions[versionName];
     const books = version?.books || [];
@@ -5576,9 +5679,7 @@ async function appendCrossReferences(versionType, bookNumber, chapter, versionNa
     let bookIndex = TOPIC_BOOK_ALIASES.findIndex(aliases => aliases
         .map(normalizeBookName)
         .some(alias => sourceNames.some(name => name === alias || (name.length >= 3 && alias.length >= 3 && (name.startsWith(alias) || alias.startsWith(name))))));
-    if (bookIndex < 0 && Number.isInteger(Number(bookNumber)) && Number(bookNumber) >= 1 && Number(bookNumber) <= CROSSREF_OSIS_BOOKS.length) {
-        bookIndex = Number(bookNumber) - 1;
-    }
+    if (bookIndex < 0) bookIndex = canonicalBookIndexByNumber.get(Number(bookNumber)) ?? -1;
     const bookCode = CROSSREF_OSIS_BOOKS[bookIndex];
     const content = versionType === 'primary' ? primaryBibleContent : secondaryBibleContent;
     if (!bookCode || !content) return;
@@ -6283,7 +6384,7 @@ async function loadSavedVersionsMetadata() {
                     loadedVersions[versionName] = {
                         fileData: data.fileData,
                         db: null,
-                        books: data.books
+                        books: getCanonicalBibleBooks(data.books)
                     };
                 } else {
                     console.warn(`IndexedDB: Bible data for ${versionName} incomplete or not found, skipping.`);
@@ -6384,13 +6485,15 @@ async function addBibleVersion() {
         }
         stmt.free();
         dbInstance.close();
+        const canonicalBookData = getCanonicalBibleBooks(bookData);
+        if (canonicalBookData.length !== 66) throw new Error('This Bible does not contain the supported 66-book catalog.');
 
-        await putIndexedDB(OBJECT_STORE_NAME, { versionName: versionName, fileData: uint8Array, books: bookData });
+        await putIndexedDB(OBJECT_STORE_NAME, { versionName: versionName, fileData: uint8Array, books: canonicalBookData });
 
         loadedVersions[versionName] = {
             fileData: uint8Array,
             db: null,
-            books: bookData
+            books: canonicalBookData
         };
 
         if (activeVersions.primary) {
@@ -6500,7 +6603,7 @@ async function setActiveVersion(type, versionName) {
                 if (dataFromDB && dataFromDB.fileData) {
                     loadedVersions[versionName].fileData = dataFromDB.fileData;
                     loadedVersions[versionName].db = new SQL.Database(dataFromDB.fileData);
-                    loadedVersions[versionName].books = dataFromDB.books;
+                    loadedVersions[versionName].books = getCanonicalBibleBooks(dataFromDB.books);
                     statusMessage.textContent = `${versionName} loaded from storage.`;
                 } else {
                     throw new Error(`File data for ${versionName} not found in storage.`);
@@ -7368,7 +7471,7 @@ async function loadVersionContent(versionType) {
 
             for (const item of contentItems) {
                 if (item.type === 'subheading') {
-                    contentHtml += `<h4 class="subheading">${item.text}</h4>`;
+                    contentHtml += `<h4 class="subheading">${formatSubheadingReferences(item.text, processingVersionName)}</h4>`;
                 } else { 
                     const { verse_number, text: verseText } = item;
                     const selectedClass = selectedVerseToScrollTo === verse_number ? 'selected-verse' : '';
