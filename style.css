@@ -2244,7 +2244,7 @@ ul.slide-menu-items {
 #top-bar #hamburgerMenuBtn,
 #top-bar #commentaryPopupBtn {
     margin: 0 2px;
-    border: 1px solid color-mix(in srgb, var(--top-bar-text-color) 32%, transparent) !important;
+    border: 0 !important;
     background: color-mix(in srgb, var(--top-bar-text-color) 10%, transparent) !important;
     color: var(--top-bar-text-color) !important;
     box-shadow: none;
@@ -2346,7 +2346,7 @@ ul.slide-menu-items {
 #reader-top-bar .top-bar-icon-btn,
 #reader-top-bar .nav-btn,
 #slideMenu .menu-close-btn {
-    border: 1px solid color-mix(in srgb, var(--sidebar-text-color) 34%, transparent) !important;
+    border: 0 !important;
     background: color-mix(in srgb, var(--sidebar-text-color) 10%, transparent) !important;
     color: var(--sidebar-text-color) !important;
     box-shadow: none;
@@ -3806,10 +3806,12 @@ button, a, select, label { touch-action: manipulation; }
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    gap: clamp(3px, 1vw, 6px);
-    margin: 4px 0 14px;
+    gap: 6px;
+    margin: 4px 0 16px;
     overflow: visible;
-    padding-bottom: 4px;
+    padding: 10px 12px 0;
+    border-radius: 14px 14px 0 0;
+    background: var(--accent-color, #1e88e5);
     width: 100%;
     box-sizing: border-box;
 }
@@ -3817,22 +3819,27 @@ button, a, select, label { touch-action: manipulation; }
     flex: 0 1 auto;
     min-width: 0;
     max-width: 100%;
-    padding: 8px clamp(4px, 1.5vw, 7px);
-    border: 1px solid var(--panel-border-color);
-    border-radius: 18px;
-    background: var(--panel-bg-color);
-    color: var(--panel-text-color);
+    padding: 10px clamp(7px, 1.8vw, 14px);
+    border: 0;
+    border-radius: 12px 12px 0 0;
+    background: transparent;
+    color: var(--accent-text-color, #fff);
     font: inherit;
-    font-size: clamp(0.64rem, 4.5vw, 1rem);
+    font-size: clamp(0.64rem, 3.5vw, 1rem);
     line-height: 1.15;
     cursor: pointer;
     text-align: center;
     white-space: nowrap;
 }
 .instruction-tab.active {
-    border-color: var(--accent-color, #1e88e5);
-    background: var(--accent-color, #1e88e5);
-    color: #fff;
+    background: var(--panel-bg-color);
+    color: var(--accent-color, #1e88e5);
+    box-shadow: 0 -2px 0 color-mix(in srgb, var(--accent-text-color, #fff) 35%, transparent);
+}
+.reader-main-controls #reader-item-nav-group .nav-btn,
+#reader-top-bar .top-bar-icon-btn,
+#slideMenu .menu-close-btn {
+    border: 0 !important;
 }
 .instruction-content {
     flex: 1 1 auto;

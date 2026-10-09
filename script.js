@@ -4042,8 +4042,8 @@ function displayItemContent(itemId, trackHistory = true) {
         creditBrand.className = 'reader-credit-brand';
         creditBrand.textContent = 'LaiTech Innovations LLC';
         credit.appendChild(creditBrand);
-        content.appendChild(credit);
         if (switcher) content.appendChild(switcher);
+        content.appendChild(credit);
     };
 
     renderHymnContent();
