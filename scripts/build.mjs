@@ -22,6 +22,7 @@ for (const path of [
     await cp(resolve(projectRoot, path), resolve(outputRoot, path));
 }
 await cp(resolve(projectRoot, 'icons'), resolve(outputRoot, 'icons'), { recursive: true });
+await cp(resolve(projectRoot, 'assets'), resolve(outputRoot, 'assets'), { recursive: true });
 
 const html = await readFile(resolve(projectRoot, 'index.html'), 'utf8');
 if (!html.includes(fontAwesomeCdn) || !html.includes(html2canvasCdn)) {

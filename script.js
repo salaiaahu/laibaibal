@@ -3744,6 +3744,37 @@ function showReaderPage(context) { // context is { data: [...], title: "..." }
 }
 
 const FAVORITES_KEY = 'laibaibal_reader_favorites';
+// Temporary notation preview assets. Add an entry here as each hymn's SVG is approved.
+const hymnNotationAssets = {
+    1: 'assets/hymn-notation/test/001.svg',
+    2: 'assets/hymn-notation/test/002.svg',
+    3: 'assets/hymn-notation/test/003.svg',
+    4: 'assets/hymn-notation/test/004.svg'
+};
+
+function createHymnViewSwitcher(item, mode, onChange) {
+    const switcher = document.createElement('div');
+    switcher.className = 'hymn-view-switcher';
+    switcher.setAttribute('role', 'group');
+    switcher.setAttribute('aria-label', `View options for hymn ${item.id}`);
+
+    const views = [
+        { mode: 'text', label: 'Text', icon: 'fa-align-left' },
+        { mode: 'notation', label: 'Notation', icon: 'fa-music' }
+    ];
+    views.forEach(view => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'hymn-view-switcher-button';
+        button.classList.toggle('is-active', mode === view.mode);
+        button.setAttribute('aria-pressed', String(mode === view.mode));
+        button.innerHTML = `<i class="fas ${view.icon}" aria-hidden="true"></i><span>${view.label}</span>`;
+        button.addEventListener('click', () => onChange(view.mode));
+        switcher.appendChild(button);
+    });
+    return switcher;
+}
+
 function getFavorites() {
     try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || []; } catch { return []; }
 }
@@ -3918,31 +3949,67 @@ function displayItemContent(itemId, trackHistory = true) {
     currentReaderContext.activeId = parseInt(itemId);
     const content = document.createElement('div');
     content.className = 'hymn-content';
-    content.innerHTML = item.destext;
-    if (currentReaderContext.title === 'Khrihfa Hlabu') {
-        content.querySelectorAll('p').forEach(paragraph => {
-            if (/^\s*Doh\s*(?:is|:)/i.test(paragraph.textContent)) {
-                paragraph.classList.add('hymn-key-line');
-                return;
-            }
-            const label = paragraph.querySelector('b');
-            if (!label) return;
-            if (/^\s*CHO\s*:/i.test(label.textContent)) {
-                label.classList.add('hymn-chorus-label');
-                paragraph.classList.add('hymn-chorus-line');
-            } else if (/^\s*\d+[.)]?\s*$/.test(label.textContent)) {
-                label.classList.add('hymn-verse-number');
-            }
-        });
-    }
-    const credit = document.createElement('p');
-    credit.className = 'reader-credit';
-    credit.append('Brought to you by ');
-    const creditBrand = document.createElement('strong');
-    creditBrand.className = 'reader-credit-brand';
-    creditBrand.textContent = 'LaiTech Innovations LLC';
-    credit.appendChild(creditBrand);
-    content.appendChild(credit);
+    const notationAsset = currentReaderContext.title === 'Khrihfa Hlabu'
+        ? hymnNotationAssets[item.id]
+        : null;
+    let displayMode = notationAsset && currentReaderContext.hymnDisplayMode === 'notation'
+        ? 'notation'
+        : 'text';
+
+    const renderHymnContent = () => {
+        content.replaceChildren();
+        if (notationAsset) {
+            content.appendChild(createHymnViewSwitcher(item, displayMode, selectedMode => {
+                displayMode = selectedMode;
+                currentReaderContext.hymnDisplayMode = selectedMode;
+                renderHymnContent();
+                content.scrollTop = 0;
+            }));
+        }
+
+        if (displayMode === 'notation') {
+            const notation = document.createElement('div');
+            notation.className = 'hymn-notation';
+            const image = document.createElement('img');
+            image.src = notationAsset;
+            image.alt = `Musical notation for hymn ${item.id}: ${item.name}`;
+            image.loading = 'eager';
+            notation.appendChild(image);
+            content.appendChild(notation);
+            return;
+        }
+
+        const text = document.createElement('div');
+        text.className = 'hymn-text-content';
+        text.innerHTML = item.destext;
+        content.appendChild(text);
+        if (currentReaderContext.title === 'Khrihfa Hlabu') {
+            text.querySelectorAll('p').forEach(paragraph => {
+                if (/^\s*Doh\s*(?:is|:)/i.test(paragraph.textContent)) {
+                    paragraph.classList.add('hymn-key-line');
+                    return;
+                }
+                const label = paragraph.querySelector('b');
+                if (!label) return;
+                if (/^\s*CHO\s*:/i.test(label.textContent)) {
+                    label.classList.add('hymn-chorus-label');
+                    paragraph.classList.add('hymn-chorus-line');
+                } else if (/^\s*\d+[.)]?\s*$/.test(label.textContent)) {
+                    label.classList.add('hymn-verse-number');
+                }
+            });
+        }
+        const credit = document.createElement('p');
+        credit.className = 'reader-credit';
+        credit.append('Brought to you by ');
+        const creditBrand = document.createElement('strong');
+        creditBrand.className = 'reader-credit-brand';
+        creditBrand.textContent = 'LaiTech Innovations LLC';
+        credit.appendChild(creditBrand);
+        text.appendChild(credit);
+    };
+
+    renderHymnContent();
     readerContentArea.replaceChildren(content);
     const readerTitle = currentReaderContext.title === 'Chawnghlang Relnak'
         ? 'Chawnghlang'

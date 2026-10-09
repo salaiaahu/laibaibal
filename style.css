@@ -3630,6 +3630,54 @@ button, a, select, label { touch-action: manipulation; }
     font-style: italic;
     text-align: center;
 }
+.hymn-view-switcher {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: inline-flex;
+    gap: 3px;
+    margin: -3px 0 14px;
+    padding: 3px;
+    border: 1px solid var(--panel-border-color);
+    border-radius: 9px;
+    background: var(--main-bg-color);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+.hymn-view-switcher-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 6px 11px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.86rem;
+    cursor: pointer;
+}
+.hymn-view-switcher-button.is-active {
+    background: var(--accent-color, #1e88e5);
+    color: #fff;
+}
+.hymn-notation {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 4px 0 12px;
+    background: #fff;
+}
+.hymn-notation img {
+    display: block;
+    width: 100%;
+    max-width: 860px;
+    height: auto;
+}
+@media (max-width: 520px) {
+    .hymn-content { padding: 10px; }
+    .hymn-notation { margin: 0 -4px; width: calc(100% + 8px); }
+}
 .reader-credit-brand,
 .instruction-credit strong {
     color: var(--accent-color, #1e88e5);
