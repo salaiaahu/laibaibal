@@ -3751,8 +3751,11 @@ const hymnNotationAssets = {
     3: 'assets/hymn-notation/test/003.svg',
     4: 'assets/hymn-notation/test/004.svg'
 };
+const NOTATION_ZOOM_MIN = 0.75;
+const NOTATION_ZOOM_MAX = 3;
+let currentNotationZoom = Number(localStorage.getItem('laibaibal_notation_zoom')) || 1;
 
-function createHymnViewSwitcher(item, mode, onChange) {
+function createHymnViewSwitcher(item, mode, onChange, onFullscreenToggle, isFullscreen) {
     const switcher = document.createElement('div');
     switcher.className = 'hymn-view-switcher';
     switcher.setAttribute('role', 'group');
@@ -3772,7 +3775,34 @@ function createHymnViewSwitcher(item, mode, onChange) {
         button.addEventListener('click', () => onChange(view.mode));
         switcher.appendChild(button);
     });
+    const fullscreenButton = document.createElement('button');
+    fullscreenButton.type = 'button';
+    fullscreenButton.className = 'hymn-fullscreen-button';
+    fullscreenButton.title = isFullscreen ? 'Exit full screen' : 'Full screen notation';
+    fullscreenButton.setAttribute('aria-label', fullscreenButton.title);
+    fullscreenButton.innerHTML = `<i class="fas ${isFullscreen ? 'fa-compress' : 'fa-expand'}" aria-hidden="true"></i>`;
+    fullscreenButton.addEventListener('click', onFullscreenToggle);
+    switcher.appendChild(fullscreenButton);
     return switcher;
+}
+
+function isNotationViewActive() {
+    return isReaderViewActive() && Boolean(readerContentArea?.querySelector('.hymn-notation'));
+}
+
+function applyNotationZoom(zoom) {
+    currentNotationZoom = Math.max(NOTATION_ZOOM_MIN, Math.min(NOTATION_ZOOM_MAX, zoom));
+    localStorage.setItem('laibaibal_notation_zoom', String(currentNotationZoom));
+    const notationImage = readerContentArea?.querySelector('.hymn-notation img');
+    if (notationImage) notationImage.style.width = `${currentNotationZoom * 100}%`;
+    updateFloatingFontControlState();
+}
+
+function toggleNotationFullscreen() {
+    const enabled = contentReaderPanel.classList.toggle('notation-fullscreen');
+    if (enabled) showFontControlsTemporarily();
+    const activeId = currentReaderContext.activeId;
+    if (activeId) displayItemContent(activeId, false);
 }
 
 function getFavorites() {
@@ -3962,9 +3992,11 @@ function displayItemContent(itemId, trackHistory = true) {
             content.appendChild(createHymnViewSwitcher(item, displayMode, selectedMode => {
                 displayMode = selectedMode;
                 currentReaderContext.hymnDisplayMode = selectedMode;
+                if (selectedMode === 'text') contentReaderPanel.classList.remove('notation-fullscreen');
                 renderHymnContent();
                 content.scrollTop = 0;
-            }));
+                updateFloatingFontControlState();
+            }, toggleNotationFullscreen, contentReaderPanel.classList.contains('notation-fullscreen')));
         }
 
         if (displayMode === 'notation') {
@@ -3974,6 +4006,7 @@ function displayItemContent(itemId, trackHistory = true) {
             image.src = notationAsset;
             image.alt = `Musical notation for hymn ${item.id}: ${item.name}`;
             image.loading = 'eager';
+            image.style.width = `${currentNotationZoom * 100}%`;
             notation.appendChild(image);
             content.appendChild(notation);
             return;
@@ -4052,15 +4085,24 @@ function updateFloatingFontControlState() {
     floatingFontControls.classList.toggle('hidden', !visible);
     if (visible && wasHidden) showFontControlsTemporarily();
 
+    const inNotation = isNotationViewActive();
     if (decreaseFontSizeBtn) {
-        decreaseFontSizeBtn.disabled = inReader
-            ? currentReaderFontSizeRem <= 0.7
-            : currentAppFontSizeRem <= MIN_FONT_SIZE_REM;
+        decreaseFontSizeBtn.title = inNotation ? 'Zoom out notation' : 'Decrease text size';
+        decreaseFontSizeBtn.setAttribute('aria-label', decreaseFontSizeBtn.title);
+        decreaseFontSizeBtn.disabled = inNotation
+            ? currentNotationZoom <= NOTATION_ZOOM_MIN
+            : inReader
+                ? currentReaderFontSizeRem <= 0.7
+                : currentAppFontSizeRem <= MIN_FONT_SIZE_REM;
     }
     if (increaseFontSizeBtn) {
-        increaseFontSizeBtn.disabled = inReader
-            ? currentReaderFontSizeRem >= 2.0
-            : currentAppFontSizeRem >= MAX_FONT_SIZE_REM;
+        increaseFontSizeBtn.title = inNotation ? 'Zoom in notation' : 'Increase text size';
+        increaseFontSizeBtn.setAttribute('aria-label', increaseFontSizeBtn.title);
+        increaseFontSizeBtn.disabled = inNotation
+            ? currentNotationZoom >= NOTATION_ZOOM_MAX
+            : inReader
+                ? currentReaderFontSizeRem >= 2.0
+                : currentAppFontSizeRem >= MAX_FONT_SIZE_REM;
     }
 }
 
@@ -9045,7 +9087,8 @@ async function initializeApp() {
 	    if (decreaseFontSizeBtn) {
         decreaseFontSizeBtn.addEventListener('click', () => {
             showFontControlsTemporarily();
-            if (isReaderViewActive()) applyReaderFontSize(currentReaderFontSizeRem - 0.1);
+            if (isNotationViewActive()) applyNotationZoom(currentNotationZoom - 0.25);
+            else if (isReaderViewActive()) applyReaderFontSize(currentReaderFontSizeRem - 0.1);
             else applyFontSize(currentAppFontSizeRem - FONT_SIZE_STEP_REM);
         });
     } else {
@@ -9055,7 +9098,8 @@ async function initializeApp() {
     if (increaseFontSizeBtn) {
         increaseFontSizeBtn.addEventListener('click', () => {
             showFontControlsTemporarily();
-            if (isReaderViewActive()) applyReaderFontSize(currentReaderFontSizeRem + 0.1);
+            if (isNotationViewActive()) applyNotationZoom(currentNotationZoom + 0.25);
+            else if (isReaderViewActive()) applyReaderFontSize(currentReaderFontSizeRem + 0.1);
             else applyFontSize(currentAppFontSizeRem + FONT_SIZE_STEP_REM);
         });
     } else {

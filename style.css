@@ -3635,6 +3635,8 @@ button, a, select, label { touch-action: manipulation; }
     top: 0;
     z-index: 2;
     display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
     gap: 3px;
     margin: -3px 0 14px;
     padding: 3px;
@@ -3661,6 +3663,17 @@ button, a, select, label { touch-action: manipulation; }
     background: var(--accent-color, #1e88e5);
     color: #fff;
 }
+.hymn-fullscreen-button {
+    display: none;
+    width: 34px;
+    min-height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
 .hymn-notation {
     display: flex;
     justify-content: center;
@@ -3670,13 +3683,42 @@ button, a, select, label { touch-action: manipulation; }
 }
 .hymn-notation img {
     display: block;
-    width: 100%;
-    max-width: 860px;
+    flex: 0 0 auto;
+    max-width: none;
     height: auto;
 }
 @media (max-width: 520px) {
     .hymn-content { padding: 10px; }
     .hymn-notation { margin: 0 -4px; width: calc(100% + 8px); }
+    .hymn-fullscreen-button { display: inline-grid; place-items: center; }
+    #content-reader-panel.notation-fullscreen {
+        position: fixed;
+        inset: 0;
+        z-index: 10001;
+        height: 100dvh;
+    }
+    #content-reader-panel.notation-fullscreen #reader-top-bar { display: none; }
+    #content-reader-panel.notation-fullscreen #reader-content-area { border: 0; }
+    #content-reader-panel.notation-fullscreen .hymn-content {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+    }
+    #content-reader-panel.notation-fullscreen .hymn-view-switcher {
+        position: fixed;
+        top: max(8px, env(safe-area-inset-top));
+        left: max(8px, env(safe-area-inset-left));
+        margin: 0;
+    }
+    #content-reader-panel.notation-fullscreen .hymn-notation {
+        width: 100vw;
+        min-height: 100dvh;
+        margin: 0;
+        padding: 0;
+        justify-content: flex-start;
+    }
+    #content-reader-panel.notation-fullscreen .hymn-notation img { width: 100%; }
 }
 .reader-credit-brand,
 .instruction-credit strong {
