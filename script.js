@@ -5610,15 +5610,22 @@ function cleanPopupVerseText(value) {
 function formatSubheadingReferences(title, versionName) {
     const versionBooks = loadedVersions[versionName]?.books || [];
     const safeTitle = escapeSubheadingHtml(title);
-    // Some source databases wrap references in legacy <X>…</X> tags. They have
-    // already been escaped above, so accept both that form and a plain reference.
-    return safeTitle.replace(/\((?:&lt;X&gt;)?(\d+)\s+(\d+):(\d+)(?:\s*[-–]\s*(\d+))?(?:&lt;\/X&gt;)?\)/gi, (match, bookNumber, chapter, startVerse, endVerse) => {
+    const makeReference = (match, bookNumber, chapter, startVerse, endVerse) => {
         const book = versionBooks.find(item => Number(item.book_number) === Number(bookNumber));
         if (!book) return match;
         const rangeEnd = endVerse ? `–${endVerse}` : '';
         const label = `${book.short_name} ${chapter}:${startVerse}${rangeEnd}`;
         return `<button type="button" class="subheading-reference" data-version-name="${escapeSubheadingHtml(versionName)}" data-book-number="${bookNumber}" data-chapter="${chapter}" data-start-verse="${startVerse}" data-end-verse="${endVerse || startVerse}" aria-label="Read ${label}">${label}</button>`;
-    });
+    };
+    // `<X>…</X>` is the source Bible's reference marker. A heading may contain
+    // several markers inside one pair of parentheses, so format each marker
+    // independently rather than requiring the entire parenthetical text to be
+    // a single reference.
+    const markedReferences = /&lt;X&gt;\s*(\d+)\s+(\d+):(\d+)(?:\s*[-–]\s*(\d+))?\s*&lt;\/X&gt;/gi;
+    const plainParentheticalReference = /\((\d+)\s+(\d+):(\d+)(?:\s*[-–]\s*(\d+))?\)/gi;
+    return safeTitle
+        .replace(markedReferences, makeReference)
+        .replace(plainParentheticalReference, (match, bookNumber, chapter, startVerse, endVerse) => `(${makeReference(match, bookNumber, chapter, startVerse, endVerse)})`);
 }
 
 async function showSubheadingReference(bookNumber, chapter, startVerse, endVerse, versionName) {
