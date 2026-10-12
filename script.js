@@ -3383,6 +3383,8 @@ function pushAppHistoryState(state, title, url) {
 let loadedVersions = {}; // Stores Bible versions
 let activeVersions = { primary: null, secondary: null };
 let activeDbs = { primary: null, secondary: null }; // Stores active Bible DB instances
+let initialBibleDownloadInProgress = false;
+const BIBLE_DOWNLOAD_COMPLETION_SEEN_KEY = 'laibaibal_bible_download_completion_seen';
 
 let inAppBackAction = null; 
 
@@ -3578,6 +3580,7 @@ const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
 const bookList = document.getElementById('bookList');
 
 const bibleHomePanel = document.getElementById('bible-home-panel');
+const bibleDownloadNotice = document.getElementById('bibleDownloadNotice');
 const bibleHomeReaderBtn = document.getElementById('bibleHomeReaderBtn');
 const bibleHomeManageBiblesBtn = document.getElementById('bibleHomeManageBiblesBtn');
 const bibleHomeManageCommentariesBtn = document.getElementById('bibleHomeManageCommentariesBtn');
@@ -4510,9 +4513,16 @@ function setupSlideMenuListeners() {
             });
         }
         if (bibleHomeReaderBtn) {
-            bibleHomeReaderBtn.addEventListener('click', () => {
-                if (currentBook && currentChapter) showPanel(bibleContentView);
+            bibleHomeReaderBtn.addEventListener('click', async () => {
+                if (!activeVersions.primary && Object.keys(loadedVersions).length > 0) {
+                    await setActiveVersion('primary', Object.keys(loadedVersions)[0]);
+                }
+                if (currentBook && currentChapter) {
+                    dismissBibleDownloadCompletionNotice();
+                    showPanel(bibleContentView);
+                }
                 else if (Object.keys(loadedVersions).length > 0) openBookNavigator();
+                else if (initialBibleDownloadInProgress) showToast('Your Bible is still downloading. Please wait a few minutes, then try Bible Reader again.');
                 else openBibleToolPanel(uploadPanel, bibleHomePanel);
             });
         }
@@ -4831,8 +4841,25 @@ async function fetchFileFromUrl(url) {
     return await response.arrayBuffer();
 }
 
+function setBibleDownloadNotice(message = '') {
+    if (!bibleDownloadNotice) return;
+    bibleDownloadNotice.textContent = message;
+    bibleDownloadNotice.classList.toggle('hidden', !message);
+}
+
+function dismissBibleDownloadCompletionNotice() {
+    try { localStorage.setItem(BIBLE_DOWNLOAD_COMPLETION_SEEN_KEY, 'true'); } catch { /* Non-essential UI preference. */ }
+    if (!initialBibleDownloadInProgress) setBibleDownloadNotice('');
+}
+
 async function processPredefinedResources() {
     console.log("Checking for predefined resources to load...");
+    initialBibleDownloadInProgress = Object.keys(loadedVersions).length === 0;
+    const shouldAnnounceCompletion = initialBibleDownloadInProgress
+        && localStorage.getItem(BIBLE_DOWNLOAD_COMPLETION_SEEN_KEY) !== 'true';
+    if (initialBibleDownloadInProgress) {
+        setBibleDownloadNotice('Your Bible is downloading for offline reading. This first setup can take a few minutes; you can continue using the other sections while it finishes.');
+    }
     if (statusMessage) statusMessage.textContent = "Setting up initial resources (may take a moment on first load)...";
 
     const preloadedStatus = PRELOADED_RESOURCES_MANAGER.getPreloadedStatus();
@@ -4840,15 +4867,22 @@ async function processPredefinedResources() {
 
     for (const resource of PREDEFINED_RESOURCES) {
         if (preloadedStatus[resource.name]) {
-            console.log(`Resource "${resource.name}" (${resource.type}) previously marked as preloaded for this batch. Skipping download attempt.`);
-            // Ensure it's actually in our in-memory lists if it was preloaded
-            if (resource.type === "bible" && !loadedVersions[resource.name]) {
-                 console.warn(`Preloaded Bible "${resource.name}" not in loadedVersions. May need to re-verify from IndexedDB.`);
-                 // The main loadSavedVersionsMetadata should ideally pick it up if it's in IndexedDB
-            } else if (resource.type === "commentary" && !loadedCommentaries[resource.name]) {
-                 console.warn(`Preloaded Commentary "${resource.name}" not in loadedCommentaries.`);
-            }
-            continue;
+            console.log(`Resource "${resource.name}" (${resource.type}) was previously marked as preloaded. Verifying local availability.`);
+            const resourceIsAvailable = resource.type === 'bible'
+                ? Boolean(loadedVersions[resource.name])
+                : Boolean(loadedCommentaries[resource.name]);
+            if (resourceIsAvailable) continue;
+
+            // A cleared/corrupted IndexedDB can leave a stale preload marker.
+            // Retry the resource instead of treating that marker as readiness.
+            console.warn(`Preload marker for "${resource.name}" is stale; downloading again.`);
+            delete preloadedStatus[resource.name];
+            try {
+                localStorage.setItem(PRELOADED_RESOURCES_MANAGER.key, JSON.stringify({
+                    batchVersion: PRELOADED_RESOURCES_MANAGER.batchVersion,
+                    loadedNames: preloadedStatus
+                }));
+            } catch { /* A retry can still continue when local storage is unavailable. */ }
         }
 
         // Also check if it's already present from a manual load in a previous session
@@ -4862,6 +4896,9 @@ async function processPredefinedResources() {
 
         console.log(`Attempting to preload ${resource.type}: "${resource.name}" from ${resource.url}`);
         if (statusMessage) statusMessage.textContent = `Downloading predefined ${resource.type}: ${resource.name}...`;
+        if (resource.type === 'bible' && initialBibleDownloadInProgress) {
+            setBibleDownloadNotice(`Downloading ${resource.name} Bible for offline reading. This may take a few minutes; other sections remain available.`);
+        }
 
         try {
             const arrayBuffer = await fetchFileFromUrl(resource.url); // Your existing function
@@ -4925,6 +4962,14 @@ async function processPredefinedResources() {
         // Or, if you want to update them now if they happen to be open (less likely during initial load):
         // if (bibleVersionSelectModal && !bibleVersionSelectModal.classList.contains('hidden')) populateBibleVersionModal();
         // if (commentarySelectModal && !commentarySelectModal.classList.contains('hidden')) populateCommentaryModal();
+    }
+    initialBibleDownloadInProgress = false;
+    if (Object.keys(loadedVersions).length > 0 && shouldAnnounceCompletion) {
+        setBibleDownloadNotice('Bible download complete. Bible Reader, Topics, and Daily Plans are ready.');
+    } else if (Object.keys(loadedVersions).length === 0) {
+        setBibleDownloadNotice('Bible download is not ready yet. Keep the app open and connected to the internet, then try again shortly.');
+    } else {
+        setBibleDownloadNotice('');
     }
     if (statusMessage) statusMessage.textContent = "Initial resources setup complete.";
     console.log("Finished processing predefined resources.");
@@ -5462,8 +5507,10 @@ function openBookNavigator() {
 
     if (!activeVersions.primary || !loadedVersions[activeVersions.primary]) {
         console.warn("LOG: openBookNavigator - No primary version active or loaded. Alerting.");
-        showToast("Please load and select a primary Bible version first.");
-        showPanel(uploadPanel); // Or your default panel for loading versions
+        showToast(initialBibleDownloadInProgress
+            ? 'Your Bible is still downloading. Please wait a few minutes.'
+            : 'Please load and select a primary Bible version first.');
+        if (!initialBibleDownloadInProgress) showPanel(uploadPanel);
         return;
     }
     console.log("LOG: openBookNavigator - Primary version seems active. Proceeding...");
@@ -9434,7 +9481,9 @@ async function initializeApp() {
         await loadSavedCommentariesMetadata();
         console.log('DEBUG: loadSavedVersionsMetadata() & loadSavedCommentariesMetadata() completed.');
 
-        await processPredefinedResources(); 
+        // First-run resource downloads can be large. Keep the app navigable
+        // while they are fetched and make Bible actions wait gracefully.
+        void processPredefinedResources();
         updateViewModeDisplay(); // Set initial view mode display
 		updateActiveVersionNameDisplays();
         // Load last read position or set defaults
@@ -9513,8 +9562,8 @@ async function initializeApp() {
                     if(currentChapterDisplay) currentChapterDisplay.textContent = 'No Books';
                 }
             } else { // No versions loaded at all
-                showPanel(uploadPanel);
-                if(currentChapterDisplay) currentChapterDisplay.textContent = 'No Version';
+                showPanel(bibleHomePanel);
+                if(currentChapterDisplay) currentChapterDisplay.textContent = initialBibleDownloadInProgress ? 'Loading…' : 'No Version';
             }
         }
         

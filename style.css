@@ -4007,6 +4007,18 @@ button, a, select, label { touch-action: manipulation; }
 .bible-home-intro p { display: grid; gap: 5px; margin: 0; }
 .bible-home-intro p strong { font: 600 1.55rem/1.15 Georgia, serif; }
 .bible-home-intro p span { color: var(--secondary-text-color, #727b84); font-size: .9rem; }
+.bible-download-notice {
+    width: min(100%, 880px);
+    box-sizing: border-box;
+    margin: 0 auto 16px;
+    padding: 11px 13px;
+    border: 1px solid color-mix(in srgb, var(--accent-color) 42%, var(--panel-border-color));
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent-color) 10%, var(--panel-bg-color));
+    color: var(--panel-text-color);
+    font-size: .9rem;
+    line-height: 1.4;
+}
 .bible-home-intro-icon,
 .bible-home-card-icon {
     display: grid;
