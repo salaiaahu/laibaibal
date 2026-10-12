@@ -1347,11 +1347,25 @@ h2, h3 {
     text-transform: uppercase;
     letter-spacing: 0.035em;
     color: var(--subheading-text-color);  
-    margin-top: 0.1em;
+    margin-top: 0.45em;
     margin-bottom: 0.1em;
-    border-bottom: 1px solid var(--subheading-border-color);
-    padding-bottom: 5px;
+    border-top: 1px solid var(--subheading-border-color);
+    border-bottom: 0;
+    padding-top: 5px;
+    padding-bottom: 0;
     text-align: left;
+}
+.subheading:not(.subheading-reference-only) {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+}
+.subheading-at-chapter-start { border-top: 0; padding-top: 0; margin-top: 0; }
+.subheading-reference-only {
+    margin-top: 0.12em;
+    border-top: 0;
+    padding-top: 0;
+    text-decoration: none;
 }
 .subheading-reference {
     display: inline;
@@ -4079,6 +4093,8 @@ button, a, select, label { touch-action: manipulation; }
 .cross-reference-modal-content h2 { margin: 0 38px 16px 0; flex: none; }
 .cross-reference-modal-content .close-button { border: 0; background: transparent; }
 #crossReferenceList { flex: 1 1 auto; min-height: 0; max-height: none; padding-right: 2px; }
+#crossReferenceModal.single-cross-reference .cross-reference-modal-content { height: auto; min-height: 0; max-height: calc(100vh - 30px); }
+#crossReferenceModal.single-cross-reference #crossReferenceList { flex: 0 1 auto; max-height: calc(100vh - 150px); }
 .cross-reference-item { padding: 12px; border: 1px solid var(--panel-border-color); border-radius: 10px; background: var(--main-bg-color); color: var(--main-text-color); font: inherit; text-align: left; cursor: pointer; }
 .cross-reference-item strong, .cross-reference-item span, .cross-reference-item small { display: block; }
 .cross-reference-item span { margin-top: 5px; line-height: 1.45; }.cross-reference-item small { margin-top: 7px; color: var(--secondary-text-color, #727b84); font-size: .75rem; }

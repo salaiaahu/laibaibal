@@ -4658,9 +4658,6 @@ function setupMobileBackButtonHandler() {
             allowBrowserBack = false;
             return;
         }
-        // A device back press always leaves the current verse selection behind,
-        // even when it only closes a modal or returns to the previous screen.
-        clearVerseSelection();
         appHistoryEntries = Math.max(0, appHistoryEntries - 1);
 
         const isOpen = element => element && !element.classList.contains('hidden');
@@ -4670,6 +4667,49 @@ function setupMobileBackButtonHandler() {
 
         if (isOpen(splashScreen)) {
             rearmCurrentRoute();
+            return;
+        }
+
+        // Overlays take precedence over page navigation. This makes the device
+        // back button close the current reader UI first instead of jumping to a
+        // menu while an action bar or picker is still open.
+        const openTransientOverlay = [
+            document.getElementById('verseActionPopup'),
+            highlightPicker,
+            highlightColorPicker
+        ].find(isOpen);
+        if (openTransientOverlay) {
+            if (openTransientOverlay === highlightPicker) hideHighlightPicker();
+            clearVerseSelection();
+            rearmCurrentRoute();
+            return;
+        }
+
+        const openModal = [
+            noteModal,
+            bookmarkModal,
+            introModal,
+            commentaryModal,
+            document.getElementById('verseImageModal'),
+            document.getElementById('crossReferenceModal'),
+            document.getElementById('subheadingReferenceModal'),
+            bibleVersionSelectModal,
+            commentarySelectModal,
+            themeSelectModal
+        ]
+            .find(isOpen);
+        if (openModal) {
+            openModal.classList.add('hidden');
+            clearVerseSelection();
+            const previousRoute = event.state?.laiBaibalRoute;
+            const currentRoute = getAppHistoryRoute();
+            if (
+                !previousRoute ||
+                previousRoute.type !== currentRoute.type ||
+                previousRoute.panelId !== currentRoute.panelId
+            ) {
+                rearmCurrentRoute();
+            }
             return;
         }
 
@@ -4695,23 +4735,8 @@ function setupMobileBackButtonHandler() {
             return;
         }
 
-        const openModal = [noteModal, bookmarkModal, bibleVersionSelectModal, commentarySelectModal, themeSelectModal]
-            .find(isOpen);
-        if (openModal) {
-            openModal.classList.add('hidden');
-            const previousRoute = event.state?.laiBaibalRoute;
-            const currentRoute = getAppHistoryRoute();
-            if (
-                !previousRoute ||
-                previousRoute.type !== currentRoute.type ||
-                previousRoute.panelId !== currentRoute.panelId
-            ) {
-                rearmCurrentRoute();
-            }
-            return;
-        }
-
         if (isOpen(slideMenu)) {
+            clearVerseSelection();
             slideMenu.classList.add('hidden');
             slideMenuOverlay?.classList.add('hidden');
             rearmCurrentRoute();
@@ -4721,8 +4746,9 @@ function setupMobileBackButtonHandler() {
         } else if (isOpen(bookChapterVerseSelector) && isOpen(chapterGridView)) {
             backToBookGridBtn?.click();
             rearmCurrentRoute();
-        } else if (!restoreAppHistoryState(event.state)) {
-            rearmCurrentRoute();
+        } else {
+            clearVerseSelection();
+            if (!restoreAppHistoryState(event.state)) rearmCurrentRoute();
         }
     });
 }
@@ -5606,8 +5632,15 @@ function escapeSubheadingHtml(value) {
 }
 
 function cleanPopupVerseText(value) {
-    // Some source Bibles include legacy page-break markers in the stored text.
-    return String(value ?? '').replace(/<\/?pb\s*\/?\s*>/gi, '').replace(/\s{2,}/g, ' ').trim();
+    // Source databases can include legacy page-break, footnote, and inline
+    // formatting tags. They are editor codes, not Bible text for this preview.
+    return String(value ?? '')
+        .replace(/<f\b[^>]*>.*?<\/f\s*>/gi, '')
+        .replace(/&lt;f\b[^&]*&gt;.*?&lt;\/f&gt;/gi, '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&lt;\/?[^&]*&gt;/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
 }
 
 function formatSubheadingReferences(title, versionName) {
@@ -5631,6 +5664,13 @@ function formatSubheadingReferences(title, versionName) {
         .replace(plainParentheticalReference, (match, bookNumber, chapter, startVerse, endVerse) => `(${makeReference(match, bookNumber, chapter, startVerse, endVerse)})`);
 }
 
+function isReferenceOnlySubheading(title) {
+    const text = String(title ?? '')
+        .replace(/<\/?X\s*>/gi, '')
+        .trim();
+    return /^\(?\s*(?:\d+\s+\d+:\d+(?:\s*[-–]\s*\d+)?\s*[;,]?\s*)+\)?$/.test(text);
+}
+
 async function showSubheadingReference(bookNumber, chapter, startVerse, endVerse, versionName) {
     const modal = document.getElementById('subheadingReferenceModal');
     const title = document.getElementById('subheadingReferenceTitle');
@@ -5649,6 +5689,7 @@ async function showSubheadingReference(bookNumber, chapter, startVerse, endVerse
     const lastVerse = Math.max(firstVerse, Number(endVerse));
     title.textContent = `${book.short_name} ${chapter}:${firstVerse}${lastVerse !== firstVerse ? `–${lastVerse}` : ''}`;
     content.replaceChildren();
+    content.scrollTop = 0;
     try {
         const statement = version.db.prepare('SELECT verse, text FROM verses WHERE book_number = ? AND chapter = ? AND verse BETWEEN ? AND ? ORDER BY verse ASC;');
         statement.bind([Number(bookNumber), Number(chapter), firstVerse, lastVerse]);
@@ -5667,6 +5708,7 @@ async function showSubheadingReference(bookNumber, chapter, startVerse, endVerse
     }
     if (!content.children.length) content.textContent = 'This passage is not available in the selected Bible version.';
     modal.classList.remove('hidden');
+    resetViewScroll(modal);
     modal.setAttribute('aria-hidden', 'false');
 }
 
@@ -5731,6 +5773,7 @@ function showCrossReferenceModal(refs, versionName) {
         list.appendChild(item);
     });
     if (!list.children.length) list.innerHTML = '<p class="placeholder">No cross references are available in this Bible version.</p>';
+    modal.classList.toggle('single-cross-reference', list.children.length === 1);
     modal.classList.remove('hidden');
 }
 document.addEventListener('click', event => {
@@ -5823,11 +5866,37 @@ function showPanel(panelToShow, trackHistory = true) {
             panel.classList.add('hidden');
         }
     });
+    // Bible reading is the sole view that preserves its reading position.
+    // Every other page opens at its beginning.
+    if (panelToShow !== bibleContentView) resetViewScroll(panelToShow);
     updateFloatingFontControlState();
 
     if (trackHistory && !restoringAppHistory && !homeIsVisible && currentPanel !== panelToShow) {
         pushAppHistoryState({ appNavigation: true }, pageTitles.get(panelToShow) || '', location.href);
     }
+}
+
+function resetViewScroll(root) {
+    if (!root) return;
+    const reset = () => {
+        [root, ...root.querySelectorAll('*')].forEach(element => {
+            if (element.scrollHeight > element.clientHeight) element.scrollTop = 0;
+            if (element.scrollWidth > element.clientWidth) element.scrollLeft = 0;
+        });
+    };
+    reset();
+    requestAnimationFrame(reset);
+}
+
+function setupViewScrollResets() {
+    const overlaySelector = '.modal, .selection-modal, #slideMenu';
+    const observer = new MutationObserver(records => {
+        records.forEach(record => {
+            const overlay = record.target;
+            if (overlay.matches?.(overlaySelector) && !overlay.classList.contains('hidden')) resetViewScroll(overlay);
+        });
+    });
+    observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
 }
 
 function openBibleToolPanel(panel, returnPanel = null) {
@@ -7493,9 +7562,12 @@ async function loadVersionContent(versionType) {
                 currentSubheadingIndex++;
             }
 
+            let hasRenderedChapterContent = false;
             for (const item of contentItems) {
                 if (item.type === 'subheading') {
-                    contentHtml += `<h4 class="subheading">${formatSubheadingReferences(item.text, processingVersionName)}</h4>`;
+                    const referenceOnlyClass = isReferenceOnlySubheading(item.text) ? ' subheading-reference-only' : '';
+                    const chapterStartClass = hasRenderedChapterContent ? '' : ' subheading-at-chapter-start';
+                    contentHtml += `<h4 class="subheading${referenceOnlyClass}${chapterStartClass}">${formatSubheadingReferences(item.text, processingVersionName)}</h4>`;
                 } else { 
                     const { verse_number, text: verseText } = item;
                     const selectedClass = selectedVerseToScrollTo === verse_number ? 'selected-verse' : '';
@@ -7561,6 +7633,7 @@ if (multiMode) {
                         ${verseText} ${commentaryLinksHtml}${indicatorIcons}
                     </p>`;
                 }
+                hasRenderedChapterContent = true;
             }
         } 
 
@@ -9868,6 +9941,7 @@ if (nextChapterBtn) {
 console.log('DEBUG: Script file loaded. Calling initializeApp().');
 setupMobileBackButtonHandler();
 setupSlideMenuListeners();
+setupViewScrollResets();
 initializeApp();
 
 
@@ -10110,6 +10184,7 @@ function showHome() {
     const wasHidden = homeScreen?.classList.contains('hidden');
     clearExitConfirmation();
     homeScreen?.classList.remove('hidden');
+    resetViewScroll(homeScreen);
     if (wasHidden && !restoringAppHistory) {
         pushAppHistoryState({ appNavigation: true }, '', location.href);
     }
