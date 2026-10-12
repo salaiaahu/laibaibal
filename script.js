@@ -3744,13 +3744,33 @@ function showReaderPage(context) { // context is { data: [...], title: "..." }
 }
 
 const FAVORITES_KEY = 'laibaibal_reader_favorites';
-// Temporary notation preview assets. Add an entry here as each hymn's SVG is approved.
-const hymnNotationAssets = {
-    1: 'assets/hymn-notation/test/001.svg',
-    2: 'assets/hymn-notation/test/002.svg',
-    3: 'assets/hymn-notation/test/003.svg',
-    4: 'assets/hymn-notation/test/004.svg'
-};
+// Notation files are published at the root of the notation repository using
+// three-digit hymn IDs (001.svg, 002.svg, ...).
+const HYMN_NOTATION_BASE_URL = 'https://raw.githubusercontent.com/salaiaahu/tonicsolfa-hlabu/main';
+const hymnNotationAssets = Object.fromEntries(
+    allHymns.map(({ id }) => [id, `${HYMN_NOTATION_BASE_URL}/${String(id).padStart(3, '0')}.svg`])
+);
+const MOBILE_NOTATION_VIEWBOX = '32 30 365 550';
+
+async function getNotationDisplaySource(sourceUrl) {
+    // The uploaded score pages retain a paper-size SVG canvas. On phones, crop
+    // that canvas to the same score bounds used by the former local notation
+    // files, so the notation—not surrounding white paper—uses the display.
+    if (!window.matchMedia('(max-width: 520px)').matches) return sourceUrl;
+    try {
+        const response = await fetch(sourceUrl);
+        if (!response.ok) throw new Error('Unable to load notation');
+        const svg = await response.text();
+        const croppedSvg = svg.replace(
+            /(<svg\b[^>]*\b)viewBox="0 0 425 612"/i,
+            `$1viewBox="${MOBILE_NOTATION_VIEWBOX}"`
+        );
+        return URL.createObjectURL(new Blob([croppedSvg], { type: 'image/svg+xml' }));
+    } catch {
+        // Keep the remote source usable even if it cannot be cropped offline.
+        return sourceUrl;
+    }
+}
 const NOTATION_ZOOM_MIN = 0.75;
 const NOTATION_ZOOM_MAX = 3;
 let currentNotationZoom = Number(localStorage.getItem('laibaibal_notation_zoom')) || 1;
@@ -4002,16 +4022,34 @@ function displayItemContent(itemId, trackHistory = true) {
         }
 
         if (displayMode === 'notation') {
+            content.classList.add('is-notation-mode');
             const notation = document.createElement('div');
             notation.className = 'hymn-notation';
             const image = document.createElement('img');
             image.src = notationAsset;
             image.alt = `Musical notation for hymn ${item.id}: ${item.name}`;
             image.loading = 'eager';
+            image.addEventListener('error', () => {
+                // A missing remote file should not leave the reader with a
+                // broken image; retain the hymn's built-in text as a fallback.
+                displayMode = 'text';
+                currentReaderContext.hymnDisplayMode = 'text';
+                showToast(`Notation for hymn ${item.id} is not available yet.`);
+                renderHymnContent();
+            }, { once: true });
             image.style.width = `${currentNotationZoom * 100}%`;
             notation.appendChild(image);
             content.appendChild(notation);
             if (switcher) content.appendChild(switcher);
+            getNotationDisplaySource(notationAsset).then(displaySource => {
+                if (!content.contains(image) || displayMode !== 'notation' || image.src === displaySource) return;
+                const previousSource = image.src;
+                image.src = displaySource;
+                if (displaySource.startsWith('blob:')) {
+                    image.addEventListener('load', () => URL.revokeObjectURL(displaySource), { once: true });
+                }
+                if (previousSource.startsWith('blob:')) URL.revokeObjectURL(previousSource);
+            });
             return;
         }
 
@@ -5738,7 +5776,18 @@ async function appendCrossReferences(versionType, bookNumber, chapter, versionNa
     let bookIndex = TOPIC_BOOK_ALIASES.findIndex(aliases => aliases
         .map(normalizeBookName)
         .some(alias => sourceNames.some(name => name === alias || (name.length >= 3 && alias.length >= 3 && (name.startsWith(alias) || alias.startsWith(name))))));
-    if (bookIndex < 0) bookIndex = canonicalBookIndexByNumber.get(Number(bookNumber)) ?? -1;
+    if (bookIndex < 0) {
+        const numericBookNumber = Number(bookNumber);
+        // Bible databases in the app use sparse IDs (10, 20, ...), while
+        // catalog.json and some versions use canonical 1–66 positions. Accept
+        // both before choosing the OSIS-named cross-reference resource.
+        bookIndex = canonicalBookIndexByNumber.get(numericBookNumber)
+            ?? (Number.isInteger(numericBookNumber)
+                && numericBookNumber >= 1
+                && numericBookNumber <= CROSSREF_OSIS_BOOKS.length
+                ? numericBookNumber - 1
+                : -1);
+    }
     const bookCode = CROSSREF_OSIS_BOOKS[bookIndex];
     const content = versionType === 'primary' ? primaryBibleContent : secondaryBibleContent;
     if (!bookCode || !content) return;
@@ -5973,6 +6022,7 @@ const TOPIC_BOOK_ALIASES = [
 function normalizeBookName(name) { return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 function resolveTopicBook(availableBooks, catalogBook) {
     const canonicalIndex = Number.isFinite(Number(catalogBook)) ? Number(catalogBook) - 1 : -1;
+    const bibleBookNumber = canonicalIndex >= 0 ? CANONICAL_BIBLE_BOOK_NUMBERS[canonicalIndex] : null;
     const aliases = canonicalIndex >= 0 ? TOPIC_BOOK_ALIASES[canonicalIndex] : [String(catalogBook)];
     const normalizedAliases = aliases.map(normalizeBookName);
     const matchesAlias = name => {
@@ -5981,9 +6031,36 @@ function resolveTopicBook(availableBooks, catalogBook) {
     };
     return availableBooks.find(book => [book.short_name, book.long_name].some(matchesAlias))
         || availableBooks.find(book => normalizeBookName(book.short_name) === normalizeBookName(catalogBook) || normalizeBookName(book.long_name) === normalizeBookName(catalogBook))
+        // Topic catalog IDs are 1–66, while installed Bible databases use the
+        // sparse IDs in CANONICAL_BIBLE_BOOK_NUMBERS (e.g. Matthew = 480).
+        || availableBooks.find(book => bibleBookNumber != null && Number(book.book_number) === bibleBookNumber)
         || availableBooks.find(book => Number(book.book_number) === Number(catalogBook))
-        // Last resort for localized Bible names: catalog positions use the 66-book canon.
-        || (canonicalIndex >= 0 ? availableBooks[canonicalIndex] : null);
+        || null;
+}
+
+function groupTopicVerses(verses) {
+    return verses.reduce((groups, reference) => {
+        const [bookNumber, chapter, verse] = reference.map(Number);
+        const previous = groups[groups.length - 1];
+        if (previous && previous.bookNumber === bookNumber && previous.chapter === chapter && verse === previous.endVerse + 1) {
+            previous.endVerse = verse;
+            previous.references.push([bookNumber, chapter, verse]);
+        } else {
+            groups.push({ bookNumber, chapter, startVerse: verse, endVerse: verse, references: [[bookNumber, chapter, verse]] });
+        }
+        return groups;
+    }, []);
+}
+
+function toggleTopicPassageFavorite(topicId, references) {
+    const favorites = getTopicFavorites();
+    const isSaved = reference => favorites.some(item => item.topicId === topicId && item.bookNumber === reference[0] && item.chapter === reference[1] && item.verse === reference[2]);
+    const allSaved = references.every(isSaved);
+    const remaining = favorites.filter(item => !references.some(reference => item.topicId === topicId && item.bookNumber === reference[0] && item.chapter === reference[1] && item.verse === reference[2]));
+    if (!allSaved) {
+        references.filter(reference => !isSaved(reference)).forEach(([bookNumber, chapter, verse]) => remaining.push({ topicId, bookNumber, chapter, verse }));
+    }
+    localStorage.setItem(TOPIC_FAVORITES_KEY, JSON.stringify(remaining));
 }
 
 async function showTopicDetail(topic) {
@@ -5999,24 +6076,29 @@ async function showTopicDetail(topic) {
     topicsStatusMessage.classList.add('topic-title');
     topicDetail.innerHTML = `<p>${favoriteOnly ? `${verses.length} saved` : `${topic.verses.length} linked`} verses. Select one to open it in your current Bible.</p>`;
     const topicVersion = await ensureTopicBibleVersion();
-    verses.forEach(([bookNumber, chapter, verse]) => {
+    groupTopicVerses(verses).forEach(({ bookNumber, chapter, startVerse, endVerse, references }) => {
         const availableBooks = topicVersion?.books || [];
         // Catalog references use the 66-book canon; resolve them by each Bible's
         // short/long names so Bibles with different internal IDs still work.
         const book = resolveTopicBook(availableBooks, bookNumber);
         const button = document.createElement('div'); button.className = 'topic-verse'; button.tabIndex = 0; button.setAttribute('role', 'button');
-        const reference = `${book?.short_name || `Book ${bookNumber}`} ${chapter}:${verse}`;
+        const verseRange = startVerse === endVerse ? `${startVerse}` : `${startVerse}-${endVerse}`;
+        const reference = `${book?.short_name || `Book ${bookNumber}`} ${chapter}:${verseRange}`;
         let text = '';
         if (book && topicVersion?.db) {
-            const stmt = topicVersion.db.prepare('SELECT text FROM verses WHERE book_number = ? AND chapter = ? AND verse = ?;');
-            stmt.bind([book.book_number, chapter, verse]); if (stmt.step()) text = stmt.getAsObject().text || ''; stmt.free();
+            const stmt = topicVersion.db.prepare('SELECT verse, text FROM verses WHERE book_number = ? AND chapter = ? AND verse BETWEEN ? AND ? ORDER BY verse ASC;');
+            stmt.bind([book.book_number, chapter, startVerse, endVerse]);
+            const parts = [];
+            while (stmt.step()) parts.push(stmt.getAsObject().text || '');
+            stmt.free();
+            text = parts.filter(Boolean).join(' ');
         }
-        const saved = isTopicVerseFavorite(topic.id, bookNumber, chapter, verse);
+        const saved = references.every(([groupBook, groupChapter, groupVerse]) => isTopicVerseFavorite(topic.id, groupBook, groupChapter, groupVerse));
         button.innerHTML = `<span class="topic-verse-copy"><strong>${reference}</strong>${text ? `<span>${text}</span>` : '<span class="topic-verse-missing">Verse not available in this version.</span>'}</span><button class="topic-verse-favorite" type="button" aria-label="${saved ? 'Remove favorite' : 'Save favorite'}"><i class="${saved ? 'fas' : 'far'} fa-star"></i></button>`;
-        button.disabled = !book;
-        button.addEventListener('click', async () => { await setActiveVersion('primary', topicBibleVersion || activeVersions.primary); currentBook = book; currentChapter = chapter; currentVerse = verse; loadChapterContent(book.book_number, chapter, verse); });
+        button.setAttribute('aria-disabled', String(!book));
+        button.addEventListener('click', async () => { if (!book) return; await setActiveVersion('primary', topicBibleVersion || activeVersions.primary); currentBook = book; currentChapter = chapter; currentVerse = startVerse; loadChapterContent(book.book_number, chapter, startVerse); });
         button.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); button.click(); } });
-        button.querySelector('.topic-verse-favorite').addEventListener('click', event => { event.stopPropagation(); toggleTopicVerseFavorite({ topicId: topic.id, bookNumber, chapter, verse }); showTopicDetail(topic); });
+        button.querySelector('.topic-verse-favorite').addEventListener('click', event => { event.stopPropagation(); toggleTopicPassageFavorite(topic.id, references); showTopicDetail(topic); });
         topicDetail.appendChild(button);
     });
 }

@@ -3773,11 +3773,25 @@ button, a, select, label { touch-action: manipulation; }
         flex-direction: column;
         padding: 10px 10px 4px;
     }
+    /* Scores already include a narrow paper edge. Do not spend more of the
+       limited phone viewport on a second reader inset. */
+    .hymn-content.is-hymn.is-notation-mode {
+        margin: 0;
+        padding: 0;
+    }
     .hymn-text-content { flex: 1 0 auto; }
     .hymn-content > .reader-credit {
         margin-top: auto;
         margin-bottom: 0;
         padding: 10px 8px 2px;
+    }
+    .hymn-content.is-hymn.is-notation-mode .hymn-notation {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    .hymn-content.is-hymn.is-notation-mode .hymn-notation img {
+        width: 100% !important;
     }
     .hymn-notation { margin: 0 -4px; width: calc(100% + 8px); }
     .hymn-fullscreen-button { display: inline-grid; place-items: center; }

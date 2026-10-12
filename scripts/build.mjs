@@ -23,6 +23,13 @@ for (const path of [
 }
 await cp(resolve(projectRoot, 'icons'), resolve(outputRoot, 'icons'), { recursive: true });
 await cp(resolve(projectRoot, 'assets'), resolve(outputRoot, 'assets'), { recursive: true });
+// Cross-reference JSON is fetched by the Bible reader at runtime. Include it
+// in dist so Capacitor/mobile builds can resolve it just like the desktop app.
+await cp(
+    resolve(projectRoot, 'resources', 'crossrefs'),
+    resolve(outputRoot, 'resources', 'crossrefs'),
+    { recursive: true }
+);
 
 const html = await readFile(resolve(projectRoot, 'index.html'), 'utf8');
 if (!html.includes(fontAwesomeCdn) || !html.includes(html2canvasCdn)) {
