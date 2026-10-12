@@ -4658,6 +4658,9 @@ function setupMobileBackButtonHandler() {
             allowBrowserBack = false;
             return;
         }
+        // A device back press always leaves the current verse selection behind,
+        // even when it only closes a modal or returns to the previous screen.
+        clearVerseSelection();
         appHistoryEntries = Math.max(0, appHistoryEntries - 1);
 
         const isOpen = element => element && !element.classList.contains('hidden');
@@ -5793,6 +5796,13 @@ function showPanel(panelToShow, trackHistory = true) {
         [instructionsPanel, 'App Hmandaan']
     ]);
     const isDedicatedPage = pageTitles.has(panelToShow);
+
+    // The verse action bar belongs only to the Bible reader. It is fixed in the
+    // viewport, so hide it before showing any other panel rather than letting it
+    // carry over onto a menu or a different reader.
+    if (panelToShow !== bibleContentView) {
+        document.getElementById('verseActionPopup')?.classList.add('hidden');
+    }
 
     // Add or remove the 'reader-active' class from the main app container
     if (panelToShow === contentReaderPanel) {
@@ -7899,7 +7909,11 @@ function hideHighlightPicker() {
 // --- Highlight Management ---
 async function applyHighlight(color) {
     const els = getSelectedVerseEls();
-    if (els.length < 2 || !currentHighlightVerseElement) return applyHighlightOne(color, true);
+    if (els.length < 2 || !currentHighlightVerseElement) {
+        await applyHighlightOne(color, true);
+        clearVerseSelection();
+        return;
+    }
     for (let i = 0; i < els.length; i++) {
         currentHighlightVerseElement = els[i];
         currentHighlightVerseRef = refFromVerseEl(els[i]);
@@ -9489,13 +9503,14 @@ if (noteIcon) {
             console.log("Note icon click: No valid currentSelectedText on popup dataset. Proceeding as whole verse note.");
         }
         
-        showNoteModal(verseRef, textForPartialNote ? textForPartialNote.trim() : null); // Pass trimmed or null
+        await showNoteModal(verseRef, textForPartialNote ? textForPartialNote.trim() : null); // Pass trimmed or null
         
         // Clear the temporary dataset attribute and globals after use for this action
         verseActionPopup.dataset.currentSelectedText = '';
         latestSelection = null;
         latestSelectedText = '';
         verseActionPopup.classList.add('hidden'); // Hide popup after initiating action
+        clearVerseSelection();
     });
 } else {
     console.error("Note icon (.fa-sticky-note) not found in verseActionPopup.");
@@ -9657,6 +9672,7 @@ if (verseActionPopupHighlightIcon) {
                         window.getSelection()?.removeAllRanges();
                         latestSelection = null; latestSelectedText = '';
                         verseActionPopup.dataset.currentSelectedText = '';
+                        clearVerseSelection();
                     });
                 });
             }
@@ -9685,6 +9701,7 @@ if (verseActionPopupHighlightIcon) {
             console.log("EVENT: Bookmark icon in verseActionPopup CLICKED.");
             const multiRefs = getSelectedRefs();
             if (multiRefs.length > 1) {
+                verseActionPopup.classList.add('hidden');
                 await showBookmarkModal(multiRefs[0]);
                 currentBookmarkMultiRefs = multiRefs;
                 bookmarkCategoryInput.value = '';
@@ -9694,7 +9711,9 @@ if (verseActionPopupHighlightIcon) {
                 clearVerseSelection();
                 return;
             }
-            showBookmarkModal(getPopupRef());
+            verseActionPopup.classList.add('hidden');
+            await showBookmarkModal(getPopupRef());
+            clearVerseSelection();
         });
     } else { console.error("Bookmark icon not found in verseActionPopup."); }
 
@@ -9704,7 +9723,9 @@ if (verseActionPopupHighlightIcon) {
         shareIcon.addEventListener('click', () => {
             console.log("EVENT: Share icon in verseActionPopup CLICKED.");
             const refs = getSelectedRefs();
-            shareVerse(refs.length > 1 ? refs : getPopupRef());
+            const shareTarget = refs.length > 1 ? refs : getPopupRef();
+            clearVerseSelection();
+            shareVerse(shareTarget);
         });
     } else { console.error("Share icon not found in verseActionPopup."); }
 
@@ -9714,7 +9735,9 @@ if (verseActionPopupHighlightIcon) {
         imageIcon.addEventListener('click', () => {
             console.log("EVENT: Image icon in verseActionPopup CLICKED.");
             const refs = getSelectedRefs();
-            generateVerseImage(refs.length > 1 ? refs : getPopupRef());
+            const imageTarget = refs.length > 1 ? refs : getPopupRef();
+            clearVerseSelection();
+            generateVerseImage(imageTarget);
         });
     } else { console.error("Image icon not found in verseActionPopup."); }
 

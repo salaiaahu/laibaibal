@@ -3546,12 +3546,12 @@ button, a, select, label { touch-action: manipulation; }
 .reader-main-controls #reader-item-nav-group { justify-content: center; }
 .reader-main-controls #item-title-display { flex: 1 1 auto; text-align: center; }
 
-/* Verse action popup: roomy, colorful touch targets */
-.verse-action-popup { gap: 14px; padding: 10px 14px; border-radius: 14px; align-items: center; }
+/* Verse action popup: compact controls with deliberate spacing between actions */
+.verse-action-popup { gap: 14px; padding: 7px 10px; border-radius: 12px; align-items: center; }
 .verse-action-popup .action-icon {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px; border-radius: 50%;
-  font-size: 1.15rem; color: #fff; transition: transform .12s ease, filter .12s ease;
+  width: 36px; height: 36px; border-radius: 50%;
+  font-size: 1rem; color: #fff; transition: transform .12s ease, filter .12s ease;
 }
 .verse-action-popup .action-icon:hover { color: #fff; filter: brightness(1.1); }
 .verse-action-popup .action-icon:active { transform: scale(.9); }
