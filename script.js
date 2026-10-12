@@ -4058,6 +4058,21 @@ function displayItemContent(itemId, trackHistory = true) {
         text.innerHTML = item.destext;
         content.appendChild(text);
         if (currentReaderContext.title === 'Khrihfa Hlabu') {
+            const hymnParagraphs = Array.from(text.querySelectorAll(':scope > p'));
+            const numberedVerses = hymnParagraphs.filter(paragraph => /^\s*\d+[.)]?\s*$/.test(paragraph.querySelector(':scope > b')?.textContent || ''));
+            const sourceChorus = hymnParagraphs.find(paragraph => /^\s*CHO\s*:/i.test(paragraph.querySelector(':scope > b')?.textContent || ''));
+            if (sourceChorus) {
+                // Hymn data stores the chorus only once. Repeat it after every
+                // numbered verse so the reading order follows how it is sung.
+                sourceChorus.remove();
+                numberedVerses.forEach(verse => {
+                    const chorus = sourceChorus.cloneNode(true);
+                    verse.classList.add('hymn-verse-with-chorus');
+                    verse.after(chorus);
+                });
+            } else {
+                numberedVerses.forEach(verse => verse.classList.add('hymn-verse-without-chorus'));
+            }
             text.querySelectorAll('p').forEach(paragraph => {
                 if (/^\s*Doh\s*(?:is|:)/i.test(paragraph.textContent)) {
                     paragraph.classList.add('hymn-key-line');

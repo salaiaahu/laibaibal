@@ -102,6 +102,8 @@ body,
 
     --accent-color: #a52b3c;
     --accent-text-color: #ffffff;
+    --hymn-chorus-text-color: #852d3b;
+    --hymn-chorus-marker-color: #b56713;
     --selected-verse-bg-color: #fde6c9;
     --selected-verse-text-color: var(--main-text-color);
 
@@ -148,6 +150,8 @@ body.theme-dark {
     --panel-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
     --accent-color: #007bff; 
     --accent-text-color: #ffffff;
+    --hymn-chorus-text-color: #8ebcf4;
+    --hymn-chorus-marker-color: #f2bf5b;
 
     --top-bar-bg-color: #121212;
     --top-bar-text-color: #e0e0e0;
@@ -248,6 +252,8 @@ body.theme-sepia {
     --panel-shadow: 0 0 10px rgba(80, 60, 40, 0.15);
     --accent-text-color: #f5f5f5;
     --accent-color: #8d6e63;	
+    --hymn-chorus-text-color: #76554a;
+    --hymn-chorus-marker-color: #a65d2e;
 
     --top-bar-bg-color: #7a5c43; /* Darker sepia/brown */
     --top-bar-text-color: #f4e8c1; /* Light sepia text */
@@ -3690,8 +3696,19 @@ button, a, select, label { touch-action: manipulation; }
     font-weight: 700;
 }
 .hymn-content .hymn-verse-number { color: #6d28d9; }
-.hymn-content .hymn-chorus-label { color: #087f8c; }
-.hymn-content .hymn-chorus-line { margin-top: 1.2em; }
+/* The chorus needs a visual identity without assuming a specific theme color. */
+.hymn-content .hymn-verse-with-chorus { margin-bottom: .18em; }
+.hymn-content .hymn-verse-without-chorus { margin-bottom: 1.25em; }
+.hymn-content .hymn-chorus-line {
+    margin-top: 0;
+    margin-bottom: 1.25em;
+    color: var(--hymn-chorus-text-color);
+}
+.hymn-content .hymn-chorus-label {
+    color: var(--hymn-chorus-marker-color);
+    font-weight: 800;
+    letter-spacing: .025em;
+}
 .hymn-content > .reader-credit {
     margin: auto 0 1px;
     padding: 28px 8px 1px;
