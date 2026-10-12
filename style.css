@@ -3,6 +3,22 @@ body,
 * {
     scrollbar-width: none;
     -ms-overflow-style: none;
+    /* Verse selection is tap-based in this app; suppress browser text selection
+       and long-press copy UI without affecting that custom interaction. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Keep forms usable: users must still be able to position the caret and edit
+   their own search terms, notes, and other entered text. */
+input,
+textarea,
+select,
+[contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
 }
 
 *::-webkit-scrollbar {
