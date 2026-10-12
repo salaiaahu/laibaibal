@@ -5798,6 +5798,9 @@ async function appendCrossReferences(versionType, bookNumber, chapter, versionNa
         Object.entries(data.verses || {}).forEach(([verseNumber, refs]) => {
             const verse = content.querySelector(`#${versionType}-verse-${verseNumber}`);
             if (!verse || verse.dataset.versionName !== versionName || Number(verse.dataset.bookNumber) !== Number(bookNumber) || Number(verse.dataset.chapter) !== Number(chapter) || !Array.isArray(refs) || !refs.length) return;
+            // Chapter rendering can trigger more than one async load. Keep one
+            // reference control per verse even when the same JSON finishes twice.
+            if (verse.querySelector('.cross-reference-trigger')) return;
             const trigger = document.createElement('button');
             trigger.type = 'button'; trigger.className = 'cross-reference-trigger'; trigger.title = `View ${refs.length} cross reference${refs.length === 1 ? '' : 's'}`; trigger.setAttribute('aria-label', trigger.title);
             trigger.innerHTML = '<i class="fas fa-link" aria-hidden="true"></i>';

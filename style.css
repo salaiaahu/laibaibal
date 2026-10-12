@@ -4103,7 +4103,7 @@ button, a, select, label { touch-action: manipulation; }
     }
 }
 #crossReferenceList { display: grid; gap: 9px; max-height: 60vh; overflow-y: auto; }
-.cross-reference-modal-content { box-sizing: border-box; width: min(100%, 760px); max-width: none; height: calc(100vh - 30px); max-height: none; padding: 20px; }
+.cross-reference-modal-content { box-sizing: border-box; width: min(100%, 760px); max-width: none; height: calc(90vh - 30px); max-height: none; padding: 20px; }
 .cross-reference-modal-content h2 { margin: 0 38px 16px 0; flex: none; }
 .cross-reference-modal-content .close-button { border: 0; background: transparent; }
 #crossReferenceList { flex: 1 1 auto; min-height: 0; max-height: none; padding-right: 2px; }
