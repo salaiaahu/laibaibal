@@ -3219,8 +3219,9 @@ footer {
     min-width: 30px;
 }
 .reader-main-controls.reader-reading-active #item-title-display {
-    padding: 0 2px;
-    font-size: clamp(0.7rem, 3.5vw, 0.88rem);
+    /* Keep group-reading titles equal to hymn-reader titles. */
+    padding: 0 8px;
+    font-size: 0.88rem;
 }
 
 /* Unified, touch-friendly top bar alignment. */
@@ -3245,6 +3246,42 @@ footer {
 }
 #top-bar .chapter-navigator .chapter-display {
     font-size: 1rem;
+}
+
+/* The book/chapter name is navigation context, not expendable decoration.
+   Let it consume the remaining header width before truncating it. */
+@media (max-width: 768px) {
+    #top-bar { gap: 1px; }
+    #top-bar-group-left {
+        flex: 1 1 auto;
+        gap: 3px;
+    }
+    #top-bar-group-right {
+        flex: 0 0 auto;
+        gap: 2px;
+        padding-right: 3px;
+    }
+    #top-bar .top-bar-icon-btn { width: 32px; height: 36px; min-height: 36px; }
+    #top-bar #hamburgerMenuBtn { width: 36px; }
+    #top-bar .version-picker-button { flex: 0 0 auto; padding: 4px; }
+    #top-bar .version-picker-button .active-version-name-display { max-width: 44px; }
+    #top-bar .chapter-navigator {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    #top-bar .chapter-navigator .chapter-nav-btn {
+        flex: 0 0 28px;
+        width: 28px;
+    }
+    #top-bar .chapter-navigator .chapter-display,
+    #currentChapterDisplay {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        max-width: none;
+        padding: 0 5px;
+        font-size: 1rem;
+    }
 }
 
 .commentary-all-toggle {
@@ -3724,6 +3761,12 @@ button, a, select, label { touch-action: manipulation; }
     color: var(--hymn-chorus-marker-color);
     font-weight: 800;
     letter-spacing: .025em;
+}
+/* Group-reading responses are full bold paragraphs. Separate them from the
+   surrounding regular reading without changing the actual text styling. */
+.hymn-content.is-group-reading .group-reading-emphasis {
+    margin-top: 1.35em;
+    margin-bottom: 1.35em;
 }
 .hymn-content > .reader-credit {
     margin: auto 0 1px;

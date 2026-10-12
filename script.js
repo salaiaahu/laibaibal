@@ -4000,6 +4000,7 @@ function displayItemContent(itemId, trackHistory = true) {
     const content = document.createElement('div');
     content.className = 'hymn-content';
     content.classList.toggle('is-hymn', currentReaderContext.title === 'Khrihfa Hlabu');
+    content.classList.toggle('is-group-reading', currentReaderContext.title === 'Chawnghlang Relnak');
     const notationAsset = currentReaderContext.title === 'Khrihfa Hlabu'
         ? hymnNotationAssets[item.id]
         : null;
@@ -4086,6 +4087,11 @@ function displayItemContent(itemId, trackHistory = true) {
                 } else if (/^\s*\d+[.)]?\s*$/.test(label.textContent)) {
                     label.classList.add('hymn-verse-number');
                 }
+            });
+        }
+        if (currentReaderContext.title === 'Chawnghlang Relnak') {
+            text.querySelectorAll(':scope > p').forEach(paragraph => {
+                if (paragraph.querySelector(':scope > b')) paragraph.classList.add('group-reading-emphasis');
             });
         }
         const credit = document.createElement('p');
